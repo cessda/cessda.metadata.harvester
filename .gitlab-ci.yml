@@ -1,0 +1,37 @@
+image: docker-private.gesis.intra/gesis/dc-maven:3.0
+services:
+  - name: docker-private.gesis.intra/gesis/dind:3.0
+    alias: docker
+variables:
+  DOCKER_HOST: "tcp://docker:2375"
+stages:
+  - test
+  - deploy-artifacts
+
+jar-test:
+  stage: test
+  before_script:
+    - mvn --version
+  script:
+    - mvn clean test jacoco:report
+  after_script:
+    - echo -n 'Branch coverage ' && grep -oE '<tfoot>.*</tfoot>' target/site/jacoco/index.html | grep -oE '[0-9]{1,3}%' | tail -1
+  only:
+    - master
+    - stable
+
+gesis-maven:
+  stage: deploy-artifacts
+  script:
+    - mvn clean deploy -DskipTests
+  only:
+    - master
+    - stable
+
+gesis-docker:
+  stage: deploy-artifacts
+  script:
+    - mvn clean -DskipTests package docker:build docker:push -Pdocker-compose
+  only:
+    - master
+    - stable
