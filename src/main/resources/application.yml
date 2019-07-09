@@ -72,5 +72,4 @@ harvester:
   repos:
   - url: https://dbk.gesis.org/dbkoai/
     setName: DBK
-    dataProvider: gesis
-    metaDataProvider: gesis
+    
