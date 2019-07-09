@@ -21,6 +21,7 @@
 		<logging.level.org.springframework>INFO</logging.level.org.springframework>
 		<server.port>8083</server.port>
 		<server.servlet.context-path>/</server.servlet.context-path>
+		<documents>data</documents>
 	</properties>
 
 	<dependencies>
@@ -107,30 +108,11 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.1.0</version>
-				<executions>
-					<execution>
-						<id>javadoc-jar</id>
-						<phase>package</phase>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-						<configuration>
-							<quiet>true</quiet>
-							<charset>UTF-8</charset>
-							<docencoding>UTF-8</docencoding>
-							<docfilessubdirs>true</docfilessubdirs>
-							<includeDependencySources>true</includeDependencySources>
-							<dependencySourceIncludes>
-								<dependencySourceInclude>org.gesis.commons:*</dependencySourceInclude>
-							</dependencySourceIncludes>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin> -->
+			<!-- plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-javadoc-plugin</artifactId> <version>3.1.0</version> 
+				<executions> <execution> <id>javadoc-jar</id> <phase>package</phase> <goals> <goal>jar</goal> </goals> <configuration> <quiet>true</quiet> 
+				<charset>UTF-8</charset> <docencoding>UTF-8</docencoding> <docfilessubdirs>true</docfilessubdirs> <includeDependencySources>true</includeDependencySources> 
+				<dependencySourceIncludes> <dependencySourceInclude>org.gesis.commons:*</dependencySourceInclude> </dependencySourceIncludes> 
+				</configuration> </execution> </executions> </plugin> -->
 			<plugin>
 				<groupId>pl.project13.maven</groupId>
 				<artifactId>git-commit-id-plugin</artifactId>
@@ -254,6 +236,7 @@
 				<targetPath>${project.basedir}/target/docker/generated</targetPath>
 				<includes>
 					<include>**/*</include>
+					<include>application.Dockerfile</include>
 				</includes>
 			</resource>
 		</resources>
@@ -298,6 +281,7 @@
 		<profile>
 			<id>docker-compose</id>
 			<properties>
+				<documents>/${project.artifactId}/data</documents>
 				<logging.file>application.log</logging.file>
 			</properties>
 		</profile>

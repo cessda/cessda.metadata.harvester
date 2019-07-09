@@ -282,7 +282,7 @@ public class Server extends SpringBootServletInitializer {
 		log.info(repoBase + "  " + setspec + "   " + fromDate);
 		File f = new File(harvesterConfiguration.getDir());
 		if (!f.exists()) {
-			f = new File(System.getProperty("java.io.tmpdir"));
+			f = new File(harvesterConfiguration.getDir());
 		}
 		try {
 			ArrayList<String> currentlyRetrievedSet = null;

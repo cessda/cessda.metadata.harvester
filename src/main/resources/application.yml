@@ -6,6 +6,7 @@ logging:
   level:
     org:
       springframework: '@logging.level.org.springframework@'
+    springfox.documentation.spring.web.readers.operation: WARN
 management:
   endpoints:
     web:
@@ -57,7 +58,7 @@ spring:
 harvester:
   metadataFormat: oai_ddi32
   dialectDefinitionName: gesisCMM-ddi32
-  dir: /home/eqb/metadata
+  dir: '@documents@'
   recipient: thomas.kraemer@gesis.org
   timeout: 60
   from:
