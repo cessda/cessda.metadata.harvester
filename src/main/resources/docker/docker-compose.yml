@@ -8,6 +8,6 @@ services:
     image: @docker.registry.uri@/gesis/@project.artifactId@:@project.version@
     ports:
      - @server.port@:@server.port@
-  volumes:
-     - ./application.properties:/@project.artifactId@/application.properties
-     - H:/Users/kraemets/Documents/Workspace/flatdb-import/data/:/oaiharvester/documents
+    volumes:
+##this line hinders docker-compose from starting     - ./application.properties:/@project.artifactId@/application.properties
+     - /home/thomas/cessda.eqb/data/:@documents@
