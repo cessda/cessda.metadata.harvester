@@ -278,7 +278,7 @@ public class Server extends SpringBootServletInitializer {
 
 	void fetchDCRecords(String repoBase, String setspec, String fromDate) {
 
-		log.debug(harvesterConfiguration.getDir());
+		log.info(harvesterConfiguration.getDir());
 		log.info(repoBase + "  " + setspec + "   " + fromDate);
 		File f = new File(harvesterConfiguration.getDir());
 		if (!f.exists()) {
@@ -659,6 +659,7 @@ public class Server extends SpringBootServletInitializer {
 
 					}
 					if (ls.getResumptionToken() != "") {
+						log.info(ls.getResumptionToken());
 						url = url + "?verb=ListSets&resumptionToken=" + ls.getResumptionToken();
 						log.info("" + url);
 					}
@@ -667,7 +668,7 @@ public class Server extends SpringBootServletInitializer {
 				log.info("");
 			} catch (NoSuchFieldException e) {
 				e.printStackTrace();
-				log.info("less than 50 specs or end of spec list reached");
+				log.info("less than 50 specs or end of spec list reached" + e.getMessage());
 			} catch (SocketTimeoutException ste) {
 				log.error("Request to oai endpoint timed out " + harvesterConfiguration.getTimeout());
 			}
