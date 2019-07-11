@@ -56,7 +56,8 @@ spring:
       auto-registration: true
       period: 5000
 harvester:
-  metadataFormat: ddi32
+  #metadataFormat: ddi32
+  metadataFormat: oai_ddi32
   dialectDefinitionName: gesisCMM-ddi32
   dir: '@documents@'
   recipient: thomas.kraemer@gesis.org
@@ -70,7 +71,7 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
+#  - url: https://colectica.nsd.no/oai/request
+#    setName: Studies
   - url: https://dbk.gesis.org/dbkoai/
     setName: DBK
-  - url: https://colectica.nsd.no/oai/request
-    setName: Studies
