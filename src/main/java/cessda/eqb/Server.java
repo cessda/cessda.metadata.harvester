@@ -482,7 +482,7 @@ public class Server extends SpringBootServletInitializer {
 		} catch (IOException e1) {
 			log.error(e1.getMessage());
 		}
-		log.debug(dest.toFile().getAbsolutePath() + "  " + dest.toFile().exists() + "");
+		log.info(dest.toFile().getAbsolutePath() + "  " + dest.toFile().exists() + "");
 
 		records.stream().forEach(currentRecord -> {
 			String fname = "";
