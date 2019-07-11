@@ -4,7 +4,7 @@
 
 version: '3.2'
 services:
-  restserver:
+  eqb-harvester:
     image: @docker.registry.uri@/gesis/@project.artifactId@:@project.version@
     ports:
      - @server.port@:@server.port@
