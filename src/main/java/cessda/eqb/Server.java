@@ -524,7 +524,7 @@ public class Server extends SpringBootServletInitializer {
 					log.error(e.getMessage());
 					e.printStackTrace();
 				}
-			} catch (SAXParseException e) {
+			} catch (SAXParseException e) { 	 	
 
 				log.error(fname + " : " + e.getMessage());
 
