@@ -72,4 +72,6 @@ harvester:
   repos:
   - url: https://dbk.gesis.org/dbkoai/
     setName: DBK
+  - url: hallo_ezra
+    setName: Lösch_mich_falls_keine_Einschränkung_set_ebene_gewünscht
     
