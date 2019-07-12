@@ -512,7 +512,7 @@ public class Server extends SpringBootServletInitializer {
 							Transformer transformer = TransformerFactory.newInstance().newTransformer();
 							Result output = new StreamResult(f);
 							log.trace("Stored : " + f.getAbsolutePath());
-//							transformer.transform(input, output);
+							transformer.transform(input, output);
 							break;
 
 						}
