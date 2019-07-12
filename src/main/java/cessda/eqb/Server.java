@@ -511,7 +511,7 @@ public class Server extends SpringBootServletInitializer {
 							Source input = new DOMSource(child);
 							Transformer transformer = TransformerFactory.newInstance().newTransformer();
 							Result output = new StreamResult(f);
-							log.info("Stored : " + f.getAbsolutePath());
+							log.trace("Stored : " + f.getAbsolutePath());
 //							transformer.transform(input, output);
 							break;
 
