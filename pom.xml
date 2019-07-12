@@ -5,7 +5,7 @@
 
 	<groupId>cessda.eqb</groupId>
 	<artifactId>cessda.eqb.oaiharvester</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -147,7 +147,7 @@
 			<plugin>
 				<groupId>io.fabric8</groupId>
 				<artifactId>docker-maven-plugin</artifactId>
-				<version>0.28.0</version>
+				<version>0.30.0</version>
 				<configuration>
 					<images>
 						<image>
