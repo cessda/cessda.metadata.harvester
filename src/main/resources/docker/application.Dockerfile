@@ -7,7 +7,7 @@ FROM openjdk:8-jre-alpine
 RUN addgroup user && adduser -D -G user user
 WORKDIR /@project.artifactId@
 
-RUN mkdir -p @documents@ && chmod 500 @documents@ 
+RUN mkdir -p @documents@ && chmod 700 @documents@ 
 
 COPY maven/@project.build.finalName@.jar ./application.jar
 COPY entrypoint.sh ./entrypoint.sh
