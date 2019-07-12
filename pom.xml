@@ -5,7 +5,7 @@
 
 	<groupId>cessda.eqb</groupId>
 	<artifactId>cessda.eqb.oaiharvester</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
