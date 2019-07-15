@@ -45,9 +45,10 @@ spring:
   boot:
     admin:
       client:
-        url: "http://localhost:1111" 
+        url: "http://admin:1111" 
         instance:
-          name: eqb-oai-harvester
+          name: harvester
+          health-url: "http://harvester:@server.port@"
         username: ${SPRING_BOOT_ADMIN_USER_NAME:admin}
         password: ${SPRING_BOOT_ADMIN_USER_PASSWORD:admin}
       auto-deregistration: true
