@@ -6,6 +6,7 @@ logging:
   level:
     org:
       springframework: '@logging.level.org.springframework@'
+    de.codecentric.boot.admin: DEBUG
     springfox.documentation.spring.web.readers.operation: WARN
 management:
   endpoints:
