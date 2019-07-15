@@ -117,7 +117,7 @@ public class Server extends SpringBootServletInitializer {
 	 */
 	@Async
 	@ManagedOperation(description = "Run initial harvesting. Set from date with key harvester.cron.initial. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. Don't forget to reset the environment and update application.yml for persistent configuration")
-	@Scheduled(initialDelay = 1000L, fixedDelay = 315360000000l)
+	@Scheduled(initialDelay = 10000L, fixedDelay = 315360000000l)
 	public String initialHarvesting() {
 
 		log.info(harvesterConfiguration.getMetadataFormat());
