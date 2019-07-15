@@ -43,9 +43,9 @@ spring:
     host: smtprelay.gesis.intra
   boot:
     admin:
-      url: "http://docker:1111"
+      url: "http://admin:1111"
       client:
-        url: "http://docker:1111" 
+        url: "http://admin:1111" 
         instance:
           name: eqb-oai-harvester
         username: ${SPRING_BOOT_ADMIN_USER_NAME:admin}
