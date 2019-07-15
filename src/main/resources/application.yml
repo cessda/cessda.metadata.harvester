@@ -72,5 +72,5 @@ harvester:
   repos:
 #  - url: https://colectica.nsd.no/oai/request
 #    setName: Studies
-#  - url: https://dbk.gesis.org/dbkoai/
-#    setName: DBK
+  - url: https://dbk.gesis.org/dbkoai/
+    setName: DBK
