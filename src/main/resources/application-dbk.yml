@@ -47,7 +47,7 @@ spring:
       client:
         url: "http://docker:1111" 
         instance:
-          name: eqb-oai-harvester
+          name: harvester
         username: ${SPRING_BOOT_ADMIN_USER_NAME:admin}
         password: ${SPRING_BOOT_ADMIN_USER_PASSWORD:admin}
       routes:

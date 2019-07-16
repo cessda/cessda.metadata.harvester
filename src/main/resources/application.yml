@@ -47,7 +47,7 @@ spring:
       client:
         url: "http://admin:1111" 
         instance:
-          name: cessda-eqb-harvester
+          name: harvester
           health-url: "http://harvester:@server.port@"
         username: ${SPRING_BOOT_ADMIN_USER_NAME:admin}
         password: ${SPRING_BOOT_ADMIN_USER_PASSWORD:admin}
