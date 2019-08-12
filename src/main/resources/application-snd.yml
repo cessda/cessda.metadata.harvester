@@ -55,8 +55,8 @@ spring:
       auto-registration: true
       period: 5000
 harvester:
-  metadataFormat: ddi
-  dialectDefinitionName: gesisCMM-ddi25
+  metadataFormat: ddi_3_2
+  dialectDefinitionName: gesisCMM-ddi32
   dir: '@documents@'
   recipient: thomas.kraemer@gesis.org
   timeout: 60
@@ -69,5 +69,5 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: https://oai.ukdataservice.ac.uk:8443/oai/
-    setName: 
+  - url: https://snd.gu.se/en/oai-pmh
+    setName: discipline:social-science
