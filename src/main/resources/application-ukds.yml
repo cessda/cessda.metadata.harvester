@@ -55,8 +55,7 @@ spring:
       auto-registration: true
       period: 5000
 harvester:
-  #metadataFormat: ddi32
-  metadataFormat: ddi_c
+  metadataFormat: ddi
   dialectDefinitionName: gesisCMM-ddi25
   dir: '@documents@'
   recipient: thomas.kraemer@gesis.org
@@ -70,5 +69,5 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: http://services.fsd.uta.fi/v0/oai
+  - url: https://oai.ukdataservice.ac.uk:8443/oai/
     setName: 
