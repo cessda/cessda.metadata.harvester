@@ -56,8 +56,8 @@ spring:
       period: 5000
 harvester:
   #metadataFormat: ddi32
-  metadataFormat: oai_ddi32
-  dialectDefinitionName: gesisCMM-ddi32
+  metadataFormat: ddi_c
+  dialectDefinitionName: gesisCMM-ddi25
   dir: '@documents@'
   recipient: thomas.kraemer@gesis.org
   timeout: 60
@@ -70,7 +70,5 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-#  - url: https://colectica.nsd.no/oai/request
-#    setName: Studies
-  - url: https://dbk.gesis.org/dbkoai/
-    setName: DBK
+  - url: http://services.fsd.uta.fi/v0/oai
+    setName: 
