@@ -367,7 +367,7 @@ public class Server extends SpringBootServletInitializer {
 				log.trace(url);
 				li = new ListIdentifiers(oaiBase(url), resumptionToken);
 			} else {
-				if (set.compareTo(url) == 0) {
+				if (set.compareTo(url) == 0 || set.startsWith("http")) {
 					set = null;
 				}
 				log.debug("From " + fromDate + "  until " + to + "  " + oaiBase(url) + "  " + set + "  " + mdFormat);
