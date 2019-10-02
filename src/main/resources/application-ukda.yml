@@ -7,7 +7,7 @@ logging:
     org:
       springframework: '@logging.level.org.springframework@'
       gesis: TRACE
-    cessda.eqb: TRACE
+    cessda.eqb: DEBUG
     de.codecentric.boot.admin: DEBUG
     springfox.documentation.spring.web.readers.operation: WARN
 management:
