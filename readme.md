@@ -2,7 +2,8 @@
 
 ## About
 
-The cessda.eqb.harvester is a microservice for harvesting metadata made available by third parties using the  Open Archives Initiatives Protocol for Metadata Harvesting. It can be run standalone as a spring boot application or in a docker environment. 
+The cessda.eqb.harvester is a microservice for harvesting metadata made available by third parties using the  Open Archives Initiatives Protocol for Metadata Harvesting. Please refer to https://www.openarchives.org/OAI/openarchivesprotocol.html for details. 
+It can be run standalone as a spring boot application or in a docker environment. 
 
 ## Configuration
 The following properties are related to the harvesting process and extend the standard spring boot properties.
@@ -12,10 +13,43 @@ Each of them can be overwritten in the command line such as
 ```bash
 java -jar cessda.eqb.oaiharvester.jar --harvester.metadataFormat=ddi32 --server.port=9999  
 ```
+### Control the harvesting process
 
-| property | effect  |
-| ---------|---------|
-| a        |       b |
+| property                       | effect                    |
+| -------------------------------|---------------------------|
+| harvester.metadataFormat       | metadataPrefix parameter to use in requests to the oai pmh server|
+| harvester.dir|directory where harvested files will be downloaded to|
+| harvester.recipient| recipient for error messages sent as email. Requires a valid `spring.mail.host`property|
+| harvester.timeout| seconds to wait until a request is considered erroneous|
+| harvester.from.single|controls the `from` parameter when harvesting a single repository|
+| harvester.from.intitial|controls the `from` parameter when performing the initial harvesting after application startup|
+| harvester.from.incremental|controls the `from` parameter when performing incremental harvesting as defined in the cron expression `harvester.cron.incremental`|
+| harvester.from.full|controls the `from` parameter when performing full harvesting |
+| harvester.cron.full|cron expression to define the points in time when to perform a full harvesting|
+| harvester.cron.incremental|cron expression to define the points in time when to perform incremental harvesting|
+| harvester.repos|a list of repositories, with a url and setName. Prepend a `-`to indicate a new repo in the list|
+
+
+#### Define a list of repositories to be harvested
+
+```yml
+harvester:
+ repos:
+  - url: https://dbk.gesis.org/dbkoai/
+    setName: DBK
+```
+
+#### metadataPrefix
+
+Please be aware, that to harvest different metadata standards (i.e. want to use different metadataPrefix parameters), you need to run one instance per metadata prefix, as it is a global parameter. 
+Running these lines will lead to all repositories defined in the configuration to be harvested threee times, once with dc, once with ddi....
+
+```bash
+java -jar cessda.eqb.oaiharvester.jar --harvester.metadataFormat=oai_dc --server.port=9997  
+java -jar cessda.eqb.oaiharvester.jar --harvester.metadataFormat=ddi25 --server.port=9998  
+java -jar cessda.eqb.oaiharvester.jar --harvester.metadataFormat=ddi32 --server.port=9999  
+```
+
 
 ## Run as Spring Boot Application for testing
 
@@ -24,6 +58,16 @@ To execute the microservice with a defined profile run
 ```bash
 java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ukda 
 ```
+
+
+## Executing methods via JMX
+
+The following methods can be executed via JMX 
+
+* initialHarvesting: Run initial harvesting. Set from date with key harvester.cron.initial. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. Don't forget to reset the environment and update application.yml for persistent configuration
+* singleHarvesting: Run harvesting on one single repo starting from 'harvester.from.single'. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. The position corresponds to the number given in the list of repos in the configuration view, starting from 0. See environments tab and search for 'harvester.repos'
+* fullHarvesting: Run full harvesting. Set from date with key harvester.cron.full
+* bundleHarvesting: Run harvesting on several repo starting from 'harvester.from.single'. Separate more than one repo with comma. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. The position corresponds to the number given in the list of repos in the configuration view, starting from 0. See environments tab and search for 'harvester.repos'
  
 ##  Remote Configuration
 
