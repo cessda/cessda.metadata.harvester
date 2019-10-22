@@ -1,11 +1,47 @@
 # cessda.eqb:cessda.eqb.oaiharvester
 
+## About
+
+The cessda.eqb.harvester is a microservice for harvesting metadata made available by third parties using the  Open Archives Initiatives Protocol for Metadata Harvesting. It can be run standalone as a spring boot application or in a docker environment. 
+
+## Configuration
+The following properties are related to the harvesting process and extend the standard spring boot properties.
+Each of them can be overwritten in the command line such as 
+
+
+```bash
+java -jar cessda.eqb.oaiharvester.jar --harvester.metadataFormat=ddi32 --server.port=9999  
+```
+
+| property | effect  |
+| ---------|---------|
+| a        |       b |
+
+## Run as Spring Boot Application for testing
+
+To execute the microservice with a defined profile run 
+
+```bash
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ukda 
+```
+ 
+##  Remote Configuration
+
+Each instances tries to register itself with a spring boot admin server as indicated in the configuration. If selr-registration fails at startup, a warning is shown that can be safely ignored. 
+
+```log
+2019-22-10 16:59:27.218 WARN                      (register)        (ApplicationRegistrator.java:115) - Failed to register application as Application(name=harvester, managementUrl=http:
+//KOL19707.gesis.intra:8083/actuator, healthUrl=http://harvester:8083, serviceUrl=http://KOL19707.gesis.intra:8083/) at spring-boot-admin ([http://admin:1111/instances]): I/O error on POST request
+```
+
+
+
 ## Endpoints
- * [REST API](http://localhost:8080/)
- * [HTTP GET /hello-world](http://localhost:8080/hello-world)
- * [HTTP GET /actuator](http://localhost:8080/actuator)
- * [HTTP GET /actuator/health](http://localhost:8080/actuator/health)
- * [HTTP GET /actuator/logfile](http://localhost:8080/actuator/logfile)
+ * [REST API](http://localhost:8083/)
+ * [HTTP GET /hello-world](http://localhost:8083/hello-world)
+ * [HTTP GET /actuator](http://localhost:8083/actuator)
+ * [HTTP GET /actuator/health](http://localhost:8083/actuator/health)
+ * [HTTP GET /actuator/logfile](http://localhost:8083/actuator/logfile)
 
 ## Getting started as developer
 
