@@ -91,7 +91,7 @@ Each instances tries to register itself with a spring boot admin server as indic
 
 * Execute tests and run the application
 
-    ```
+    ```shell
     # Execute all tests locally with default config
     mvn clean test
     
@@ -103,7 +103,7 @@ Each instances tries to register itself with a spring boot admin server as indic
 
 * Create and run service environment with docker-compose
 
-    ```
+    ```shell
     # Package Java jar file and build docker image with required settings
     mvn -DskipTests clean package docker:build -Pdocker-compose
     
@@ -153,8 +153,8 @@ Each instances tries to register itself with a spring boot admin server as indic
         image: docker-private.gesis.intra/gesis/cessda.eqb.oaiharvester:0.0.1-SNAPSHOT
         ports:
          - 8080:8080
-    #    volumes:
-    #     - ./application.properties:/cessda.eqb.oaiharvester/application.properties
+        volumes:
+         - ./application.properties:/cessda.eqb.oaiharvester/application.properties
     ```
 
 * Browse to http://localhost:8080
