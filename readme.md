@@ -91,18 +91,18 @@ Each instances tries to register itself with a spring boot admin server as indic
 
 * Execute tests and run the application
 
-```shell
+<code>
     # Execute all tests locally with default config
     mvn clean test
     # Run the app locally with default config and pre-populated database
     mvn clean spring-boot:run
     # Browse to http://localhost:8080 
     # Stop the app with Ctrl+C
-```
+</code>
 
 * Create and run service environment with docker-compose
 
-```shell
+<code>
     # Package Java jar file and build docker image with required settings
     mvn -DskipTests clean package docker:build -Pdocker-compose
     # Create and start the environment in daemon mode (-d)
@@ -125,7 +125,7 @@ Each instances tries to register itself with a spring boot admin server as indic
     # Shutdown the environment
     # All containers and the local network are stopped and deleted
     docker-compose -f target/docker/generated/docker-compose.yml down
-```
+</code>
 
 ## Getting started as user
 
