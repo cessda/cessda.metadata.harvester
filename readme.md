@@ -71,7 +71,7 @@ The following methods can be executed via JMX
  
 ##  Remote Configuration
 
-Each instances tries to register itself with a spring boot admin server as indicated in the configuration. If selr-registration fails at startup, a warning is shown that can be safely ignored. 
+Each instances tries to register itself with a spring boot admin server as indicated in the configuration. If self-registration fails at startup, a warning is shown that can be safely ignored. 
 
 ```log
 2019-22-10 16:59:27.218 WARN                      (register)        (ApplicationRegistrator.java:115) - Failed to register application as Application(name=harvester, managementUrl=http:
@@ -91,7 +91,7 @@ Each instances tries to register itself with a spring boot admin server as indic
 
 * Execute tests and run the application
 
-    ```bash    
+    ```
     # Execute all tests locally with default config
     mvn clean test
     
@@ -103,7 +103,7 @@ Each instances tries to register itself with a spring boot admin server as indic
 
 * Create and run service environment with docker-compose
 
-    ```bash
+    ```
     # Package Java jar file and build docker image with required settings
     mvn -DskipTests clean package docker:build -Pdocker-compose
     
