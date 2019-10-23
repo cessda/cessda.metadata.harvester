@@ -5,6 +5,17 @@
 The cessda.eqb.harvester is a microservice for harvesting metadata made available by third parties using the  Open Archives Initiatives Protocol for Metadata Harvesting. Please refer to https://www.openarchives.org/OAI/openarchivesprotocol.html for details. 
 It can be run standalone as a spring boot application or in a docker environment. 
 
+
+
+
+## Run as Spring Boot Application
+
+To execute the microservice with a defined profile run the service with the `spring.profiles.active` property. The following will run the app with the properties from the [application-ukda.yml](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/src/master/src/main/resources/application-ukda.yml) file 
+
+```bash
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ukda 
+```
+
 ## Configuration
 The following properties are related to the harvesting process and extend the standard spring boot properties.
 Each of them can be overwritten in the command line such as 
@@ -50,14 +61,6 @@ java -jar cessda.eqb.oaiharvester.jar --harvester.metadataFormat=ddi25 --server.
 java -jar cessda.eqb.oaiharvester.jar --harvester.metadataFormat=ddi32 --server.port=9999  
 ```
 
-
-## Run as Spring Boot Application for testing
-
-To execute the microservice with a defined profile run 
-
-```bash
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ukda 
-```
 
 
 ## Executing methods via JMX
