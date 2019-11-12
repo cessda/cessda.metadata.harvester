@@ -6,8 +6,8 @@ logging:
   level:
     org:
       springframework: '@logging.level.org.springframework@'
+    de.codecentric.boot.admin: DEBUG
     springfox.documentation.spring.web.readers.operation: WARN
-    de.codecentric.boot.admin.client.registration: WARN
 management:
   endpoints:
     web:
@@ -44,15 +44,13 @@ spring:
     host: smtprelay.gesis.intra
   boot:
     admin:
-      url: "http://docker:1111"
       client:
-        url: "http://docker:1111" 
+        url: "http://admin:1111" 
         instance:
           name: harvester
+          health-url: "http://harvester:@server.port@"
         username: ${SPRING_BOOT_ADMIN_USER_NAME:admin}
         password: ${SPRING_BOOT_ADMIN_USER_PASSWORD:admin}
-      routes:
-        endpoints: env,metrics,log,trace,dump,jolokia,info,configprops,trace,logfile,refresh,flyway,liquibase,heapdump,hystrix.stream,hystrix
       auto-deregistration: true
       auto-registration: true
       period: 5000
@@ -71,5 +69,8 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: https://dbk.gesis.org/dbkoai/
-    setName: DBK
+  - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
+    setName: 4bd6eef6-99df-40e6-9b11-5b8f64e5cb23
+  - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
+    setName: 30ea0200-7121-4f01-8d21-a931a182b86d
+    
