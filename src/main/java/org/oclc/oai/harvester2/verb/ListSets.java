@@ -62,6 +62,8 @@ public class ListSets extends HarvesterVerb {
         } else if (SCHEMA_LOCATION_V1_1_LIST_SETS.equals(getSchemaLocation())) {
             return getSingleString("/oai11_ListSets:ListSets/oai11_ListSets:resumptionToken");
         } else {
+            System.err.println(getSchemaLocation()+"-");
+            System.err.println(this.toString());
             throw new NoSuchFieldException(getSchemaLocation());
         }
     }
