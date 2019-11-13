@@ -29,6 +29,7 @@ import java.util.Properties;
 import java.util.TimeZone;
 
 import javax.annotation.PreDestroy;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -75,7 +76,7 @@ import jodd.mail.SmtpServer;
 @ManagedResource
 public class Server extends SpringBootServletInitializer {
 
-	final static Logger log = LoggerFactory.getLogger(Server.class.getName());
+	private static final Logger log = LoggerFactory.getLogger(Server.class);
 
 	static boolean fullIsRunning = false;
 
@@ -85,10 +86,10 @@ public class Server extends SpringBootServletInitializer {
 	@ManagedOperation(description = "Run harvesting on several repo starting from 'harvester.from.single'. Separate more than one repo with comma. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. The position corresponds to the number given in the list of repos in the configuration view, starting from 0. See environments tab and search for 'harvester.repos'")
 	public String bundleHarvesting(String commaSeparatedIntegerPositionInRepoList) {
 
-		String res = "";
-		int[] numbers = Arrays.asList(commaSeparatedIntegerPositionInRepoList.split(",")).stream().map(String::trim).mapToInt(Integer::parseInt).toArray();
+		StringBuilder res = new StringBuilder();
+		int[] numbers = Arrays.stream(commaSeparatedIntegerPositionInRepoList.split(",")).map(String::trim).mapToInt(Integer::parseInt).toArray();
 		for (int i : numbers) {
-			res += "Repo " + i + " : " + singleHarvesting(i) + "                           \n";
+			res.append("Repo ").append(i).append(" : ").append(singleHarvesting(i)).append("                           \n");
 		}
 		return res + "    Bundle harvesting finished from " + harvesterConfiguration.getFrom().getSingle();
 	}
@@ -101,9 +102,9 @@ public class Server extends SpringBootServletInitializer {
 			return "Not started. An incremental harvesting progress is already running";
 		}
 		incrementalIsRunning = true;
-		hlog.info("Single harvesting starting from " + harvesterConfiguration.getFrom().getSingle());
+		hlog.info("Single harvesting starting from {}", harvesterConfiguration.getFrom().getSingle());
 		runSingleHarvest(harvesterConfiguration.getFrom().getSingle(), positionInRepoList);
-		hlog.info("Single harvesting finished from " + harvesterConfiguration.getFrom().getSingle());
+		hlog.info("Single harvesting finished from {}", harvesterConfiguration.getFrom().getSingle());
 
 		incrementalIsRunning = false;
 		return "Single harvesting for " + positionInRepoList + "th repository started. See log section for details";
@@ -116,7 +117,7 @@ public class Server extends SpringBootServletInitializer {
 	 */
 	@Async
 	@ManagedOperation(description = "Run initial harvesting. Set from date with key harvester.cron.initial. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. Don't forget to reset the environment and update application.yml for persistent configuration")
-	@Scheduled(initialDelay = 10000L, fixedDelay = 315360000000l)
+	@Scheduled(initialDelay = 10000L, fixedDelay = 315360000000L)
 	public String initialHarvesting() {
 
 		log.info(harvesterConfiguration.getMetadataFormat());
@@ -134,13 +135,13 @@ public class Server extends SpringBootServletInitializer {
 			return "Not started. An incremental harvesting progress is already running";
 		}
 		incrementalIsRunning = true;
-		hlog.info("Full harvest schedule: " + harvesterConfiguration.getCron().getFull());
-		hlog.info("Incremental harvest schedule: " + harvesterConfiguration.getCron().getIncremental());
+		hlog.info("Full harvest schedule: {}", harvesterConfiguration.getCron().getFull());
+		hlog.info("Incremental harvest schedule: {}", harvesterConfiguration.getCron().getIncremental());
 
-		hlog.info("Initial harvesting starting from " + harvesterConfiguration.getFrom().getInitial());
-		hlog.info("Incremental harvesting will start with cron schedule " + harvesterConfiguration.getCron().getIncremental() + " from " + harvesterConfiguration.getFrom().getIncremental());
+		hlog.info("Initial harvesting starting from {}", harvesterConfiguration.getFrom().getInitial());
+		hlog.info("Incremental harvesting will start with cron schedule {} from {}", harvesterConfiguration.getCron().getIncremental(), harvesterConfiguration.getFrom().getIncremental());
 		runHarvest(harvesterConfiguration.getFrom().getInitial());
-		hlog.info("Initial harvesting finished from " + harvesterConfiguration.getFrom().getInitial());
+		hlog.info("Initial harvesting finished from {}", harvesterConfiguration.getFrom().getInitial());
 
 		incrementalIsRunning = false;
 		return "Initial harvesting finished from " + harvesterConfiguration.getFrom().getInitial();
@@ -181,7 +182,7 @@ public class Server extends SpringBootServletInitializer {
 		cal.setTime(new Date());
 		cal.add(Calendar.DAY_OF_MONTH, -2);
 		String newIncFrom = rsmFlDtFrmt.format(cal.getTime());
-		String msg = "";
+		String msg;
 		if (!fullIsRunning) {
 			if (!incrementalIsRunning) {
 				incrementalIsRunning = true;
@@ -212,7 +213,7 @@ public class Server extends SpringBootServletInitializer {
 	@Async
 	public void runSingleHarvest(String fromDate, Integer position) {
 
-		hlog.info("Harvesting started from " + fromDate + " for repo " + position);
+		hlog.info("Harvesting started from {} for repo {}", fromDate, position);
 		try {
 			encoding();
 			type = "dc";
@@ -220,30 +221,28 @@ public class Server extends SpringBootServletInitializer {
 			to = rsmFlDtFrmt.format(new Date());
 
 			String baseUrl = harvesterConfiguration.getRepoBaseUrls().get(position);
-			hlog.info("Single harvesting " + baseUrl + " from " + fromDate);
+			hlog.info("Single harvesting {} from {}", baseUrl, fromDate);
 			if (baseUrl.trim() != "") {
-				if (baseUrl.indexOf("#") != -1) {
-					baseUrl = baseUrl.substring(0, baseUrl.indexOf("#"));
+				if (baseUrl.contains("#")) {
+					baseUrl = baseUrl.substring(0, baseUrl.indexOf('#'));
 				}
-				log.trace(baseUrl + " " + fromDate);
+				log.trace("{} {}", baseUrl, fromDate);
 				for (String set : getSpecs(baseUrl)) {
-					hlog.info("Start to get " + type + " records for " + baseUrl + " / " + set + " from " + fromDate);
+					hlog.info("Start to get {} records for {} / {} from {}", type, baseUrl, set, fromDate);
 					fetchDCRecords(oaiBase(baseUrl), set, fromDate);
 				}
 			}
 
 			File[] directories = new File(harvesterConfiguration.getDir()).listFiles(File::isDirectory);
 		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-			log.error(e.getMessage());
-
+			log.error(e.getMessage(), e);
 			incrementalIsRunning = false;
 		}
 	}
 
 	public void runHarvest(String fromDate) {
 
-		hlog.info("Harvesting started from " + fromDate);
+		hlog.info("Harvesting started from {}", fromDate);
 		try {
 			encoding();
 			type = "dc";
@@ -252,12 +251,12 @@ public class Server extends SpringBootServletInitializer {
 
 			for (String baseUrl : harvesterConfiguration.getRepoBaseUrls()) {
 				if (baseUrl.trim() != "") {
-					if (baseUrl.indexOf("#") != -1) {
-						baseUrl = baseUrl.substring(0, baseUrl.indexOf("#"));
+					if (baseUrl.contains("#")) {
+						baseUrl = baseUrl.substring(0, baseUrl.indexOf('#'));
 					}
-					log.trace(baseUrl + " " + fromDate);
+					log.trace("{} {}", baseUrl, fromDate);
 					for (String set : getSpecs(baseUrl)) {
-						hlog.info("Start to get " + type + " records for " + baseUrl + " / " + set + " from " + fromDate);
+                        hlog.info("Start to get {} records for {} / {} from {}", type, baseUrl, set, fromDate);
 						fetchDCRecords(oaiBase(baseUrl), set, fromDate);
 					}
 				}
@@ -265,8 +264,7 @@ public class Server extends SpringBootServletInitializer {
 
 			File[] directories = new File(harvesterConfiguration.getDir()).listFiles(File::isDirectory);
 		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			e.printStackTrace();
-			log.error(e.getMessage());
+			log.error(e.getMessage(), e);
 		}
 	}
 
@@ -279,12 +277,12 @@ public class Server extends SpringBootServletInitializer {
 			f = new File(harvesterConfiguration.getDir());
 		}
 		try {
-			ArrayList<String> currentlyRetrievedSet = null;
+			ArrayList<String> currentlyRetrievedSet;
 			do {
-				log.info("Fetching " + type + " records for repo " + repoBase + " and  pmh set " + setspec + ". be patient, this can take hours.");
+				log.info("Fetching {} records for repo {} and pmh set {}. Be patient, this can take hours.", type, repoBase, setspec);
 				currentlyRetrievedSet = null;
 				do {
-					currentlyRetrievedSet = getIdentifiersForSet(repoBase, setspec, largeHarvestInteruptedToken, new ArrayList<String>(), Optional.of(mdFormat), fromDate);
+					currentlyRetrievedSet = getIdentifiersForSet(repoBase, setspec, largeHarvestInteruptedToken, new ArrayList<>(), Optional.of(mdFormat), fromDate);
 					writeToLocalFileSystem(currentlyRetrievedSet, repoBase, setspec, f.getAbsolutePath());
 					if (currentlyRetrievedSet.size() == 0) {
 						break;
@@ -293,7 +291,7 @@ public class Server extends SpringBootServletInitializer {
 				} while (largeHarvestInteruptedToken != null && itemsInCurrentSet != 50);
 			} while (currentlyRetrievedSet.size() != 0 && currentlyRetrievedSet.size() % 50 == 0 && itemsInCurrentSet != 50 && itemsInCurrentSet % currentlyRetrievedSet.size() != 0);
 		} catch (Exception e) {
-			e.printStackTrace();
+		    log.error(e.getMessage(), e);
 		}
 	}
 
@@ -308,11 +306,11 @@ public class Server extends SpringBootServletInitializer {
 		return application.sources(Server.class);
 	}
 
-	static final Logger hlog = LoggerFactory.getLogger(HarvesterReport.class);
+	private static final Logger hlog = LoggerFactory.getLogger(Server.class);
 
 	static String largeHarvestInteruptedToken = null;
 
-	static Long itemsInCurrentSet = 0l;
+	static Long itemsInCurrentSet = 0L;
 
 	protected static DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
 
@@ -335,8 +333,8 @@ public class Server extends SpringBootServletInitializer {
 	String mailhost = "smtp.gmail.com";
 
 	protected ArrayList<String> getIdentifiersForSet(String url, String set, String resumptionToken, ArrayList<String> list, Optional<String> overwrite, String fromDate) {
-
-		log.info("Harvesting started for " + oaiBase(url) + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix=" + mdFormat + "&from=" + fromDate + "&resumptionToken=" + resumptionToken, "");
+        String oaiBaseUrl = oaiBase(url);
+		log.info("Harvesting started for {}?verb=ListRecords&set={}&metadataPrefix={}&from={}&resumptionToken={}", oaiBaseUrl, set, mdFormat, fromDate, resumptionToken);
 		ArrayList<String> records = list;
 		log.debug("URL: " + url + " list size : " + list.size() + " restoken " + resumptionToken);
 		log.trace("limit : " + largeHarvestLimit + " recordssize: " + records.size());
@@ -347,6 +345,7 @@ public class Server extends SpringBootServletInitializer {
 		}
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		try {
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 			log.trace("recurse:\turl " + url + " set " + set + " token " + resumptionToken + "  ");
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			ListIdentifiers li;
@@ -360,7 +359,7 @@ public class Server extends SpringBootServletInitializer {
 				}
 				log.debug("From " + fromDate + "  until " + to + "  " + oaiBase(url) + "  " + set + "  " + mdFormat);
 				li = new ListIdentifiers(oaiBase(url), fromDate, to, set, overwrite.orElse(mdFormat), harvesterConfiguration.getTimeout());
-				log.debug(oaiBase(url));
+				log.debug(oaiBaseUrl);
 			}
 			log.trace(li.getRequestURL());
 			InputSource is = new InputSource(new StringReader(li.toString()));
@@ -384,7 +383,7 @@ public class Server extends SpringBootServletInitializer {
 			if (resumptionTokenReq.getLength() > 0 && resumptionTokenReq.item(0).getTextContent() != "") {
 				String rTok = resumptionTokenReq.item(0).getTextContent();
 				log.info("\tSet\t" + set + "\tToken\t" + rTok + "\tSize \t " + records.size() + "\tURL\t" + url);
-				records = getIdentifiersForSet(url, set, rTok, records, null, fromDate);
+				records = getIdentifiersForSet(url, set, rTok, records, Optional.empty(), fromDate);
 				// need to interrupt recursion?
 
 			} else {
@@ -405,10 +404,10 @@ public class Server extends SpringBootServletInitializer {
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
-			String m = "\n";
+			StringBuilder m = new StringBuilder("\n");
 			for (StackTraceElement ste : e.getStackTrace()) {
 				if (ste.getFileName() != null) {
-					m += ste.getFileName() + "  " + ste.getMethodName() + "   " + ste.getLineNumber() + "\n";
+					m.append(ste.getFileName()).append("  ").append(ste.getMethodName()).append("   ").append(ste.getLineNumber()).append("\n");
 				}
 			}
 			this.notifyOnError(
@@ -534,7 +533,7 @@ public class Server extends SpringBootServletInitializer {
 		if (u.endsWith("/")) {
 			return u;
 		}
-		if (u.indexOf("?") != -1) {
+		if (u.contains("?")) {
 			u = u.substring(0, u.indexOf("?"));
 		}
 		return u;
@@ -542,7 +541,7 @@ public class Server extends SpringBootServletInitializer {
 
 	protected static String oaiSet(String u) {
 
-		if (u.indexOf("set=") != -1) {
+		if (u.contains("set=")) {
 			u = u.substring(u.indexOf("set="));
 			if (u.contains("&")) {
 				u = u.substring(0, u.indexOf("&"));
@@ -559,7 +558,7 @@ public class Server extends SpringBootServletInitializer {
 				return new URI(prefix.substring(1)).toString();
 			}
 			log.debug(oaiUrl);
-			return prefix + new URI(oaiUrl).getHost().toString().replace(".", "_").replace(":", "-").toLowerCase();
+			return prefix + new URI(oaiUrl).getHost().replace(".", "_").replace(":", "-").toLowerCase();
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 			return "";
@@ -580,7 +579,7 @@ public class Server extends SpringBootServletInitializer {
 	@Deprecated
 	List<String> getRepoBaseUrls(String file) {
 
-		ArrayList<String> reposToUnfold = new ArrayList<String>();
+		ArrayList<String> reposToUnfold = new ArrayList<>();
 		File fil = new File(file);
 		if (!fil.exists()) {
 			reposToUnfold.add("http://www.da-ra.de/oaip/oai?verb=ListIdentifiers&metadataPrefix=oai_dc&set=16");
@@ -595,7 +594,7 @@ public class Server extends SpringBootServletInitializer {
 					if (line.contains("&set=")) {
 						reposToUnfold.add(line);
 					} else {
-						if (line.indexOf("?") != -1) {
+						if (line.contains("?")) {
 							reposToUnfold.add(line.substring(0, line.indexOf("?")));
 						} else {
 							reposToUnfold.add(line);
@@ -617,18 +616,20 @@ public class Server extends SpringBootServletInitializer {
 
 	List<String> getSpecs(String url) {
 
-		ArrayList<String> unfoldedSets = new ArrayList<String>();
+		ArrayList<String> unfoldedSets = new ArrayList<>();
 		// skip if set is explicitly referenced
 		if (url.contains("set=") && unfoldedSets.add(url.substring(url.indexOf("set=") + 4)) || url.length() == 0) {
 			return unfoldedSets;
 		}
 		try {
-			ListSets ls = null;
+			ListSets ls;
 			try {
+				StringBuilder urlBuilder = new StringBuilder(url);
 				do {
-					log.warn("" + url);
-					ls = new ListSets(url.trim(), harvesterConfiguration.getTimeout());
+					log.warn("" + urlBuilder);
+					ls = new ListSets(urlBuilder.toString().trim(), harvesterConfiguration.getTimeout());
 					DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+					factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 					DocumentBuilder builder = factory.newDocumentBuilder();
 					InputSource is = new InputSource(new StringReader(ls.toString()));
 
@@ -647,10 +648,11 @@ public class Server extends SpringBootServletInitializer {
 					}
 					if (ls.getResumptionToken() != "") {
 						log.info(ls.getResumptionToken());
-						url = url + "?verb=ListSets&resumptionToken=" + ls.getResumptionToken();
-						log.info("" + url);
+						urlBuilder.append("?verb=ListSets&resumptionToken=").append(ls.getResumptionToken());
+						log.info("" + urlBuilder);
 					}
-				} while (unfoldedSets.size() % 50 == 0 && ls.getResumptionToken() != "" && url.trim() != "" && url.trim() != null);
+				} while (unfoldedSets.size() % 50 == 0 && ls.getResumptionToken() != "" && urlBuilder.toString().trim() != "" && urlBuilder.toString().trim() != null);
+				url = urlBuilder.toString();
 				log.info("");
 			} catch (NoSuchFieldException e) {
 				e.printStackTrace();
@@ -659,24 +661,14 @@ public class Server extends SpringBootServletInitializer {
 				log.error("Request to oai endpoint timed out " + harvesterConfiguration.getTimeout());
 			}
 
-		} catch (IOException e) {
-			e.printStackTrace();
-			log.error("");
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-			log.error("");
 		} catch (SAXParseException e) {
-			log.error("");
+			log.error(e.getMessage());
 			unfoldedSets.add(url);
 			return unfoldedSets;
-		} catch (SAXException e) {
-			e.printStackTrace();
-			log.error("");
-		} catch (TransformerException e) {
-			e.printStackTrace();
-			log.error("");
+		} catch (IOException | TransformerException | ParserConfigurationException | SAXException e) {
+			log.error(e.getMessage(), e);
 		}
-		log.info("No. of sets: " + unfoldedSets.size());
+		log.info("No. of sets: {}", unfoldedSets.size());
 		return unfoldedSets;
 	}
 
@@ -694,7 +686,7 @@ public class Server extends SpringBootServletInitializer {
 		log.trace(Math.round(used / 1e6) + " MB used before Cycle");
 	}
 
-	protected void encoding() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+	protected void encoding() throws NoSuchFieldException, IllegalAccessException {
 
 		System.setProperty("file.encoding", "UTF-8");
 		Field charset = Charset.class.getDeclaredField("defaultCharset");

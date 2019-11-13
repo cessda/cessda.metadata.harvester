@@ -10,12 +10,12 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="cessda.eqb.oaiharvester" target="1.8" />
+      <module name="cessda.eqb.oaiharvester" target="11" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="cessda.eqb.oaiharvester" options="-parameters" />
+      <module name="cessda.eqb.oaiharvester" options="-parameters -Xlint:all" />
     </option>
   </component>
 </project>

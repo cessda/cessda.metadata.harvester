@@ -14,8 +14,9 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<gesis.repository.visibility>private</gesis.repository.visibility><!-- valid values: (private|public) -->
 		<java.version>1.8</java.version>
+		<gesis.repository.visibility>public</gesis.repository.visibility><!-- valid values: (private|public) -->
+		<image_tag>cessda/${project.artifactId}:${project.version}</image_tag>
 		<code-generation-comment>This file is generated, all changes will be overriden</code-generation-comment>
 		<logging.file>target/application.log</logging.file>
 		<logging.level.org.springframework>INFO</logging.level.org.springframework>
@@ -80,6 +81,11 @@
 			<version>0.2.1</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>xalan</groupId>
+			<artifactId>xalan</artifactId>
+			<version>2.7.2</version>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -94,6 +100,9 @@
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
+					<compilerArgs>
+						<arg>-Xlint:all</arg>
+					</compilerArgs>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -151,7 +160,7 @@
 				<configuration>
 					<images>
 						<image>
-							<name>${docker.registry.uri}/gesis/${project.artifactId}:${project.version}</name>
+							<name>${image_tag}</name>
 							<build>
 								<dockerFile>${project.basedir}/target/docker/generated/application.Dockerfile</dockerFile>
 								<assembly>

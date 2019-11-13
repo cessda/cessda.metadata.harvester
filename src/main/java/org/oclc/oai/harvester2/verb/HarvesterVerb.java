@@ -1,4 +1,4 @@
-/**
+/*
  Copyright 2006 OCLC, Online Computer Library Center
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import com.sun.org.apache.xpath.internal.XPathAPI;
+import org.apache.xpath.XPathAPI;
 
 /**
  * HarvesterVerb is the parent class for each of the OAI verbs.
@@ -60,6 +60,8 @@ import com.sun.org.apache.xpath.internal.XPathAPI;
 public abstract class HarvesterVerb {
 
 	private static Logger log = LoggerFactory.getLogger(HarvesterVerb.class);
+
+	private static final String XMLNS_NAMESPACE_URI = "http://www.w3.org/2000/xmlns/";
 
 	/* Primary OAI namespaces */
 	public static final String SCHEMA_LOCATION_V2_0 = "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd";
@@ -82,7 +84,7 @@ public abstract class HarvesterVerb {
 
 	private String requestURL = null;
 
-	private static HashMap builderMap = new HashMap();
+	private static HashMap<Thread, DocumentBuilder> builderMap = new HashMap<Thread, DocumentBuilder>();
 
 	private static Element namespaceElement = null;
 
@@ -103,26 +105,26 @@ public abstract class HarvesterVerb {
 			Document namespaceHolder = impl.createDocument("http://www.oclc.org/research/software/oai/harvester",
 					"harvester:namespaceHolder", null);
 			namespaceElement = namespaceHolder.getDocumentElement();
-			namespaceElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:harvester",
+			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:harvester",
 					"http://www.oclc.org/research/software/oai/harvester");
-			namespaceElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xsi",
+			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:xsi",
 					"http://www.w3.org/2001/XMLSchema-instance");
-			namespaceElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:oai20",
+			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai20",
 					"http://www.openarchives.org/OAI/2.0/");
-			namespaceElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:oai11_GetRecord",
+			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai11_GetRecord",
 					"http://www.openarchives.org/OAI/1.1/OAI_GetRecord");
-			namespaceElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:oai11_Identify",
+			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai11_Identify",
 					"http://www.openarchives.org/OAI/1.1/OAI_Identify");
-			namespaceElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:oai11_ListIdentifiers",
+			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai11_ListIdentifiers",
 					"http://www.openarchives.org/OAI/1.1/OAI_ListIdentifiers");
-			namespaceElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:oai11_ListMetadataFormats",
+			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai11_ListMetadataFormats",
 					"http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats");
-			namespaceElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:oai11_ListRecords",
+			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai11_ListRecords",
 					"http://www.openarchives.org/OAI/1.1/OAI_ListRecords");
-			namespaceElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:oai11_ListSets",
+			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai11_ListSets",
 					"http://www.openarchives.org/OAI/1.1/OAI_ListSets");
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (ParserConfigurationException e) {
+			log.error("Parser Error:", e);
 		}
 	}
 
@@ -212,26 +214,26 @@ public abstract class HarvesterVerb {
 			throws IOException, ParserConfigurationException, SAXException, TransformerException {
 
 		this.requestURL = requestURL;
-		log.trace("requestURL=" + requestURL);
-		InputStream in = null;
+		log.trace("requestURL={}", requestURL);
+		InputStream in;
 		URL url = new URL(requestURL);
-		HttpURLConnection con = null;
-		int responseCode = 0;
+		HttpURLConnection con;
+		int responseCode;
 		do {
 			con = (HttpURLConnection) url.openConnection();
 			con.setRequestProperty("User-Agent", "OAIHarvester/2.0");
 			con.setRequestProperty("Accept-Encoding", "compress, gzip, identify");
 			//TK  added default timeout for dataverses taking too long to respond / stall
 
-			log.trace("Timeout : "+timeout+" seconds");
+			log.trace("Timeout : {} seconds", timeout);
             con.setConnectTimeout(timeout*1000);
             con.setReadTimeout(timeout*1000);
 			try {
 				responseCode = con.getResponseCode();
-				log.trace("responseCode=" + responseCode);
+				log.trace("responseCode={}", responseCode);
 				if(responseCode==302){
 					con.getHeaderFields().values().forEach(v -> log.info(v.toString()));
-					con.getHeaderFields().get("Location").forEach(v -> log.info(v.toString()));
+					con.getHeaderFields().get("Location").forEach(v -> log.info(v));
 					harvest(con.getHeaderFields().get("Location").get(0), timeout);
 					return;
 					
@@ -252,18 +254,19 @@ public abstract class HarvesterVerb {
 				if (retrySeconds == 0) { // Apparently, it's a bad URL
 					throw new FileNotFoundException("Bad URL?");
 				}
-				log.error("Server response: Retry-After=" + retrySeconds);
+				log.error("Server response: Retry-After={}", retrySeconds);
 				if (retrySeconds > 0) {
 					try {
 						Thread.sleep(retrySeconds * 1000);
 					} catch (InterruptedException ex) {
-						ex.printStackTrace();
+						log.warn("Interrupted!", ex);
+						Thread.currentThread().interrupt();
 					}
 				}
 			}
 		} while (responseCode == HttpURLConnection.HTTP_UNAVAILABLE);
 		String contentEncoding = con.getHeaderField("Content-Encoding");
-		log.trace("contentEncoding=" + contentEncoding);
+		log.trace("contentEncoding={}", contentEncoding);
 		if ("compress".equals(contentEncoding)) {
 			ZipInputStream zis = new ZipInputStream(con.getInputStream());
 			zis.getNextEntry();
@@ -279,7 +282,7 @@ public abstract class HarvesterVerb {
 		InputSource data = new InputSource(in);
 
 		Thread t = Thread.currentThread();
-		DocumentBuilder builder = (DocumentBuilder) builderMap.get(t);
+		DocumentBuilder builder = builderMap.get(t);
 		if (builder == null) {
 			builder = factory.newDocumentBuilder();
 			builderMap.put(t, builder);
@@ -287,7 +290,7 @@ public abstract class HarvesterVerb {
 		doc = builder.parse(data);
 		con.disconnect();
 		StringTokenizer tokenizer = new StringTokenizer(getSingleString("/*/@xsi:schemaLocation"), " ");
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		while (tokenizer.hasMoreTokens()) {
 			if (sb.length() > 0)
 				sb.append(" ");

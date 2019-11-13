@@ -1,5 +1,4 @@
-
-/**
+/*
  Copyright 2006 OCLC, Online Computer Library Center
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,7 +16,9 @@
 package org.oclc.oai.harvester2.verb;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -77,9 +78,9 @@ public class ListRecords extends HarvesterVerb {
     public String getResumptionToken()
     throws TransformerException, NoSuchFieldException {
         String schemaLocation = getSchemaLocation();
-        if (schemaLocation.indexOf(SCHEMA_LOCATION_V2_0) != -1) {
+        if (schemaLocation.contains(SCHEMA_LOCATION_V2_0)) {
             return getSingleString("/oai20:OAI-PMH/oai20:ListRecords/oai20:resumptionToken");
-        } else if (schemaLocation.indexOf(SCHEMA_LOCATION_V1_1_LIST_RECORDS) != -1) {
+        } else if (schemaLocation.contains(SCHEMA_LOCATION_V1_1_LIST_RECORDS)) {
             return getSingleString("/oai11_ListRecords:ListRecords/oai11_ListRecords:resumptionToken");
         } else {
             throw new NoSuchFieldException(schemaLocation);
@@ -94,7 +95,7 @@ public class ListRecords extends HarvesterVerb {
     private static String getRequestURL(String baseURL, String from,
             String until, String set,
             String metadataPrefix) {
-        StringBuffer requestURL =  new StringBuffer(baseURL);
+        StringBuilder requestURL =  new StringBuilder(baseURL);
         requestURL.append("?verb=ListRecords");
         if (from != null) requestURL.append("&from=").append(from);
         if (until != null) requestURL.append("&until=").append(until);
@@ -109,11 +110,7 @@ public class ListRecords extends HarvesterVerb {
      * @param resumptionToken
      * @return
      */
-    private static String getRequestURL(String baseURL,
-            String resumptionToken) {
-        StringBuffer requestURL =  new StringBuffer(baseURL);
-        requestURL.append("?verb=ListRecords");
-        requestURL.append("&resumptionToken=").append(URLEncoder.encode(resumptionToken));
-        return requestURL.toString();
+    private static String getRequestURL(String baseURL, String resumptionToken) {
+        return baseURL + "?verb=ListRecords" + "&resumptionToken=" + URLEncoder.encode(resumptionToken, StandardCharsets.UTF_8);
     }
 }
