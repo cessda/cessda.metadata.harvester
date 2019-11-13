@@ -55,7 +55,7 @@ spring:
       auto-registration: true
       period: 5000
 harvester:
-  metadataFormat: ddi_c
+  metadataFormat: oai_ddi25
   dialectDefinitionName: gesisCMM-ddi32
   dir: '@documents@'
   recipient: thomas.kraemer@gesis.org
