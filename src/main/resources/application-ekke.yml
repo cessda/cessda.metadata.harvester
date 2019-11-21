@@ -71,4 +71,4 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: http://nesstar-server.sodanet.gr/oai-pmh/
+  - url: http://harvester.sodanet.gr:8080/oai/request

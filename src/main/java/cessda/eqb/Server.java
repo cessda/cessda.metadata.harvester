@@ -467,7 +467,7 @@ public class Server extends SpringBootServletInitializer {
 		}
 		log.info(dest.toFile().getAbsolutePath() + "  " + dest.toFile().exists() + "");
 
-		records.stream().forEach(currentRecord -> {
+		records.stream().map(s -> s.trim()).forEach(currentRecord -> {
 			String fname = "";
 			try {
 

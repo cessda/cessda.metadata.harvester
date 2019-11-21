@@ -59,7 +59,7 @@ import com.sun.org.apache.xpath.internal.XPathAPI;
  */
 public abstract class HarvesterVerb {
 
-	private static Logger log = LoggerFactory.getLogger(HarvesterVerb.class);
+	protected static Logger log = LoggerFactory.getLogger(HarvesterVerb.class);
 
 	/* Primary OAI namespaces */
 	public static final String SCHEMA_LOCATION_V2_0 = "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd";
@@ -194,6 +194,7 @@ public abstract class HarvesterVerb {
 	
 	public HarvesterVerb(String requestURL, Integer timeout)
 			throws IOException, ParserConfigurationException, SAXException, TransformerException {
+		log.info(requestURL);
 		harvest(requestURL, timeout);
 	}
 			
