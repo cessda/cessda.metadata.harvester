@@ -23,6 +23,6 @@ RUN chown -R user:user ./
 USER user:user
 
 HEALTHCHECK CMD exit $(echo $(echo $(wget http://localhost:@server.port@@server.servlet.context-path@/actuator/health -q -O -) | grep -cv UP))
-ENV JAVA_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1"
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=50.0"
 ENTRYPOINT ["/bin/sh", "./entrypoint.sh"]
 EXPOSE @server.port@

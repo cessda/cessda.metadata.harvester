@@ -1,5 +1,4 @@
-
-/**
+/*
  Copyright 2006 OCLC, Online Computer Library Center
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,7 +16,9 @@
 package org.oclc.oai.harvester2.verb;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -35,7 +36,7 @@ import org.xml.sax.SAXException;
  */
 public class ListIdentifiers extends HarvesterVerb {
 
-	public static Logger log = LoggerFactory.getLogger(ListIdentifiers.class);
+	private static final Logger log = LoggerFactory.getLogger(ListIdentifiers.class);
 
 	/**
 	 * Mock object constructor (for unit testing purposes)
@@ -101,17 +102,20 @@ public class ListIdentifiers extends HarvesterVerb {
 	 */
 	private static String getRequestURL(String baseURL, String from, String until, String set, String metadataPrefix) {
 
-		StringBuffer requestURL = new StringBuffer(baseURL);
-		requestURL.append("?verb=ListIdentifiers");
+		StringBuilder requestURLBuilder = new StringBuilder(baseURL);
+		requestURLBuilder.append("?verb=ListIdentifiers");
 		if (from != null)
-			requestURL.append("&from=").append(from);
+			requestURLBuilder.append("&from=").append(from);
 		if (until != null)
-			requestURL.append("&until=").append(until);
+			requestURLBuilder.append("&until=").append(until);
 		if (set != null)
-			requestURL.append("&set=").append(set);
-		requestURL.append("&metadataPrefix=").append(metadataPrefix);
-		log.info(requestURL.toString());
-		return requestURL.toString();
+			requestURLBuilder.append("&set=").append(set);
+		requestURLBuilder.append("&metadataPrefix=").append(metadataPrefix);
+
+		String requestURL = requestURLBuilder.toString();
+
+		log.info(requestURL);
+		return requestURL;
 	}
 
 	/**
@@ -122,10 +126,6 @@ public class ListIdentifiers extends HarvesterVerb {
 	 * @return
 	 */
 	private static String getRequestURL(String baseURL, String resumptionToken) {
-
-		StringBuffer requestURL = new StringBuffer(baseURL);
-		requestURL.append("?verb=ListIdentifiers");
-		requestURL.append("&resumptionToken=").append(URLEncoder.encode(resumptionToken));
-		return requestURL.toString();
+		return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode(resumptionToken, StandardCharsets.UTF_8);
 	}
 }

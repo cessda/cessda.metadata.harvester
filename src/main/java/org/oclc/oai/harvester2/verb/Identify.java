@@ -1,5 +1,4 @@
-
-/**
+/*
  Copyright 2006 OCLC, Online Computer Library Center
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -17,6 +16,7 @@
 package org.oclc.oai.harvester2.verb;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import org.xml.sax.SAXException;
@@ -72,8 +72,6 @@ public class Identify extends HarvesterVerb {
      * @return the requestURL
      */
     private static String getRequestURL(String baseURL) {
-        StringBuffer requestURL =  new StringBuffer(baseURL);
-        requestURL.append("?verb=Identify");
-        return requestURL.toString();
+        return baseURL + "?verb=Identify";
     }
 }

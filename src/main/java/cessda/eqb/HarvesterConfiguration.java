@@ -47,7 +47,7 @@ public class HarvesterConfiguration {
 
 	private String metadataFormat = null;
 
-	private List<Repo> repos = new ArrayList<Repo>();
+	private List<Repo> repos = new ArrayList<>();
 
 	private Cron cron;
 
