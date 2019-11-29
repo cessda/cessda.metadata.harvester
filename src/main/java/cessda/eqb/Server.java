@@ -1,46 +1,8 @@
 package cessda.eqb;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.StringReader;
-import java.lang.reflect.Field;
-import java.net.InetAddress;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.channels.ClosedByInterruptException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.TimeZone;
-
-import javax.annotation.PreDestroy;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
+import jodd.mail.Email;
+import jodd.mail.SendMailSession;
+import jodd.mail.SmtpServer;
 import org.oclc.oai.harvester2.verb.GetRecord;
 import org.oclc.oai.harvester2.verb.ListIdentifiers;
 import org.oclc.oai.harvester2.verb.ListSets;
@@ -58,18 +20,34 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.w3c.dom.DOMException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import jodd.mail.Email;
-import jodd.mail.SendMailSession;
-import jodd.mail.SmtpServer;
+import javax.annotation.PreDestroy;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
+import java.lang.reflect.Field;
+import java.net.InetAddress;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.channels.ClosedByInterruptException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @EnableScheduling
 @SpringBootApplication
@@ -147,9 +125,74 @@ public class Server extends SpringBootServletInitializer {
 		return "Initial harvesting finished from " + harvesterConfiguration.getFrom().getInitial();
 	}
 
+	public static final String REPO_BASE_URL = "http://svko-dara-test.gesis.org:8080/oaip/oai";
+	private static final Logger hlog = LoggerFactory.getLogger(Server.class);
+	protected static DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+	protected static String fromEmail = "system.wts@gesis.org";
+	protected static int largeHarvestLimit = 50;
+	protected static String to = "";
+	protected static TimeZone tZone = TimeZone.getTimeZone("UTC");
+	protected static String mdFormat = "oai_ddi";
+	protected static String type = "dc";
+	static String largeHarvestInteruptedToken = null;
+	static Long itemsInCurrentSet = 0L;
+	protected final DateFormat oaiDtFrmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	protected final SimpleDateFormat rsmFlDtFrmt = new SimpleDateFormat("yyyy-MM-dd");
+	@Autowired
+	ApplicationContext applicationContext;
+	@Value("${spring.mail.host}")
+	String mailhost = "smtp.gmail.com";
+
+	public static void main(String[] args) {
+		SpringApplication.run(Server.class, args);
+		log.info("Harvester running. ");
+	}
+
+	protected static String oaiBase(String u) {
+
+		if (u.endsWith("/")) {
+			return u;
+		}
+		if (u.contains("?")) {
+			u = u.substring(0, u.indexOf('?'));
+		}
+		return u;
+	}
+
+	protected static String oaiSet(String u) {
+
+		if (u.contains("set=")) {
+			u = u.substring(u.indexOf("set="));
+			if (u.contains("&")) {
+				u = u.substring(0, u.indexOf('&'));
+			}
+			return u;
+		}
+		return null;
+	}
+
+	protected static String shortened(String prefix, String oaiUrl) {
+
+		try {
+			if (prefix.startsWith("!")) {
+				return new URI(prefix.substring(1)).toString();
+			}
+			log.debug(oaiUrl);
+			return prefix + new URI(oaiUrl).getHost().replace(".", "_").replace(":", "-").toLowerCase();
+		} catch (URISyntaxException e) {
+			log.error(e.getMessage(), e);
+			return "";
+		}
+	}
+
+	@Override
+	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+		return application.sources(Server.class);
+	}
+
 	/**
 	 * runs once in a year, no incremental harvesting takes place
-	 * 
+	 *
 	 * @return status
 	 */
 	@Async
@@ -160,7 +203,7 @@ public class Server extends SpringBootServletInitializer {
 		if (fullIsRunning) {
 			return "Not started. A full harvesting progress is already running";
 		}
-		hlog.info("Full harvesting started from " + harvesterConfiguration.getFrom().getFull());
+		hlog.info("Full harvesting started from {}", harvesterConfiguration.getFrom().getFull());
 		fullIsRunning = true;
 		runHarvest(harvesterConfiguration.getFrom().getFull());
 		hlog.info("Full harvesting finished");
@@ -170,7 +213,7 @@ public class Server extends SpringBootServletInitializer {
 
 	/**
 	 * runs always.
-	 * 
+	 *
 	 * @return status
 	 */
 	@Async
@@ -186,14 +229,14 @@ public class Server extends SpringBootServletInitializer {
 		if (!fullIsRunning) {
 			if (!incrementalIsRunning) {
 				incrementalIsRunning = true;
-				hlog.info("Incremental harvesting started from " + harvesterConfiguration.getFrom().getIncremental());
+				hlog.info("Incremental harvesting started from {}", harvesterConfiguration.getFrom().getIncremental());
 				runHarvest(harvesterConfiguration.getFrom().getIncremental());
 				hlog.info("Incremental harvesting finished");
 
 				msg = "Incremental harvesting finished from " + harvesterConfiguration.getFrom().getIncremental();
 
 				harvesterConfiguration.getFrom().setIncremental(newIncFrom);
-				hlog.info("Next incremental harvest will start from " + newIncFrom);
+				hlog.info("Next incremental harvest will start from {}", newIncFrom);
 			} else {
 				String o = "Incremental harvesting already running.";
 				hlog.info(o);
@@ -222,7 +265,7 @@ public class Server extends SpringBootServletInitializer {
 
 			String baseUrl = harvesterConfiguration.getRepoBaseUrls().get(position);
 			hlog.info("Single harvesting {} from {}", baseUrl, fromDate);
-			if (baseUrl.trim() != "") {
+			if (!baseUrl.trim().equals("")) {
 				if (baseUrl.contains("#")) {
 					baseUrl = baseUrl.substring(0, baseUrl.indexOf('#'));
 				}
@@ -250,13 +293,13 @@ public class Server extends SpringBootServletInitializer {
 			to = rsmFlDtFrmt.format(new Date());
 
 			for (String baseUrl : harvesterConfiguration.getRepoBaseUrls()) {
-				if (baseUrl.trim() != "") {
+				if (!baseUrl.trim().equals("")) {
 					if (baseUrl.contains("#")) {
 						baseUrl = baseUrl.substring(0, baseUrl.indexOf('#'));
 					}
 					log.trace("{} {}", baseUrl, fromDate);
 					for (String set : getSpecs(baseUrl)) {
-                        hlog.info("Start to get {} records for {} / {} from {}", type, baseUrl, set, fromDate);
+						hlog.info("Start to get {} records for {} / {} from {}", type, baseUrl, set, fromDate);
 						fetchDCRecords(oaiBase(baseUrl), set, fromDate);
 					}
 				}
@@ -284,53 +327,16 @@ public class Server extends SpringBootServletInitializer {
 				do {
 					currentlyRetrievedSet = getIdentifiersForSet(repoBase, setspec, largeHarvestInteruptedToken, new ArrayList<>(), Optional.of(mdFormat), fromDate);
 					writeToLocalFileSystem(currentlyRetrievedSet, repoBase, setspec, f.getAbsolutePath());
-					if (currentlyRetrievedSet.size() == 0) {
+					if (currentlyRetrievedSet.isEmpty()) {
 						break;
 					}
 					log.info("\tSET\t" + setspec + "\tsize:\t" + currentlyRetrievedSet.size() + "\tURL\t" + repoBase);
 				} while (largeHarvestInteruptedToken != null && itemsInCurrentSet != 50);
-			} while (currentlyRetrievedSet.size() != 0 && currentlyRetrievedSet.size() % 50 == 0 && itemsInCurrentSet != 50 && itemsInCurrentSet % currentlyRetrievedSet.size() != 0);
+			} while (!currentlyRetrievedSet.isEmpty() && currentlyRetrievedSet.size() % 50 == 0 && itemsInCurrentSet != 50 && itemsInCurrentSet % currentlyRetrievedSet.size() != 0);
 		} catch (Exception e) {
 		    log.error(e.getMessage(), e);
 		}
 	}
-
-	public static void main(String[] args) throws Exception {
-		SpringApplication.run(Server.class, args);
-
-		log.info("Harvester running. ");
-	}
-
-	@Override
-	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-		return application.sources(Server.class);
-	}
-
-	private static final Logger hlog = LoggerFactory.getLogger(Server.class);
-
-	static String largeHarvestInteruptedToken = null;
-
-	static Long itemsInCurrentSet = 0L;
-
-	protected static DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-
-	protected static String fromEmail = "system.wts@gesis.org";
-
-	protected static int largeHarvestLimit = 50;
-
-	protected static DateFormat oaiDtFrmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-
-	protected static SimpleDateFormat rsmFlDtFrmt = new SimpleDateFormat("yyyy-MM-dd");
-
-	protected static String to = "";
-
-	@Autowired
-	ApplicationContext applicationContext;
-
-	protected static TimeZone tZone = TimeZone.getTimeZone("UTC");
-
-	@Value("${spring.mail.host}")
-	String mailhost = "smtp.gmail.com";
 
 	protected ArrayList<String> getIdentifiersForSet(String url, String set, String resumptionToken, ArrayList<String> list, Optional<String> overwrite, String fromDate) {
         String oaiBaseUrl = oaiBase(url);
@@ -373,11 +379,11 @@ public class Server extends SpringBootServletInitializer {
 					if (n.getTextContent() != null) {
 						records.add(n.getTextContent());
 					} else {
-						log.warn("Node " + n + " is null");
+						log.warn("Node {} is null", n);
 					}
 				}
 			} else {
-				log.warn("Identifiers in this block are null for resumption token " + resumptionToken);
+				log.warn("Identifiers in this block are null for resumption token {}", resumptionToken);
 			}
 			// need to recurse?
 			if (resumptionTokenReq.getLength() > 0 && resumptionTokenReq.item(0).getTextContent() != "") {
@@ -392,18 +398,17 @@ public class Server extends SpringBootServletInitializer {
 			if (resumptionTokenReq.getLength() != 0 && resumptionTokenReq.item(0).hasAttributes() && resumptionTokenReq.item(0).getAttributes().getNamedItem("completeListSize") != null) {
 
 				itemsInCurrentSet = Long.parseLong(resumptionTokenReq.item(0).getAttributes().getNamedItem("completeListSize").getTextContent());
-				log.info("Items in current set: " + itemsInCurrentSet);
+				log.info("Items in current set: {}", itemsInCurrentSet);
 
 			} else {
 				log.info(" - ");
 			}
-			log.trace(itemsInCurrentSet + "");
+			if (log.isTraceEnabled()) log.trace(itemsInCurrentSet.toString());
 		} catch (SocketTimeoutException ste) {
-			log.error("OAI response timed out  " + harvesterConfiguration.getTimeout());
+			log.error("OAI response timed out  {}", harvesterConfiguration.getTimeout());
 
 		} catch (Exception e) {
-			log.error(e.getMessage());
-			e.printStackTrace();
+			log.error(e.getMessage(), e);
 			StringBuilder m = new StringBuilder("\n");
 			for (StackTraceElement ste : e.getStackTrace()) {
 				if (ste.getFileName() != null) {
@@ -415,7 +420,7 @@ public class Server extends SpringBootServletInitializer {
 					e.getMessage() + "\n" + m);
 		}
 		resumptionToken = null;
-		log.trace("Records to fetch : " + records.size());
+		log.trace("Records to fetch : {}", records.size());
 
 		return records;
 	}
@@ -434,22 +439,21 @@ public class Server extends SpringBootServletInitializer {
 			noti.from(fromEmail);
 			// log.debug(harvesterConfiguration.recipient.split(",") + "");
 			log.debug(fromEmail);
-			log.debug(harvesterConfiguration.getRecipient().split(",") + "");
+			if (log.isDebugEnabled()) log.debug(harvesterConfiguration.getRecipient());
 			noti.to(harvesterConfiguration.getRecipient().split(","));
 			noti.setSubject(localMachine.getHostName() + " : " + subject);
 
 			msg += "\n" + InetAddress.getLoopbackAddress().getHostAddress() + "\n" + InetAddress.getLoopbackAddress().getHostName();
 			noti.addText(msg);
 			SmtpServer smtpServer = SmtpServer.create(this.mailhost);
-			log.warn("smtp port " + smtpServer.getPort() + "");
+			log.warn("smtp port {}", smtpServer.getPort());
 			SendMailSession session = smtpServer.createSession();
 			session.open();
-			log.error(session.sendMail(noti));
-			log.debug("mail sent to " + harvesterConfiguration.getRecipient());
+			if (log.isErrorEnabled()) log.error(session.sendMail(noti));
+			log.debug("mail sent to {}", harvesterConfiguration.getRecipient());
 			session.close();
 		} catch (Exception e) {
-			log.error(e.getLocalizedMessage());
-			e.printStackTrace();
+			log.error(e.getLocalizedMessage(), e);
 		}
 
 	}
@@ -458,7 +462,7 @@ public class Server extends SpringBootServletInitializer {
 
 		log.info(oaiUrl + "\t" + specId + "\t" + path);
 		String indexName = shortened("", oaiUrl) + "-" + specId;
-		Path dest = Paths.get(path, indexName.replace(":", "-").replace("\\", "-").replaceAll("/", "-"));
+		Path dest = Paths.get(path, indexName.replace(":", "-").replace("\\", "-").replace("/", "-"));
 		try {
 			Files.createDirectories(dest);
 		} catch (IOException e1) {
@@ -466,21 +470,20 @@ public class Server extends SpringBootServletInitializer {
 		}
 		log.info(dest.toFile().getAbsolutePath() + "  " + dest.toFile().exists() + "");
 
-		records.stream().map(s -> s.trim()).forEach(currentRecord -> {
+		records.stream().map(String::trim).forEach(currentRecord -> {
 			String fname = "";
 			try {
 
 				fname = "";
 				GetRecord pmhRecord = null;
-				fname = (indexName + "__" + currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName() + ".xml").replace(":", "-").replace("\\", "-").replaceAll("/", "-");
+				fname = (indexName + "__" + currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName() + ".xml").replace(":", "-").replace("\\", "-").replace("/", "-");
 
 				try {
 					log.trace(oaiUrl);
 					try {
 						pmhRecord = new GetRecord(oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout());
 					} catch (SocketTimeoutException e) {
-						e.printStackTrace();
-						log.error(oaiUrl + " " + currentRecord + " " + e.getMessage());
+						log.error(oaiUrl + " " + currentRecord + " " + e.getMessage(), e);
 					}
 					Path fdest = Paths.get(path, indexName.replace(":", "-").replace("\\", "-").replace("/", "-"), fname);
 					File f = new File(fdest.toString());
@@ -490,7 +493,9 @@ public class Server extends SpringBootServletInitializer {
 							Node child = nl.item(i);
 							if (child instanceof Element) {
 								Source input = new DOMSource(child);
-								Transformer transformer = TransformerFactory.newInstance().newTransformer();
+								TransformerFactory factory = TransformerFactory.newInstance();
+								factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+								Transformer transformer = factory.newTransformer();
 								Result output = new StreamResult(f);
 								log.trace("Stored : " + f.getAbsolutePath());
 								transformer.transform(input, output);
@@ -504,10 +509,9 @@ public class Server extends SpringBootServletInitializer {
 					}
 
 				} catch (ClosedByInterruptException cbie) {
-					log.trace("Storing metadata interupted. Restart requested while processing " + fname);
+					log.trace("Storing metadata interupted. Restart requested while processing {}", fname);
 				} catch (NullPointerException | IOException | InvalidPathException e) {
-					log.error(e.getMessage());
-					e.printStackTrace();
+					log.error(e.getMessage(), e);
 					log.error(pmhRecord.getDocument().toString());
 				}
 			} catch (SAXParseException e) {
@@ -517,59 +521,14 @@ public class Server extends SpringBootServletInitializer {
 			} catch (DOMException | ParserConfigurationException | SAXException | TransformerException e) {
 
 				log.error(fname);
-				log.error(e.getMessage());
-				e.printStackTrace();
+				log.error(e.getMessage(), e);
 
 			} catch (Exception z) {
-				z.printStackTrace();
-				log.error(z.getMessage());
+				log.error(z.getMessage(), z);
 			}
 		});
 
 	}
-
-	protected static String oaiBase(String u) {
-
-		if (u.endsWith("/")) {
-			return u;
-		}
-		if (u.contains("?")) {
-			u = u.substring(0, u.indexOf("?"));
-		}
-		return u;
-	}
-
-	protected static String oaiSet(String u) {
-
-		if (u.contains("set=")) {
-			u = u.substring(u.indexOf("set="));
-			if (u.contains("&")) {
-				u = u.substring(0, u.indexOf("&"));
-			}
-			return u;
-		}
-		return null;
-	}
-
-	protected static String shortened(String prefix, String oaiUrl) {
-
-		try {
-			if (prefix.startsWith("!")) {
-				return new URI(prefix.substring(1)).toString();
-			}
-			log.debug(oaiUrl);
-			return prefix + new URI(oaiUrl).getHost().replace(".", "_").replace(":", "-").toLowerCase();
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-			return "";
-		}
-	}
-
-	protected static String mdFormat = "oai_ddi";
-
-	protected static String type = "dc";
-
-	public static String repoBaseUrl = "http://svko-dara-test.gesis.org:8080/oaip/oai";
 
 	@Autowired
 	protected HarvesterConfiguration harvesterConfiguration;
@@ -589,19 +548,18 @@ public class Server extends SpringBootServletInitializer {
 		try (BufferedReader br = new BufferedReader(new FileReader(fil))) {
 			String line;
 			while ((line = br.readLine()) != null) {
-				if (!line.startsWith("#") && line.trim() != "" && line.trim() != null) {
+				if (!line.startsWith("#") && line.trim().equals("") && line.trim() != null) {
 					line = line.trim();
 					if (line.contains("&set=")) {
 						reposToUnfold.add(line);
 					} else {
 						if (line.contains("?")) {
-							reposToUnfold.add(line.substring(0, line.indexOf("?")));
+							reposToUnfold.add(line.substring(0, line.indexOf('?')));
 						} else {
 							reposToUnfold.add(line);
 						}
 					}
 				}
-
 			}
 		} catch (IOException e) {
 			log.error(e.getLocalizedMessage());
@@ -609,7 +567,7 @@ public class Server extends SpringBootServletInitializer {
 		for (String string : reposToUnfold) {
 			log.debug(string);
 		}
-		log.trace(reposToUnfold + "");
+		if (log.isTraceEnabled()) log.trace(reposToUnfold.toString());
 		return reposToUnfold;
 
 	}
@@ -622,45 +580,7 @@ public class Server extends SpringBootServletInitializer {
 			return unfoldedSets;
 		}
 		try {
-			ListSets ls;
-			try {
-				StringBuilder urlBuilder = new StringBuilder(url);
-				do {
-					log.warn("" + urlBuilder);
-					ls = new ListSets(urlBuilder.toString().trim(), harvesterConfiguration.getTimeout());
-					DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-					factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-					DocumentBuilder builder = factory.newDocumentBuilder();
-					InputSource is = new InputSource(new StringReader(ls.toString()));
-
-					Document document = builder.parse(is);
-
-					NodeList nl = document.getElementsByTagName("setSpec");
-
-					for (int i = 0; i <= nl.getLength() - 1; i++) {
-						String setSpec = nl.item(i).getTextContent();
-						unfoldedSets.add(setSpec);
-						log.info("Set: " + setSpec);
-					}
-					if (ls.toString().contains("error")) {
-						log.error("Invalid request" + ls);
-
-					}
-					if (ls.getResumptionToken() != "") {
-						log.info(ls.getResumptionToken());
-						urlBuilder.append("?verb=ListSets&resumptionToken=").append(ls.getResumptionToken());
-						log.info("" + urlBuilder);
-					}
-				} while (unfoldedSets.size() % 50 == 0 && ls.getResumptionToken() != "" && urlBuilder.toString().trim() != "" && urlBuilder.toString().trim() != null);
-				url = urlBuilder.toString();
-				log.info("");
-			} catch (NoSuchFieldException e) {
-				e.printStackTrace();
-				log.info("less than 50 specs or end of spec list reached" + e.getMessage());
-			} catch (SocketTimeoutException ste) {
-				log.error("Request to oai endpoint timed out " + harvesterConfiguration.getTimeout());
-			}
-
+			getSetStrings(url, unfoldedSets);
 		} catch (SAXParseException e) {
 			log.error(e.getMessage());
 			unfoldedSets.add(url);
@@ -672,6 +592,46 @@ public class Server extends SpringBootServletInitializer {
 		return unfoldedSets;
 	}
 
+	private void getSetStrings(String url, ArrayList<String> unfoldedSets) throws IOException, ParserConfigurationException, SAXException, TransformerException {
+		ListSets ls;
+		try {
+			StringBuilder urlBuilder = new StringBuilder(url);
+			do {
+				if (log.isWarnEnabled()) log.warn(urlBuilder.toString());
+				ls = new ListSets(urlBuilder.toString().trim(), harvesterConfiguration.getTimeout());
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+				DocumentBuilder builder = factory.newDocumentBuilder();
+				InputSource is = new InputSource(new StringReader(ls.toString()));
+
+				Document document = builder.parse(is);
+
+				NodeList nl = document.getElementsByTagName("setSpec");
+
+				for (int i = 0; i <= nl.getLength() - 1; i++) {
+					String setSpec = nl.item(i).getTextContent();
+					unfoldedSets.add(setSpec);
+					log.info("Set: {}", setSpec);
+				}
+				if (ls.toString().contains("error")) {
+					log.error("Invalid request {}", ls);
+
+				}
+				if (!ls.getResumptionToken().equals("")) {
+					log.info(ls.getResumptionToken());
+					urlBuilder.append("?verb=ListSets&resumptionToken=").append(ls.getResumptionToken());
+					if (log.isInfoEnabled()) log.info(urlBuilder.toString());
+				}
+			} while (unfoldedSets.size() % 50 == 0 && !ls.getResumptionToken().equals("") && !urlBuilder.toString().trim().equals("") && urlBuilder.toString().trim() != null);
+			url = urlBuilder.toString();
+			log.info("");
+		} catch (NoSuchFieldException e) {
+			log.info("less than 50 specs or end of spec list reached {}", e.getMessage(), e);
+		} catch (SocketTimeoutException ste) {
+			log.error("Request to oai endpoint timed out {}", harvesterConfiguration.getTimeout());
+		}
+	}
+
 	void mem() {
 
 		Runtime runtime = Runtime.getRuntime();
@@ -680,10 +640,10 @@ public class Server extends SpringBootServletInitializer {
 		long max = runtime.maxMemory();
 		long used = total - free;
 
-		log.trace(Math.round(max / 1e6) + " MB available before Cycle");
-		log.trace(Math.round(total / 1e6) + " MB allocated before Cycle");
-		log.trace(Math.round(free / 1e6) + " MB free before Cycle");
-		log.trace(Math.round(used / 1e6) + " MB used before Cycle");
+		log.trace("{} MB available before Cycle", Math.round(max / 1e6));
+		log.trace("{} MB allocated before Cycle", Math.round(total / 1e6));
+		log.trace("{} MB free before Cycle", Math.round(free / 1e6));
+		log.trace("{} MB used before Cycle", Math.round(used / 1e6));
 	}
 
 	protected void encoding() throws NoSuchFieldException, IllegalAccessException {
@@ -703,7 +663,6 @@ public class Server extends SpringBootServletInitializer {
 
 	@PreDestroy
 	void printConfig() {
-
-		hlog.info(harvesterConfiguration.toString());
+		if (log.isInfoEnabled()) hlog.info(harvesterConfiguration.toString());
 	}
 }

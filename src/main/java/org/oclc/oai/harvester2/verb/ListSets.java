@@ -15,11 +15,12 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
+import org.xml.sax.SAXException;
+
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-import org.xml.sax.SAXException;
+import java.io.IOException;
+import java.net.MalformedURLException;
 
 /**
  * This class represents an ListSets response on either the server or
@@ -62,8 +63,8 @@ public class ListSets extends HarvesterVerb {
         } else if (SCHEMA_LOCATION_V1_1_LIST_SETS.equals(getSchemaLocation())) {
             return getSingleString("/oai11_ListSets:ListSets/oai11_ListSets:resumptionToken");
         } else {
-            System.err.println(getSchemaLocation()+"-");
-            System.err.println(this.toString());
+            log.error("{}-", getSchemaLocation());
+            if (log.isErrorEnabled()) log.error(this.toString());
             throw new NoSuchFieldException(getSchemaLocation());
         }
     }

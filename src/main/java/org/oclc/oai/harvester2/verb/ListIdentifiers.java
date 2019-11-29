@@ -15,18 +15,16 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URLEncoder;
 
 /**
  * This class represents an ListIdentifiers response on either the server or on
@@ -120,12 +118,12 @@ public class ListIdentifiers extends HarvesterVerb {
 
 	/**
 	 * Construct the query portion of the http request (resumptionToken version)
-	 * 
+	 *
 	 * @param baseURL
 	 * @param resumptionToken
 	 * @return
 	 */
-	private static String getRequestURL(String baseURL, String resumptionToken) {
-		return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode(resumptionToken, StandardCharsets.UTF_8);
+	private static String getRequestURL(String baseURL, String resumptionToken) throws UnsupportedEncodingException {
+		return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode(resumptionToken, "UTF-8");
 	}
 }

@@ -15,6 +15,19 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import org.apache.xpath.XPathAPI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.*;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,30 +40,6 @@ import java.util.StringTokenizer;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipInputStream;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
-import org.apache.xpath.XPathAPI;
 
 /**
  * HarvesterVerb is the parent class for each of the OAI verbs.
@@ -84,7 +73,7 @@ public abstract class HarvesterVerb {
 
 	private String requestURL = null;
 
-	private static HashMap<Thread, DocumentBuilder> builderMap = new HashMap<Thread, DocumentBuilder>();
+	private static HashMap<Thread, DocumentBuilder> builderMap = new HashMap<>();
 
 	private static Element namespaceElement = null;
 
@@ -236,13 +225,15 @@ public abstract class HarvesterVerb {
 					con.getHeaderFields().values().forEach(v -> log.info(v.toString()));
 					con.getHeaderFields().get("Location").forEach(v -> log.info(v));
 					harvest(con.getHeaderFields().get("Location").get(0), timeout);
-					return;
-					
 				}
 			} catch (FileNotFoundException e) {
 				// assume it's a 503 response
 				log.info(requestURL, e);
 				responseCode = HttpURLConnection.HTTP_UNAVAILABLE;
+			}
+
+			if (responseCode == 302) {
+				return;
 			}
 
 			if (responseCode == HttpURLConnection.HTTP_UNAVAILABLE) {
@@ -266,19 +257,7 @@ public abstract class HarvesterVerb {
 				}
 			}
 		} while (responseCode == HttpURLConnection.HTTP_UNAVAILABLE);
-		String contentEncoding = con.getHeaderField("Content-Encoding");
-		log.trace("contentEncoding={}", contentEncoding);
-		if ("compress".equals(contentEncoding)) {
-			ZipInputStream zis = new ZipInputStream(con.getInputStream());
-			zis.getNextEntry();
-			in = zis;
-		} else if ("gzip".equals(contentEncoding)) {
-			in = new GZIPInputStream(con.getInputStream());
-		} else if ("deflate".equals(contentEncoding)) {
-			in = new InflaterInputStream(con.getInputStream());
-		} else {
-			in = con.getInputStream();
-		}
+		in = decodeHttpInputStream(con);
 
 		InputSource data = new InputSource(in);
 
@@ -300,9 +279,27 @@ public abstract class HarvesterVerb {
 		this.schemaLocation = sb.toString();
 	}
 
+	private InputStream decodeHttpInputStream(HttpURLConnection con) throws IOException {
+		InputStream in;
+		String contentEncoding = con.getHeaderField("Content-Encoding");
+		log.trace("contentEncoding={}", contentEncoding);
+		if ("compress".equals(contentEncoding)) {
+			ZipInputStream zis = new ZipInputStream(con.getInputStream());
+			zis.getNextEntry();
+			in = zis;
+		} else if ("gzip".equals(contentEncoding)) {
+			in = new GZIPInputStream(con.getInputStream());
+		} else if ("deflate".equals(contentEncoding)) {
+			in = new InflaterInputStream(con.getInputStream());
+		} else {
+			in = con.getInputStream();
+		}
+		return in;
+	}
+
 	/**
 	 * Get the String value for the given XPath location in the response DOM
-	 * 
+	 *
 	 * @param xpath
 	 * @return a String containing the value of the XPath location.
 	 * @throws TransformerException
