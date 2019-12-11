@@ -1,132 +1,0 @@
-
-esquid:S3457¢"AFormat specifiers should be used instead of string concatenation.(ªşŒùÿÿÿÿ8Ä­öÅß-
-[squid:S2629ü"7Use the built-in formatting to construct this argument.(Áİ®ÿÿÿÿÿ8Ä­öÅß-
-esquid:S3457ƒ"AFormat specifiers should be used instead of string concatenation.(à§÷Œÿÿÿÿÿ8Ä­öÅß-
-€squid:S2629®"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(Êå¯„ûÿÿÿÿ8Ä­öÅß-
-Hsquid:S2629Ã"$Invoke method(s) only conditionally.(ïÎ¼‹úÿÿÿÿ8Ä­öÅß-
-Zsquid:S2696†"6Make the enclosing method "static" or remove this set.(ô—Ÿúÿÿÿÿ8Ä­öÅß-
-`squid:S3457†"AFormat specifiers should be used instead of string concatenation.(¤¿Òù8Ä­öÅß-
-esquid:S3027Ö"FPut single-quotes around '?' to use the faster "indexOf(char)" method.(’ÉÎ¿8Ä­öÅß-
-hsquid:S1854›"IRemove this useless assignment to local variable "currentlyRetrievedSet".(êÃ°ˆ8Ä­öÅß-
-{squid:S2629¢"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(†Ô¹´8Ä­öÅß-
-`squid:S3457İ"AFormat specifiers should be used instead of string concatenation.(’˜ØØ8Ä­öÅß-
-`squid:S3457•"AFormat specifiers should be used instead of string concatenation.(ªµÂ8Ä­öÅß-
-Usquid:S2696Ü"6Make the enclosing method "static" or remove this set.( ˜‰¡8Ä­öÅß-
-[squid:S2629Ë"7Use the built-in formatting to construct this argument.(Ããôˆÿÿÿÿÿ8Ä­öÅß-
-{squid:S2629Ó"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(ØœÒ„8Ä­öÅß-
-Usquid:S2696¼"6Make the enclosing method "static" or remove this set.(¦á™ˆ8Ä­öÅß-
-Tsquid:S1481ì"0Remove this unused "directories" local variable.(‡·ûşÿÿÿÿ8Ä­öÅß-
-Ysquid:S1141İ"5Extract this nested try block into a separate method.(¡»¢üùÿÿÿÿ8Ä­öÅß-
-lsquid:S1192·"MDefine a constant instead of duplicating this literal "user.country" 3 times.(ÂŸ8Ä­öÅß-
-Usquid:S2696¤"6Make the enclosing method "static" or remove this set.(¢¿™¡8Ä­öÅß-
-esquid:S3457µ"AFormat specifiers should be used instead of string concatenation.(¤øîµşÿÿÿÿ8¯õˆÆß-
-`squid:S3457ƒ"AFormat specifiers should be used instead of string concatenation.(•ËÖ8Ä­öÅß-
-csquid:S1854‰"?Remove this useless assignment to local variable "directories".(‡·ûşÿÿÿÿ8Ä­öÅß-
-Usquid:S1444¼"1Make this "public static repoBaseUrl" field final(ëÕ×Šúÿÿÿÿ8Ä­öÅß-
-Vsquid:S2629İ"7Use the built-in formatting to construct this argument.(’˜ØØ8Ä­öÅß-
-{squid:S2629Ó"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(—‡Ûö8Ä­öÅß-
-esquid:S3457’"AFormat specifiers should be used instead of string concatenation.(ğå‘íÿÿÿÿÿ8Ä­öÅß-
-qsquid:S3776Ï"RRefactor this method to reduce its Cognitive Complexity from 27 to the 15 allowed.(íıÓÖ8Ä­öÅß-
-ysquid:S4435í"ZSecure this "Transformer" by either disabling external DTDs or enabling secure processing.(Ò‹ñÙ8Ä­öÅß-
-]squid:S1155¤">Use isEmpty() to check whether the collection is empty or not.(áèâ†8Ä­öÅß-
-Zsquid:S2696Û"6Make the enclosing method "static" or remove this set.(¡å™şûÿÿÿÿ8Ä­öÅß-
-Usquid:S2696‰"6Make the enclosing method "static" or remove this set.(¦á™ˆ8Ä­öÅß-
-Ysquid:S1141ò"5Extract this nested try block into a separate method.(¡»¢üùÿÿÿÿ8Ä­öÅß-
-`squid:S3457«"AFormat specifiers should be used instead of string concatenation.(í˜µ¥8Ä­öÅß-
-{squid:S2629©"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(€ÂÁ³8Ä­öÅß-
-€squid:S2629¢"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(ªşŒùÿÿÿÿ8Ä­öÅß-
-_squid:S3457ä"AFormat specifiers should be used instead of string concatenation.(Ì„«8Ä­öÅß-
-msquid:S1192¸"NDefine a constant instead of duplicating this literal "user.language" 3 times.(Œ—şÆ8Ä­öÅß-
-Zsquid:S2696’"6Make the enclosing method "static" or remove this set.(Ÿ†™Áúÿÿÿÿ8Ä­öÅß-
-€squid:S2629"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(úÉ­ıÿÿÿÿ8Ä­öÅß-
-qsquid:S3776É"RRefactor this method to reduce its Cognitive Complexity from 23 to the 15 allowed.(®áÛÄ8Ä­öÅß-
-€squid:S2629Ô"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(–’Û”úÿÿÿÿ8Ä­öÅß-
-Tsquid:S1133Ä"5Do not forget to remove this deprecated code someday.( …ëÔ8Ä­öÅß-
-esquid:S3457ï"AFormat specifiers should be used instead of string concatenation.(èŠú…ÿÿÿÿÿ8Ä­öÅß-
-[squid:S2629Œ"7Use the built-in formatting to construct this argument.(î¦Ïıÿÿÿÿ8Ä­öÅß-
-Gsquid:S1148–"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8Ä­öÅß-
-esquid:S3457¼"AFormat specifiers should be used instead of string concatenation.(¨®á…ıÿÿÿÿ8Ä­öÅß-
-{squid:S2629­"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(®—âï8Ä­öÅß-
-`squid:S3457£"AFormat specifiers should be used instead of string concatenation.(¡ÈÊö8Ä­öÅß-
-esquid:S3457’"AFormat specifiers should be used instead of string concatenation.(ÿÁøşÿÿÿÿ8Ä­öÅß-
-esquid:S3457À"AFormat specifiers should be used instead of string concatenation.(ßç–üÿÿÿÿ8Ä­öÅß-
-esquid:S3457"AFormat specifiers should be used instead of string concatenation.(úÉ­ıÿÿÿÿ8Ä­öÅß-
-Ysquid:S2696m"6Make the enclosing method "static" or remove this set.(Ÿ†™Áúÿÿÿÿ8Ä­öÅß-
-€squid:S2629×"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(ˆ¢×áùÿÿÿÿ8Ä­öÅß-
-[squid:S2629ø"7Use the built-in formatting to construct this argument.(ÿæ•…ûÿÿÿÿ8Ä­öÅß-
-Xsquid:MissingDeprecatedCheckÄ"(Add the missing @deprecated Javadoc tag.( …ëÔ8Ä­öÅß-
-`squid:S3457½"AFormat specifiers should be used instead of string concatenation.(±ñÏ­8Ä­öÅß-
-Usquid:S2629ä"7Use the built-in formatting to construct this argument.(Ì„«8Ä­öÅß-
-Esquid:S2885Á"&Make "oaiDtFrmt" an instance variable.(Àà”8Ä­öÅß-
-Xsquid:S4973ı"9Use the "equals" method if value comparison was intended.(ôˆÑ½8Ä­öÅß-
-esquid:S3457Œ"AFormat specifiers should be used instead of string concatenation.(î¦Ïıÿÿÿÿ8Ä­öÅß-
-`squid:S3457“"AFormat specifiers should be used instead of string concatenation.(¤–÷ë8Ä­öÅß-
-Gsquid:S1148’"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8Ä­öÅß-
-esquid:S3027™"FPut single-quotes around '?' to use the faster "indexOf(char)" method.(¯üç8Ä­öÅß-
-csquid:S1854ì"?Remove this useless assignment to local variable "directories".(‡·ûşÿÿÿÿ8Ä­öÅß-
-Gsquid:S1148ş"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8Ä­öÅß-
-Xsquid:S4973"9Use the "equals" method if value comparison was intended.(ß­£ê8Ä­öÅß-
-Gsquid:S1148â"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8Ä­öÅß-
-`squid:S3457Ä"AFormat specifiers should be used instead of string concatenation.(¢‘£Õ8Ä­öÅß-
-Usquid:S2696ù"6Make the enclosing method "static" or remove this set.( ˜‰¡8Ä­öÅß-
-Ysquid:S1141ß"5Extract this nested try block into a separate method.(¡»¢üùÿÿÿÿ8Ä­öÅß-
-Lsquid:S2885Ã"(Make "rsmFlDtFrmt" an instance variable.(öÂüıüÿÿÿÿ8Ä­öÅß-
-Tsquid:S2696h"6Make the enclosing method "static" or remove this set.(¦á™ˆ8Ä­öÅß-
-fsquid:S5361Û"HReplace this call to "replaceAll()" by a call to the "replace()" method.(®º×E8Ä­öÅß-
-esquid:S3457‹"AFormat specifiers should be used instead of string concatenation.(ÈĞş‰ÿÿÿÿÿ8Ä­öÅß-
-Zsquid:S2696ø"6Make the enclosing method "static" or remove this set.(¡å™şûÿÿÿÿ8Ä­öÅß-
-[squid:S2629"7Use the built-in formatting to construct this argument.(İÕˆ†ıÿÿÿÿ8Ä­öÅß-
-Vsquid:S2629Ä"7Use the built-in formatting to construct this argument.(¢‘£Õ8Ä­öÅß-
-Usquid:S2696ú"6Make the enclosing method "static" or remove this set.(‹À“‘8Ä­öÅß-
-`squid:S3457©"AFormat specifiers should be used instead of string concatenation.(€ÂÁ³8Ä­öÅß-
-[squid:S2629’"7Use the built-in formatting to construct this argument.(ğå‘íÿÿÿÿÿ8Ä­öÅß-
-esquid:S3457û"AFormat specifiers should be used instead of string concatenation.(É·ÊÛøÿÿÿÿ8Ä­öÅß-
-Gsquid:S1148³"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8Ä­öÅß-
-Tsquid:S1481‰"0Remove this unused "directories" local variable.(‡·ûşÿÿÿÿ8Ä­öÅß-
-esquid:S3457Ë"AFormat specifiers should be used instead of string concatenation.(Ããôˆÿÿÿÿÿ8Ä­öÅß-
-Usquid:S2696Ö"6Make the enclosing method "static" or remove this set.(ÅğÕæ8Ä­öÅß-
-Hsquid:S2629¿"$Invoke method(s) only conditionally.(ï÷Úùıÿÿÿÿ8Ä­öÅß-
-Xsquid:S4973á"9Use the "equals" method if value comparison was intended.(ôˆÑ½8Ä­öÅß-
-Gsquid:S1148Ä"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8Ä­öÅß-
-Usquid:S2696İ"6Make the enclosing method "static" or remove this set.(‹À“‘8Ä­öÅß-
-Usquid:S2629õ"7Use the built-in formatting to construct this argument.(ËıÜ38Ä­öÅß-
-bsquid:S1155Ÿ">Use isEmpty() to check whether the collection is empty or not.(æÔ±Ïøÿÿÿÿ8Ä­öÅß-
-Zsquid:S2696Š"6Make the enclosing method "static" or remove this set.(İÊ£õşÿÿÿÿ8Ä­öÅß-
-Vsquid:S1854"7Remove this useless assignment to local variable "url".(¯¤Éí8Ä­öÅß-
-Xsquid:S4973"9Use the "equals" method if value comparison was intended.(ß­£ê8Ä­öÅß-
-`squid:S3457¢"AFormat specifiers should be used instead of string concatenation.(†Ô¹´8Ä­öÅß-
-`squid:S3457Ó"AFormat specifiers should be used instead of string concatenation.(ØœÒ„8Ä­öÅß-
-esquid:S3457"AFormat specifiers should be used instead of string concatenation.(İÕˆ†ıÿÿÿÿ8Ä­öÅß-
-jsquid:S3027£"FPut single-quotes around '&' to use the faster "indexOf(char)" method.(—Ï×òûÿÿÿÿ8Ä­öÅß-
-esquid:S3457¬"AFormat specifiers should be used instead of string concatenation.(ïäÍ’ıÿÿÿÿ8Ä­öÅß-
-ª%squid:RedundantThrowsDeclarationCheckª"lRemove the declaration of thrown exception 'java.lang.Exception', as it cannot be thrown from method's body.(ÙØ¤Şıÿÿÿÿ8Ä­öÅß-
-`squid:S3457Ó"AFormat specifiers should be used instead of string concatenation.(—‡Ûö8Ä­öÅß-
-`squid:S3457­"AFormat specifiers should be used instead of string concatenation.(®—âï8Ä­öÅß-
-Vsquid:S2629ƒ"7Use the built-in formatting to construct this argument.(•ËÖ8Ä­öÅß-
-Zsquid:S2696§"6Make the enclosing method "static" or remove this set.(ıÓœÙşÿÿÿÿ8Ä­öÅß-
-]squid:S4973‰"9Use the "equals" method if value comparison was intended.(ºñ•éùÿÿÿÿ8Ä­öÅß-
-esquid:S3457®"AFormat specifiers should be used instead of string concatenation.(Êå¯„ûÿÿÿÿ8Ä­öÅß-
-{squid:S2629«"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(í˜µ¥8Ä­öÅß-
-[squid:S2629‹"7Use the built-in formatting to construct this argument.(ÈĞş‰ÿÿÿÿÿ8Ä­öÅß-
-`squid:S3457ã"AFormat specifiers should be used instead of string concatenation.(×ÁÃŸ8Ä­öÅß-
-Gsquid:S1148Œ"#Use a logger to log this exception.(™İ˜µûÿÿÿÿ8Ä­öÅß-
-esquid:S3457×"AFormat specifiers should be used instead of string concatenation.(ˆ¢×áùÿÿÿÿ8Ä­öÅß-
-Xsquid:S4973Ğ"9Use the "equals" method if value comparison was intended.(ŒğšÁ8Ä­öÅß-
-lsquid:S5361Í"HReplace this call to "replaceAll()" by a call to the "replace()" method.(¸ºŞëÿÿÿÿÿ8Ä­öÅß-
-qsquid:S3776Ä"RRefactor this method to reduce its Cognitive Complexity from 16 to the 15 allowed.( …ëÔ8Ä­öÅß-
-jsquid:CommentedOutCodeLine³"<This block of commented-out lines of code should be removed.(²ÅÆã8Ä­öÅß-
-{squid:S2629è"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(©Œ©©8Ä­öÅß-
-`squid:S3457è"AFormat specifiers should be used instead of string concatenation.(©Œ©©8Ä­öÅß-
-’"squid:ClassVariableVisibilityCheck¼"WMake repoBaseUrl a static final constant or non-public and provide accessors if needed.(ëÕ×Šúÿÿÿÿ8Ä­öÅß-
-€squid:S2629¬"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(ïäÍ’ıÿÿÿÿ8Ä­öÅß-
-€squid:S2629µ"\Invoke method(s) only conditionally. Use the built-in formatting to construct this argument.(¤øîµşÿÿÿÿ8¯õˆÆß-
-]squid:S4973ÿ"9Use the "equals" method if value comparison was intended.(©æÀŒÿÿÿÿÿ8Ä­öÅß-
-Zsquid:S2696ï"6Make the enclosing method "static" or remove this set.(Ÿ†™Áúÿÿÿÿ8Ä­öÅß-
-Vsquid:S2629†"7Use the built-in formatting to construct this argument.(¤¿Òù8Ä­öÅß-
-esquid:S3457ø"AFormat specifiers should be used instead of string concatenation.(ÿæ•…ûÿÿÿÿ8Ä­öÅß-
-gsquid:S1854¡"CRemove this useless assignment to local variable "resumptionToken".(øÂ×‹úÿÿÿÿ8Ä­öÅß-
-Zsquid:S2696Ñ"6Make the enclosing method "static" or remove this set.(Ÿ†™Áúÿÿÿÿ8Ä­öÅß-
-esquid:S3457ü"AFormat specifiers should be used instead of string concatenation.(Áİ®ÿÿÿÿÿ8Ä­öÅß-
-esquid:S3457Ô"AFormat specifiers should be used instead of string concatenation.(–’Û”úÿÿÿÿ8Ä­öÅß-
-Gsquid:S1148‰"#Use a logger to log this exception.(€ÉÔ…ıÿÿÿÿ8Ä­öÅß-
-_squid:S3457õ"AFormat specifiers should be used instead of string concatenation.(ËıÜ38Ä­öÅß-

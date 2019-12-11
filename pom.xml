@@ -5,7 +5,7 @@
 
 	<groupId>eu.cessda.eqb</groupId>
 	<artifactId>oaiharvester</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>${revision}</version>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -14,6 +14,8 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<revision>0.0.2-${buildNumber}</revision>
+		<buildNumber>SNAPSHOT</buildNumber>
 		<java.version>1.8</java.version>
 		<gesis.repository.visibility>public</gesis.repository.visibility><!-- valid values: (private|public) -->
 		<image_tag>cessda/${project.artifactId}:${project.version}</image_tag>
