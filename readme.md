@@ -2,7 +2,7 @@
 
 ## About
 
-The cessda.eqb.harvester is a microservice for harvesting metadata made available by third parties using the  Open Archives Initiatives Protocol for Metadata Harvesting. Please refer to https://www.openarchives.org/OAI/openarchivesprotocol.html for details. 
+The cessda.eqb.harvester is a microservice for harvesting metadata made available by third parties using the Open Archives Initiatives Protocol for Metadata Harvesting. Please refer to https://www.openarchives.org/OAI/openarchivesprotocol.html for details. 
 It can be run standalone as a spring boot application or in a docker environment. 
 
 
