@@ -66,13 +66,13 @@ pipeline {
             }
             when { branch 'master' }
         }
-        /*stage('Check Requirements and Deployments') {
+        stage('Check Requirements and Deployments') {
             steps {
                 dir('./infrastructure/gcp/') {
                     build job: 'cessda.eqb.deploy/master', parameters: [string(name: 'harvester_image_tag', value: "${image_tag}"), string(name: 'module', value: 'harvester')], wait: false
                 }
             }
             when { branch 'master' }
-        }*/
+        }
     }
 }
