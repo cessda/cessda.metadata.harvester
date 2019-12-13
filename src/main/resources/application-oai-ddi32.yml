@@ -1,0 +1,85 @@
+logging:
+  file: '@logging.file@'
+  pattern:
+    console: '%d{yyyy-dd-MM HH:mm:ss.SSS} %highlight(%-5level) %30.30((%M\)) %40.40((%file:%line\)) - %message%n'
+    file: '%d{yyyy-dd-MM HH:mm:ss.SSS}  %-5level  %30.30((%M\)) %40.40((%file:%line\)) - %message%n'
+  level:
+    org:
+      springframework: '@logging.level.org.springframework@'
+    springfox.documentation.spring.web.readers.operation: WARN
+    de.codecentric.boot.admin.client.registration: WARN
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+  info:
+    git:
+      mode: full
+server:
+  port: '@server.port@'
+  servlet:
+    context-path: '@server.servlet.context-path@'
+  tomcat:
+    accesslog:
+      enabled: true
+spring:
+  security:
+    user:
+      name: admin
+      password: admin
+  devtools:
+    add-properties: false
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  main:
+    banner-mode: 'off'
+  mail:
+    host: smtprelay.gesis.intra
+  boot:
+    admin:
+      url: "http://docker:1111"
+      client:
+        url: "http://docker:1111"
+        instance:
+          name: harvester
+        username: ${SPRING_BOOT_ADMIN_USER_NAME:admin}
+        password: ${SPRING_BOOT_ADMIN_USER_PASSWORD:admin}
+      routes:
+        endpoints: env,metrics,log,trace,dump,jolokia,info,configprops,trace,logfile,refresh,flyway,liquibase,heapdump,hystrix.stream,hystrix
+      auto-deregistration: true
+      auto-registration: true
+      period: 5000
+harvester:
+  metadataFormat: oai_ddi32
+  dialectDefinitionName: gesisCMM-ddi32
+  dir: '@documents@'
+  recipient: thomas.kraemer@gesis.org
+  timeout: 60
+  from:
+    single: '1800-01-01'
+    initial: '0001-01-01'
+    incremental: '2017-02-28'
+    full: '1901-01-01'
+  cron:
+    incremental: 0 0 */2 * * *
+    full: 00 31 12 * * ?
+  repos:
+    - url: https://dbk.gesis.org/dbkoai/
+      setName: DBK
+    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
+      setName: 30ea0200-7121-4f01-8d21-a931a182b86d
+    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
+      setName: 4bd6eef6-99df-40e6-9b11-5b8f64e5cb23
+    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
+      setName: a1b8a30e-2f35-4056-8467-40e7ed0e7379
+    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
+      setName: f433e43d-29a4-4c25-9610-9dd9819a0519
+    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
+      setName: a1bb19bd-a24a-4443-8728-a6ad80eb42b8
