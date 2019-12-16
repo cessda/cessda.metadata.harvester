@@ -58,7 +58,7 @@ spring:
       period: 5000
 harvester:
   metadataFormat: oai_ddi
-  dialectDefinitionName: gesisCMM-ddi32
+  dialectDefinitionName: gesisCMM-ddi122
   dir: '@documents@'
   recipient: thomas.kraemer@gesis.org
   timeout: 60
@@ -72,3 +72,4 @@ harvester:
     full: 00 31 12 * * ?
   repos:
   - url: http://harvester.sodanet.gr:8080/oai/request
+    setName: CESSDA
