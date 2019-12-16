@@ -61,12 +61,12 @@ harvester:
   dialectDefinitionName: gesisCMM-ddi122
   dir: '@documents@'
   recipient: thomas.kraemer@gesis.org
-  timeout: 60
+  timeout: 600
   from:
-    single: '1800-01-01'
-    initial: '0001-01-01'
-    incremental: '2017-02-28'
-    full: '1901-01-01'
+    single: '2019-01-01'
+    initial: '2019-01-01'
+    incremental: '2019-02-28'
+    full: '2000-01-01'
   cron:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?

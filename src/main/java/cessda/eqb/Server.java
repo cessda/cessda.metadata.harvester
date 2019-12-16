@@ -638,7 +638,13 @@ public class Server extends SpringBootServletInitializer
 					}
 					else
 					{
-						log.error( pmhRecord.getDocument().getElementsByTagName( "error" ).item( 0 ).getTextContent() );
+						NodeList errorList = pmhRecord.getDocument().getElementsByTagName( "error" );
+						if(errorList.getLength()==0) {
+							log.error( pmhRecord.getDocument().getTextContent() );
+						}else {
+
+							log.error( errorList.item( 0 ).getTextContent() );
+						}
 					}
 
 				}

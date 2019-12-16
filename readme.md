@@ -18,20 +18,20 @@ java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ukda
 
 ### Run all configurations
 ```bash
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=csda 
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=dans 
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=dbk 
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ekke 
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=fsd 
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=fsd-ddi32 
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-questionConstructs
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-questions
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-questionGrids
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-series
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-studies
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=snd
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ukda
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=csda --server.port=8801
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=dans --server.port=8802
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=dbk --server.port=8803
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ekke --server.port=8804
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=fsd --server.port=8805
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=fsd-ddi32 --server.port=8806
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-questionConstructs --server.port=8807
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-questions --server.port=8808
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-questionGrids --server.port=8809
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-series --server.port=8810
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-studies --server.port=8811
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd --server.port=8812
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=snd --server.port=8813
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ukda --server.port=8814
 ```
 
 
