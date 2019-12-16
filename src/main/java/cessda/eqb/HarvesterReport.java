@@ -11,21 +11,28 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 
 @Component
-public class HarvesterReport {
+public class HarvesterReport
+{
 
-	public static final Logger hlog = LoggerFactory.getLogger(HarvesterReport.class);
+	public static final Logger hlog = LoggerFactory.getLogger( HarvesterReport.class );
 
-	public static void info(String m) {
-		hlog.info(m);
+	public static void info( String m )
+	{
+		hlog.info( m );
 	}
 
-	public void filesCountLocally(File[] directories) {
+	public void filesCountLocally( File[] directories )
+	{
 
-		for (File file : directories) {
-			try (Stream<Path> fileList = Files.list(file.toPath())) {
-				hlog.info("\t" + fileList.count() + "\tFiles in folder " + file.getAbsolutePath());
-			} catch (IOException e) {
-				hlog.error(e.getMessage());
+		for ( File file : directories )
+		{
+			try (Stream<Path> fileList = Files.list( file.toPath() ))
+			{
+				hlog.info( "\t" + fileList.count() + "\tFiles in folder " + file.getAbsolutePath() );
+			}
+			catch (IOException e)
+			{
+				hlog.error( e.getMessage() );
 			}
 		}
 	}

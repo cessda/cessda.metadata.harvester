@@ -52,37 +52,46 @@ import java.util.*;
 @EnableScheduling
 @SpringBootApplication
 @ManagedResource
-public class Server extends SpringBootServletInitializer {
+public class Server extends SpringBootServletInitializer
+{
 
-	private static final Logger log = LoggerFactory.getLogger(Server.class);
+	private static final Logger log = LoggerFactory.getLogger( Server.class );
 
 	static boolean fullIsRunning = false;
 
 	static boolean incrementalIsRunning = false;
 
 	@Async
-	@ManagedOperation(description = "Run harvesting on several repo starting from 'harvester.from.single'. Separate more than one repo with comma. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. The position corresponds to the number given in the list of repos in the configuration view, starting from 0. See environments tab and search for 'harvester.repos'")
-	public String bundleHarvesting(String commaSeparatedIntegerPositionInRepoList) {
+	@ManagedOperation(
+			description = "Run harvesting on several repo starting from 'harvester.from.single'. Separate more than one repo with comma. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. The position corresponds to the number given in the list of repos in the configuration view, starting from 0. See environments tab and search for 'harvester.repos'" )
+	public String bundleHarvesting( String commaSeparatedIntegerPositionInRepoList )
+	{
 
 		StringBuilder res = new StringBuilder();
-		int[] numbers = Arrays.stream(commaSeparatedIntegerPositionInRepoList.split(",")).map(String::trim).mapToInt(Integer::parseInt).toArray();
-		for (int i : numbers) {
-			res.append("Repo ").append(i).append(" : ").append(singleHarvesting(i)).append("                           \n");
+		int[] numbers = Arrays.stream( commaSeparatedIntegerPositionInRepoList.split( "," ) ).map( String::trim )
+				.mapToInt( Integer::parseInt ).toArray();
+		for ( int i : numbers )
+		{
+			res.append( "Repo " ).append( i ).append( " : " ).append( singleHarvesting( i ) )
+					.append( "                           \n" );
 		}
 		return res + "    Bundle harvesting finished from " + harvesterConfiguration.getFrom().getSingle();
 	}
 
 	@Async
-	@ManagedOperation(description = "Run harvesting on one single repo starting from 'harvester.from.single'. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. The position corresponds to the number given in the list of repos in the configuration view, starting from 0. See environments tab and search for 'harvester.repos'")
-	public String singleHarvesting(Integer positionInRepoList) {
+	@ManagedOperation(
+			description = "Run harvesting on one single repo starting from 'harvester.from.single'. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. The position corresponds to the number given in the list of repos in the configuration view, starting from 0. See environments tab and search for 'harvester.repos'" )
+	public String singleHarvesting( Integer positionInRepoList )
+	{
 
-		if (incrementalIsRunning) {
+		if ( incrementalIsRunning )
+		{
 			return "Not started. An incremental harvesting progress is already running";
 		}
 		incrementalIsRunning = true;
-		hlog.info("Single harvesting starting from {}", harvesterConfiguration.getFrom().getSingle());
-		runSingleHarvest(harvesterConfiguration.getFrom().getSingle(), positionInRepoList);
-		hlog.info("Single harvesting finished from {}", harvesterConfiguration.getFrom().getSingle());
+		hlog.info( "Single harvesting starting from {}", harvesterConfiguration.getFrom().getSingle() );
+		runSingleHarvest( harvesterConfiguration.getFrom().getSingle(), positionInRepoList );
+		hlog.info( "Single harvesting finished from {}", harvesterConfiguration.getFrom().getSingle() );
 
 		incrementalIsRunning = false;
 		return "Single harvesting for " + positionInRepoList + "th repository started. See log section for details";
@@ -94,100 +103,118 @@ public class Server extends SpringBootServletInitializer {
 	 * @return status
 	 */
 	@Async
-	@ManagedOperation(description = "Run initial harvesting. Set from date with key harvester.cron.initial. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. Don't forget to reset the environment and update application.yml for persistent configuration")
-	@Scheduled(initialDelay = 10000L, fixedDelay = 315360000000L)
-	public String initialHarvesting() {
+	@ManagedOperation(
+			description = "Run initial harvesting. Set from date with key harvester.cron.initial. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. Don't forget to reset the environment and update application.yml for persistent configuration" )
+	@Scheduled( initialDelay = 10000L, fixedDelay = 315360000000L )
+	public String initialHarvesting()
+	{
 
-		log.info(harvesterConfiguration.getMetadataFormat());
+		log.info( harvesterConfiguration.getMetadataFormat() );
 		Calendar cal = Calendar.getInstance();
-		cal.setTime(new Date());
-		cal.add(Calendar.DAY_OF_MONTH, -2);
-		String newInitial = rsmFlDtFrmt.format(cal.getTime());
+		cal.setTime( new Date() );
+		cal.add( Calendar.DAY_OF_MONTH, -2 );
+		String newInitial = rsmFlDtFrmt.format( cal.getTime() );
 		// set initial value dynamically
-		if (harvesterConfiguration.getFrom().getInitial() == null) {
-			harvesterConfiguration.getFrom().setInitial(newInitial);
+		if ( harvesterConfiguration.getFrom().getInitial() == null )
+		{
+			harvesterConfiguration.getFrom().setInitial( newInitial );
 		}
-		log.info(harvesterConfiguration.getFrom().getInitial());
+		log.info( harvesterConfiguration.getFrom().getInitial() );
 
-		if (incrementalIsRunning) {
+		if ( incrementalIsRunning )
+		{
 			return "Not started. An incremental harvesting progress is already running";
 		}
 		incrementalIsRunning = true;
-		hlog.info("Full harvest schedule: {}", harvesterConfiguration.getCron().getFull());
-		hlog.info("Incremental harvest schedule: {}", harvesterConfiguration.getCron().getIncremental());
+		hlog.info( "Full harvest schedule: {}", harvesterConfiguration.getCron().getFull() );
+		hlog.info( "Incremental harvest schedule: {}", harvesterConfiguration.getCron().getIncremental() );
 
-		hlog.info("Initial harvesting starting from {}", harvesterConfiguration.getFrom().getInitial());
-		hlog.info("Incremental harvesting will start with cron schedule {} from {}", harvesterConfiguration.getCron().getIncremental(), harvesterConfiguration.getFrom().getIncremental());
-		runHarvest(harvesterConfiguration.getFrom().getInitial());
-		hlog.info("Initial harvesting finished from {}", harvesterConfiguration.getFrom().getInitial());
+		hlog.info( "Initial harvesting starting from {}", harvesterConfiguration.getFrom().getInitial() );
+		hlog.info( "Incremental harvesting will start with cron schedule {} from {}",
+				harvesterConfiguration.getCron().getIncremental(), harvesterConfiguration.getFrom().getIncremental() );
+		runHarvest( harvesterConfiguration.getFrom().getInitial() );
+		hlog.info( "Initial harvesting finished from {}", harvesterConfiguration.getFrom().getInitial() );
 
 		incrementalIsRunning = false;
 		return "Initial harvesting finished from " + harvesterConfiguration.getFrom().getInitial();
 	}
 
 	public static final String REPO_BASE_URL = "http://svko-dara-test.gesis.org:8080/oaip/oai";
-	private static final Logger hlog = LoggerFactory.getLogger(Server.class);
+	private static final Logger hlog = LoggerFactory.getLogger( Server.class );
 	protected static DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
 	protected static String fromEmail = "system.wts@gesis.org";
 	protected static int largeHarvestLimit = 50;
 	protected static String to = "";
-	protected static TimeZone tZone = TimeZone.getTimeZone("UTC");
+	protected static TimeZone tZone = TimeZone.getTimeZone( "UTC" );
 	protected static String mdFormat = "oai_ddi";
 	protected static String type = "dc";
 	static String largeHarvestInteruptedToken = null;
 	static Long itemsInCurrentSet = 0L;
-	protected final DateFormat oaiDtFrmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-	protected final SimpleDateFormat rsmFlDtFrmt = new SimpleDateFormat("yyyy-MM-dd");
+	protected final DateFormat oaiDtFrmt = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
+	protected final SimpleDateFormat rsmFlDtFrmt = new SimpleDateFormat( "yyyy-MM-dd" );
 	@Autowired
 	ApplicationContext applicationContext;
-	@Value("${spring.mail.host}")
+	@Value( "${spring.mail.host}" )
 	String mailhost = "smtp.gmail.com";
 
-	public static void main(String[] args) {
-		SpringApplication.run(Server.class, args);
-		log.info("Harvester running. ");
+	public static void main( String[] args )
+	{
+		SpringApplication.run( Server.class, args );
+		log.info( "Harvester running. " );
 	}
 
-	protected static String oaiBase(String u) {
+	protected static String oaiBase( String u )
+	{
 
-		if (u.endsWith("/")) {
+		if ( u.endsWith( "/" ) )
+		{
 			return u;
 		}
-		if (u.contains("?")) {
-			u = u.substring(0, u.indexOf('?'));
+		if ( u.contains( "?" ) )
+		{
+			u = u.substring( 0, u.indexOf( '?' ) );
 		}
 		return u;
 	}
 
-	protected static String oaiSet(String u) {
+	protected static String oaiSet( String u )
+	{
 
-		if (u.contains("set=")) {
-			u = u.substring(u.indexOf("set="));
-			if (u.contains("&")) {
-				u = u.substring(0, u.indexOf('&'));
+		if ( u.contains( "set=" ) )
+		{
+			u = u.substring( u.indexOf( "set=" ) );
+			if ( u.contains( "&" ) )
+			{
+				u = u.substring( 0, u.indexOf( '&' ) );
 			}
 			return u;
 		}
 		return null;
 	}
 
-	protected static String shortened(String prefix, String oaiUrl) {
+	protected static String shortened( String prefix, String oaiUrl )
+	{
 
-		try {
-			if (prefix.startsWith("!")) {
-				return new URI(prefix.substring(1)).toString();
+		try
+		{
+			if ( prefix.startsWith( "!" ) )
+			{
+				return new URI( prefix.substring( 1 ) ).toString();
 			}
-			log.debug(oaiUrl);
-			return prefix + new URI(oaiUrl).getHost().replace(".", "_").replace(":", "-").toLowerCase();
-		} catch (URISyntaxException e) {
-			log.error(e.getMessage(), e);
+			log.debug( oaiUrl );
+			return prefix + new URI( oaiUrl ).getHost().replace( ".", "_" ).replace( ":", "-" ).toLowerCase();
+		}
+		catch (URISyntaxException e)
+		{
+			log.error( e.getMessage(), e );
 			return "";
 		}
 	}
 
 	@Override
-	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-		return application.sources(Server.class);
+	protected SpringApplicationBuilder configure( SpringApplicationBuilder application )
+	{
+		return application.sources( Server.class );
 	}
 
 	/**
@@ -196,17 +223,19 @@ public class Server extends SpringBootServletInitializer {
 	 * @return status
 	 */
 	@Async
-	@ManagedOperation(description = "Run full harvesting. Set from date with key harvester.cron.full")
-	@Scheduled(cron = "${harvester.cron.full:0 30 1 15 * ?}")
-	public String fullHarvesting() {
+	@ManagedOperation( description = "Run full harvesting. Set from date with key harvester.cron.full" )
+	@Scheduled( cron = "${harvester.cron.full:0 30 1 15 * ?}" )
+	public String fullHarvesting()
+	{
 
-		if (fullIsRunning) {
+		if ( fullIsRunning )
+		{
 			return "Not started. A full harvesting progress is already running";
 		}
-		hlog.info("Full harvesting started from {}", harvesterConfiguration.getFrom().getFull());
+		hlog.info( "Full harvesting started from {}", harvesterConfiguration.getFrom().getFull() );
 		fullIsRunning = true;
-		runHarvest(harvesterConfiguration.getFrom().getFull());
-		hlog.info("Full harvesting finished");
+		runHarvest( harvesterConfiguration.getFrom().getFull() );
+		hlog.info( "Full harvesting finished" );
 		fullIsRunning = false;
 		return "Full harvesting finished from " + harvesterConfiguration.getFrom().getFull();
 	}
@@ -217,35 +246,43 @@ public class Server extends SpringBootServletInitializer {
 	 * @return status
 	 */
 	@Async
-	@ManagedOperation(description = "Run incremental harvesting. Set from date with key harvester.cron.incremental")
-	@Scheduled(cron = "${harvester.cron.incremental:0 0 4 * * *}")
-	public String incrementalHarvesting() {
+	@ManagedOperation( description = "Run incremental harvesting. Set from date with key harvester.cron.incremental" )
+	@Scheduled( cron = "${harvester.cron.incremental:0 0 4 * * *}" )
+	public String incrementalHarvesting()
+	{
 
 		Calendar cal = Calendar.getInstance();
-		cal.setTime(new Date());
-		cal.add(Calendar.DAY_OF_MONTH, -2);
-		String newIncFrom = rsmFlDtFrmt.format(cal.getTime());
+		cal.setTime( new Date() );
+		cal.add( Calendar.DAY_OF_MONTH, -2 );
+		String newIncFrom = rsmFlDtFrmt.format( cal.getTime() );
 		String msg;
-		if (!fullIsRunning) {
-			if (!incrementalIsRunning) {
+		if ( !fullIsRunning )
+		{
+			if ( !incrementalIsRunning )
+			{
 				incrementalIsRunning = true;
-				hlog.info("Incremental harvesting started from {}", harvesterConfiguration.getFrom().getIncremental());
-				runHarvest(harvesterConfiguration.getFrom().getIncremental());
-				hlog.info("Incremental harvesting finished");
+				hlog.info( "Incremental harvesting started from {}",
+						harvesterConfiguration.getFrom().getIncremental() );
+				runHarvest( harvesterConfiguration.getFrom().getIncremental() );
+				hlog.info( "Incremental harvesting finished" );
 
 				msg = "Incremental harvesting finished from " + harvesterConfiguration.getFrom().getIncremental();
 
-				harvesterConfiguration.getFrom().setIncremental(newIncFrom);
-				hlog.info("Next incremental harvest will start from {}", newIncFrom);
-			} else {
+				harvesterConfiguration.getFrom().setIncremental( newIncFrom );
+				hlog.info( "Next incremental harvest will start from {}", newIncFrom );
+			}
+			else
+			{
 				String o = "Incremental harvesting already running.";
-				hlog.info(o);
+				hlog.info( o );
 				return o;
 
 			}
 
-		} else {
-			hlog.info("No incremental harvesting, as full harvesting is in progress.");
+		}
+		else
+		{
+			hlog.info( "No incremental harvesting, as full harvesting is in progress." );
 			return "No incremental harvesting, as full harvesting is in progress.";
 		}
 
@@ -254,279 +291,385 @@ public class Server extends SpringBootServletInitializer {
 	}
 
 	@Async
-	public void runSingleHarvest(String fromDate, Integer position) {
+	public void runSingleHarvest( String fromDate, Integer position )
+	{
 
-		hlog.info("Harvesting started from {} for repo {}", fromDate, position);
-		try {
+		hlog.info( "Harvesting started from {} for repo {}", fromDate, position );
+		try
+		{
 			encoding();
 			type = "dc";
-			mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat() : "oai_dc";
-			to = rsmFlDtFrmt.format(new Date());
+			mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat()
+					: "oai_dc";
+			to = rsmFlDtFrmt.format( new Date() );
 
-			String baseUrl = harvesterConfiguration.getRepoBaseUrls().get(position);
-			hlog.info("Single harvesting {} from {}", baseUrl, fromDate);
-			if (!baseUrl.trim().equals("")) {
-				if (baseUrl.contains("#")) {
-					baseUrl = baseUrl.substring(0, baseUrl.indexOf('#'));
+			String baseUrl = harvesterConfiguration.getRepoBaseUrls().get( position );
+			hlog.info( "Single harvesting {} from {}", baseUrl, fromDate );
+			if ( !baseUrl.trim().equals( "" ) )
+			{
+				if ( baseUrl.contains( "#" ) )
+				{
+					baseUrl = baseUrl.substring( 0, baseUrl.indexOf( '#' ) );
 				}
-				log.trace("{} {}", baseUrl, fromDate);
-				for (String set : getSpecs(baseUrl)) {
-					hlog.info("Start to get {} records for {} / {} from {}", type, baseUrl, set, fromDate);
-					fetchDCRecords(oaiBase(baseUrl), set, fromDate);
+				log.trace( "{} {}", baseUrl, fromDate );
+				for ( String set : getSpecs( baseUrl ) )
+				{
+					hlog.info( "Start to get {} records for {} / {} from {}", type, baseUrl, set, fromDate );
+					fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
 				}
 			}
 
-			File[] directories = new File(harvesterConfiguration.getDir()).listFiles(File::isDirectory);
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			log.error(e.getMessage(), e);
+			File[] directories = new File( harvesterConfiguration.getDir() ).listFiles( File::isDirectory );
+		}
+		catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e)
+		{
+			log.error( e.getMessage(), e );
 			incrementalIsRunning = false;
 		}
 	}
 
-	public void runHarvest(String fromDate) {
+	public void runHarvest( String fromDate )
+	{
 
-		hlog.info("Harvesting started from {}", fromDate);
-		try {
+		hlog.info( "Harvesting started from {}", fromDate );
+		try
+		{
 			encoding();
 			type = "dc";
-			mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat() : "oai_dc";
-			to = rsmFlDtFrmt.format(new Date());
+			mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat()
+					: "oai_dc";
+			to = rsmFlDtFrmt.format( new Date() );
 
-			for (String baseUrl : harvesterConfiguration.getRepoBaseUrls()) {
-				if (!baseUrl.trim().equals("")) {
-					if (baseUrl.contains("#")) {
-						baseUrl = baseUrl.substring(0, baseUrl.indexOf('#'));
+			for ( String baseUrl : harvesterConfiguration.getRepoBaseUrls() )
+			{
+				if ( !baseUrl.trim().equals( "" ) )
+				{
+					if ( baseUrl.contains( "#" ) )
+					{
+						baseUrl = baseUrl.substring( 0, baseUrl.indexOf( '#' ) );
 					}
-					log.trace("{} {}", baseUrl, fromDate);
-					for (String set : getSpecs(baseUrl)) {
-						hlog.info("Start to get {} records for {} / {} from {}", type, baseUrl, set, fromDate);
-						fetchDCRecords(oaiBase(baseUrl), set, fromDate);
+					log.trace( "{} {}", baseUrl, fromDate );
+					for ( String set : getSpecs( baseUrl ) )
+					{
+						hlog.info( "Start to get {} records for {} / {} from {}", type, baseUrl, set, fromDate );
+						fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
 					}
 				}
 			}
 
-			File[] directories = new File(harvesterConfiguration.getDir()).listFiles(File::isDirectory);
-		} catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
-			log.error(e.getMessage(), e);
+			File[] directories = new File( harvesterConfiguration.getDir() ).listFiles( File::isDirectory );
+		}
+		catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e)
+		{
+			log.error( e.getMessage(), e );
 		}
 	}
 
-	void fetchDCRecords(String repoBase, String setspec, String fromDate) {
+	void fetchDCRecords( String repoBase, String setspec, String fromDate )
+	{
 
-		log.info(harvesterConfiguration.getDir());
-		log.info(repoBase + "  " + setspec + "   " + fromDate);
-		File f = new File(harvesterConfiguration.getDir());
-		if (!f.exists()) {
-			f = new File(harvesterConfiguration.getDir());
+		log.info( harvesterConfiguration.getDir() );
+		log.info( repoBase + "  " + setspec + "   " + fromDate );
+		File f = new File( harvesterConfiguration.getDir() );
+		if ( !f.exists() )
+		{
+			f = new File( harvesterConfiguration.getDir() );
 		}
-		try {
+		try
+		{
 			ArrayList<String> currentlyRetrievedSet;
-			do {
-				log.info("Fetching {} records for repo {} and pmh set {}. Be patient, this can take hours.", type, repoBase, setspec);
+			do
+			{
+				log.info( "Fetching {} records for repo {} and pmh set {}. Be patient, this can take hours.", type,
+						repoBase, setspec );
 				currentlyRetrievedSet = null;
-				do {
-					currentlyRetrievedSet = getIdentifiersForSet(repoBase, setspec, largeHarvestInteruptedToken, new ArrayList<>(), Optional.of(mdFormat), fromDate);
-					writeToLocalFileSystem(currentlyRetrievedSet, repoBase, setspec, f.getAbsolutePath());
-					if (currentlyRetrievedSet.isEmpty()) {
+				do
+				{
+					currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, largeHarvestInteruptedToken,
+							new ArrayList<>(), Optional.of( mdFormat ), fromDate );
+					writeToLocalFileSystem( currentlyRetrievedSet, repoBase, setspec, f.getAbsolutePath() );
+					if ( currentlyRetrievedSet.isEmpty() )
+					{
 						break;
 					}
-					log.info("\tSET\t" + setspec + "\tsize:\t" + currentlyRetrievedSet.size() + "\tURL\t" + repoBase);
+					log.info( "\tSET\t" + setspec + "\tsize:\t" + currentlyRetrievedSet.size() + "\tURL\t" + repoBase );
 				} while (largeHarvestInteruptedToken != null && itemsInCurrentSet != 50);
-			} while (!currentlyRetrievedSet.isEmpty() && currentlyRetrievedSet.size() % 50 == 0 && itemsInCurrentSet != 50 && itemsInCurrentSet % currentlyRetrievedSet.size() != 0);
-		} catch (Exception e) {
-		    log.error(e.getMessage(), e);
+			} while (!currentlyRetrievedSet.isEmpty() && currentlyRetrievedSet.size() % 50 == 0
+					&& itemsInCurrentSet != 50 && itemsInCurrentSet % currentlyRetrievedSet.size() != 0);
+		}
+		catch (Exception e)
+		{
+			log.error( e.getMessage(), e );
 		}
 	}
 
-	protected ArrayList<String> getIdentifiersForSet(String url, String set, String resumptionToken, ArrayList<String> list, Optional<String> overwrite, String fromDate) {
-        String oaiBaseUrl = oaiBase(url);
-		log.info("Harvesting started for {}?verb=ListRecords&set={}&metadataPrefix={}&from={}&resumptionToken={}", oaiBaseUrl, set, mdFormat, fromDate, resumptionToken);
+	protected ArrayList<String> getIdentifiersForSet(
+			String url,
+			String set,
+			String resumptionToken,
+			ArrayList<String> list,
+			Optional<String> overwrite,
+			String fromDate )
+	{
+		String oaiBaseUrl = oaiBase( url );
+		log.info( "Harvesting started for {}?verb=ListRecords&set={}&metadataPrefix={}&from={}&resumptionToken={}",
+				oaiBaseUrl, set, mdFormat, fromDate, resumptionToken );
 		ArrayList<String> records = list;
-		log.debug("URL: " + url + " list size : " + list.size() + " restoken " + resumptionToken);
-		log.trace("limit : " + largeHarvestLimit + " recordssize: " + records.size());
-		if (records.size() >= largeHarvestLimit) {
+		log.debug( "URL: " + url + " list size : " + list.size() + " restoken " + resumptionToken );
+		log.trace( "limit : " + largeHarvestLimit + " recordssize: " + records.size() );
+		if ( records.size() >= largeHarvestLimit )
+		{
 			largeHarvestInteruptedToken = resumptionToken;
-			log.info("reached limit of " + largeHarvestLimit + ". Processing " + records.size() + " records and then resume with " + largeHarvestInteruptedToken);
+			log.info( "reached limit of " + largeHarvestLimit + ". Processing " + records.size()
+					+ " records and then resume with " + largeHarvestInteruptedToken );
 			return records;
 		}
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		try {
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-			log.trace("recurse:\turl " + url + " set " + set + " token " + resumptionToken + "  ");
+		try
+		{
+			factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
+			log.trace( "recurse:\turl " + url + " set " + set + " token " + resumptionToken + "  " );
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			ListIdentifiers li;
-			log.trace(resumptionToken);
-			if (resumptionToken != null) {
-				log.trace(url);
-				li = new ListIdentifiers(oaiBase(url), resumptionToken);
-			} else {
-				if (set.compareTo(url) == 0 || set.startsWith("http")) {
+			log.trace( resumptionToken );
+			if ( resumptionToken != null )
+			{
+				log.trace( url );
+				li = new ListIdentifiers( oaiBase( url ), resumptionToken );
+			}
+			else
+			{
+				if ( set.compareTo( url ) == 0 || set.startsWith( "http" ) )
+				{
 					set = null;
 				}
-				log.debug("From " + fromDate + "  until " + to + "  " + oaiBase(url) + "  " + set + "  " + mdFormat);
-				li = new ListIdentifiers(oaiBase(url), fromDate, to, set, overwrite.orElse(mdFormat), harvesterConfiguration.getTimeout());
-				log.debug(oaiBaseUrl);
+				log.debug(
+						"From " + fromDate + "  until " + to + "  " + oaiBase( url ) + "  " + set + "  " + mdFormat );
+				li = new ListIdentifiers( oaiBase( url ), fromDate, to, set, overwrite.orElse( mdFormat ),
+						harvesterConfiguration.getTimeout() );
+				log.debug( oaiBaseUrl );
 			}
-			log.trace(li.getRequestURL());
-			InputSource is = new InputSource(new StringReader(li.toString()));
-			Document identfiers = builder.parse(is);
-			NodeList resumptionTokenReq = identfiers.getElementsByTagName("resumptionToken");
+			log.trace( li.getRequestURL() );
+			InputSource is = new InputSource( new StringReader( li.toString() ) );
+			Document identfiers = builder.parse( is );
+			NodeList resumptionTokenReq = identfiers.getElementsByTagName( "resumptionToken" );
 			// add to list of records to fetch
-			NodeList identifiersIDs = identfiers.getElementsByTagName("identifier");
-			if (identifiersIDs != null) {
-				for (int j = 0; j < identifiersIDs.getLength(); j++) {
-					Node n = identifiersIDs.item(j);
-					if (n.getTextContent() != null) {
-						records.add(n.getTextContent());
-					} else {
-						log.warn("Node {} is null", n);
+			NodeList identifiersIDs = identfiers.getElementsByTagName( "identifier" );
+			if ( identifiersIDs != null )
+			{
+				for ( int j = 0; j < identifiersIDs.getLength(); j++ )
+				{
+					Node n = identifiersIDs.item( j );
+					if ( n.getTextContent() != null )
+					{
+						records.add( n.getTextContent() );
+					}
+					else
+					{
+						log.warn( "Node {} is null", n );
 					}
 				}
-			} else {
-				log.warn("Identifiers in this block are null for resumption token {}", resumptionToken);
+			}
+			else
+			{
+				log.warn( "Identifiers in this block are null for resumption token {}", resumptionToken );
 			}
 			// need to recurse?
-			if (resumptionTokenReq.getLength() > 0 && resumptionTokenReq.item(0).getTextContent() != "") {
-				String rTok = resumptionTokenReq.item(0).getTextContent();
-				log.info("\tSet\t" + set + "\tToken\t" + rTok + "\tSize \t " + records.size() + "\tURL\t" + url);
-				records = getIdentifiersForSet(url, set, rTok, records, Optional.empty(), fromDate);
+			if ( resumptionTokenReq.getLength() > 0 && resumptionTokenReq.item( 0 ).getTextContent() != "" )
+			{
+				String rTok = resumptionTokenReq.item( 0 ).getTextContent();
+				log.info( "\tSet\t" + set + "\tToken\t" + rTok + "\tSize \t " + records.size() + "\tURL\t" + url );
+				records = getIdentifiersForSet( url, set, rTok, records, Optional.empty(), fromDate );
 				// need to interrupt recursion?
 
-			} else {
+			}
+			else
+			{
 				largeHarvestInteruptedToken = null;
 			}
-			if (resumptionTokenReq.getLength() != 0 && resumptionTokenReq.item(0).hasAttributes() && resumptionTokenReq.item(0).getAttributes().getNamedItem("completeListSize") != null) {
+			if ( resumptionTokenReq.getLength() != 0 && resumptionTokenReq.item( 0 ).hasAttributes()
+					&& resumptionTokenReq.item( 0 ).getAttributes().getNamedItem( "completeListSize" ) != null )
+			{
 
-				itemsInCurrentSet = Long.parseLong(resumptionTokenReq.item(0).getAttributes().getNamedItem("completeListSize").getTextContent());
-				log.info("Items in current set: {}", itemsInCurrentSet);
+				itemsInCurrentSet = Long.parseLong( resumptionTokenReq.item( 0 ).getAttributes()
+						.getNamedItem( "completeListSize" ).getTextContent() );
+				log.info( "Items in current set: {}", itemsInCurrentSet );
 
-			} else {
-				log.info(" - ");
 			}
-			if (log.isTraceEnabled()) log.trace(itemsInCurrentSet.toString());
-		} catch (SocketTimeoutException ste) {
-			log.error("OAI response timed out  {}", harvesterConfiguration.getTimeout());
+			else
+			{
+				log.info( " - " );
+			}
+			if ( log.isTraceEnabled() )
+				log.trace( itemsInCurrentSet.toString() );
+		}
+		catch (SocketTimeoutException ste)
+		{
+			log.error( "OAI response timed out  {}", harvesterConfiguration.getTimeout() );
 
-		} catch (Exception e) {
-			log.error(e.getMessage(), e);
-			StringBuilder m = new StringBuilder("\n");
-			for (StackTraceElement ste : e.getStackTrace()) {
-				if (ste.getFileName() != null) {
-					m.append(ste.getFileName()).append("  ").append(ste.getMethodName()).append("   ").append(ste.getLineNumber()).append("\n");
+		}
+		catch (Exception e)
+		{
+			log.error( e.getMessage(), e );
+			StringBuilder m = new StringBuilder( "\n" );
+			for ( StackTraceElement ste : e.getStackTrace() )
+			{
+				if ( ste.getFileName() != null )
+				{
+					m.append( ste.getFileName() ).append( "  " ).append( ste.getMethodName() ).append( "   " )
+							.append( ste.getLineNumber() ).append( "\n" );
 				}
 			}
 			this.notifyOnError(
-					"Harvesting failed for " + oaiBase(url) + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix=" + mdFormat + "&from=" + fromDate + "&resumptionToken=" + resumptionToken,
-					e.getMessage() + "\n" + m);
+					"Harvesting failed for " + oaiBase( url ) + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix="
+							+ mdFormat + "&from=" + fromDate + "&resumptionToken=" + resumptionToken,
+					e.getMessage() + "\n" + m );
 		}
 		resumptionToken = null;
-		log.trace("Records to fetch : {}", records.size());
+		log.trace( "Records to fetch : {}", records.size() );
 
 		return records;
 	}
 
-	protected void notifyOnError(String subject, String msg) {
+	protected void notifyOnError( String subject, String msg )
+	{
 
-		hlog.error(subject + "\n" + String.format("%.40s", msg));
-		if (harvesterConfiguration.getRecipient().compareTo("") == 0) {
-			log.warn("no recipient for notifications given in config.");
+		hlog.error( subject + "\n" + String.format( "%.40s", msg ) );
+		if ( harvesterConfiguration.getRecipient().compareTo( "" ) == 0 )
+		{
+			log.warn( "no recipient for notifications given in config." );
 			return;
 		}
-		try {
+		try
+		{
 			java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
 
 			Email noti = new Email();
-			noti.from(fromEmail);
+			noti.from( fromEmail );
 			// log.debug(harvesterConfiguration.recipient.split(",") + "");
-			log.debug(fromEmail);
-			if (log.isDebugEnabled()) log.debug(harvesterConfiguration.getRecipient());
-			noti.to(harvesterConfiguration.getRecipient().split(","));
-			noti.setSubject(localMachine.getHostName() + " : " + subject);
+			log.debug( fromEmail );
+			if ( log.isDebugEnabled() )
+				log.debug( harvesterConfiguration.getRecipient() );
+			noti.to( harvesterConfiguration.getRecipient().split( "," ) );
+			noti.setSubject( localMachine.getHostName() + " : " + subject );
 
-			msg += "\n" + InetAddress.getLoopbackAddress().getHostAddress() + "\n" + InetAddress.getLoopbackAddress().getHostName();
-			noti.addText(msg);
-			SmtpServer smtpServer = SmtpServer.create(this.mailhost);
-			log.warn("smtp port {}", smtpServer.getPort());
+			msg += "\n" + InetAddress.getLoopbackAddress().getHostAddress() + "\n"
+					+ InetAddress.getLoopbackAddress().getHostName();
+			noti.addText( msg );
+			SmtpServer smtpServer = SmtpServer.create( this.mailhost );
+			log.warn( "smtp port {}", smtpServer.getPort() );
 			SendMailSession session = smtpServer.createSession();
 			session.open();
-			if (log.isErrorEnabled()) log.error(session.sendMail(noti));
-			log.debug("mail sent to {}", harvesterConfiguration.getRecipient());
+			if ( log.isErrorEnabled() )
+				log.error( session.sendMail( noti ) );
+			log.debug( "mail sent to {}", harvesterConfiguration.getRecipient() );
 			session.close();
-		} catch (Exception e) {
-			log.error(e.getLocalizedMessage(), e);
+		}
+		catch (Exception e)
+		{
+			log.error( e.getLocalizedMessage(), e );
 		}
 
 	}
 
-	protected void writeToLocalFileSystem(ArrayList<String> records, String oaiUrl, String specId, String path) {
+	protected void writeToLocalFileSystem( ArrayList<String> records, String oaiUrl, String specId, String path )
+	{
 
-		log.info(oaiUrl + "\t" + specId + "\t" + path);
-		String indexName = shortened("", oaiUrl) + "-" + specId;
-		Path dest = Paths.get(path, indexName.replace(":", "-").replace("\\", "-").replace("/", "-"));
-		try {
-			Files.createDirectories(dest);
-		} catch (IOException e1) {
-			log.error(e1.getMessage());
+		log.info( oaiUrl + "\t" + specId + "\t" + path );
+		String indexName = shortened( "", oaiUrl ) + "-" + specId;
+		Path dest = Paths.get( path, indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ) );
+		try
+		{
+			Files.createDirectories( dest );
 		}
-		log.info(dest.toFile().getAbsolutePath() + "  " + dest.toFile().exists() + "");
+		catch (IOException e1)
+		{
+			log.error( e1.getMessage() );
+		}
+		log.info( dest.toFile().getAbsolutePath() + "  " + dest.toFile().exists() + "" );
 
-		records.stream().map(String::trim).forEach(currentRecord -> {
+		records.stream().map( String::trim ).forEach( currentRecord ->
+		{
 			String fname = "";
-			try {
+			try
+			{
 
 				fname = "";
 				GetRecord pmhRecord = null;
-				fname = (indexName + "__" + currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName() + ".xml").replace(":", "-").replace("\\", "-").replace("/", "-");
+				fname = (indexName + "__" + currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName()
+						+ ".xml").replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" );
 
-				try {
-					log.trace(oaiUrl);
-					try {
-						pmhRecord = new GetRecord(oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout());
-					} catch (SocketTimeoutException e) {
-						log.error(oaiUrl + " " + currentRecord + " " + e.getMessage(), e);
+				try
+				{
+					log.trace( oaiUrl );
+					try
+					{
+						pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
+								harvesterConfiguration.getTimeout() );
 					}
-					Path fdest = Paths.get(path, indexName.replace(":", "-").replace("\\", "-").replace("/", "-"), fname);
-					File f = new File(fdest.toString());
-					if (pmhRecord.getDocument().getElementsByTagName("metadata").item(0) != null) {
-						NodeList nl = pmhRecord.getDocument().getElementsByTagName("metadata").item(0).getChildNodes();
-						for (int i = 0; i < nl.getLength(); i++) {
-							Node child = nl.item(i);
-							if (child instanceof Element) {
-								Source input = new DOMSource(child);
+					catch (SocketTimeoutException e)
+					{
+						log.error( oaiUrl + " " + currentRecord + " " + e.getMessage(), e );
+					}
+					Path fdest = Paths.get( path,
+							indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
+					File f = new File( fdest.toString() );
+					if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 ) != null )
+					{
+						NodeList nl = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
+								.getChildNodes();
+						for ( int i = 0; i < nl.getLength(); i++ )
+						{
+							Node child = nl.item( i );
+							if ( child instanceof Element )
+							{
+								Source input = new DOMSource( child );
 								TransformerFactory factory = TransformerFactory.newInstance();
-								factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+								factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
 								Transformer transformer = factory.newTransformer();
-								Result output = new StreamResult(f);
-								log.trace("Stored : " + f.getAbsolutePath());
-								transformer.transform(input, output);
+								Result output = new StreamResult( f );
+								log.trace( "Stored : " + f.getAbsolutePath() );
+								transformer.transform( input, output );
 								break;
 
 							}
 						}
 
-					} else {
-						log.error(pmhRecord.getDocument().getElementsByTagName("error").item(0).getTextContent());
+					}
+					else
+					{
+						log.error( pmhRecord.getDocument().getElementsByTagName( "error" ).item( 0 ).getTextContent() );
 					}
 
-				} catch (ClosedByInterruptException cbie) {
-					log.trace("Storing metadata interupted. Restart requested while processing {}", fname);
-				} catch (NullPointerException | IOException | InvalidPathException e) {
-					log.error(e.getMessage(), e);
-					log.error(pmhRecord.getDocument().toString());
 				}
-			} catch (SAXParseException e) {
-
-				log.error(fname + " : " + e.getMessage());
-
-			} catch (DOMException | ParserConfigurationException | SAXException | TransformerException e) {
-
-				log.error(fname);
-				log.error(e.getMessage(), e);
-
-			} catch (Exception z) {
-				log.error(z.getMessage(), z);
+				catch (ClosedByInterruptException cbie)
+				{
+					log.trace( "Storing metadata interupted. Restart requested while processing {}", fname );
+				}
+				catch (NullPointerException | IOException | InvalidPathException e)
+				{
+					log.error( e.getMessage(), e );
+					log.error( pmhRecord.getDocument().toString() );
+				}
 			}
-		});
+			catch (SAXParseException e)
+			{
+
+				log.error( fname + " : " + e.getMessage() );
+
+			}
+			catch (DOMException | ParserConfigurationException | SAXException | TransformerException e)
+			{
+
+				log.error( fname );
+				log.error( e.getMessage(), e );
+
+			}
+			catch (Exception z)
+			{
+				log.error( z.getMessage(), z );
+			}
+		} );
 
 	}
 
@@ -536,103 +679,141 @@ public class Server extends SpringBootServletInitializer {
 	Properties existingIndexes = null;
 
 	@Deprecated
-	List<String> getRepoBaseUrls(String file) {
+	List<String> getRepoBaseUrls( String file )
+	{
 
 		ArrayList<String> reposToUnfold = new ArrayList<>();
-		File fil = new File(file);
-		if (!fil.exists()) {
-			reposToUnfold.add("http://www.da-ra.de/oaip/oai?verb=ListIdentifiers&metadataPrefix=oai_dc&set=16");
-			reposToUnfold.add("http://www.da-ra.de/oaip/oai?verb=ListIdentifiers&metadataPrefix=oai_dc&set=18");
+		File fil = new File( file );
+		if ( !fil.exists() )
+		{
+			reposToUnfold.add( "http://www.da-ra.de/oaip/oai?verb=ListIdentifiers&metadataPrefix=oai_dc&set=16" );
+			reposToUnfold.add( "http://www.da-ra.de/oaip/oai?verb=ListIdentifiers&metadataPrefix=oai_dc&set=18" );
 			return reposToUnfold;
 		}
-		try (BufferedReader br = new BufferedReader(new FileReader(fil))) {
+		try (BufferedReader br = new BufferedReader( new FileReader( fil ) ))
+		{
 			String line;
-			while ((line = br.readLine()) != null) {
-				if (!line.startsWith("#") && line.trim().equals("") && line.trim() != null) {
+			while ((line = br.readLine()) != null)
+			{
+				if ( !line.startsWith( "#" ) && line.trim().equals( "" ) && line.trim() != null )
+				{
 					line = line.trim();
-					if (line.contains("&set=")) {
-						reposToUnfold.add(line);
-					} else {
-						if (line.contains("?")) {
-							reposToUnfold.add(line.substring(0, line.indexOf('?')));
-						} else {
-							reposToUnfold.add(line);
+					if ( line.contains( "&set=" ) )
+					{
+						reposToUnfold.add( line );
+					}
+					else
+					{
+						if ( line.contains( "?" ) )
+						{
+							reposToUnfold.add( line.substring( 0, line.indexOf( '?' ) ) );
+						}
+						else
+						{
+							reposToUnfold.add( line );
 						}
 					}
 				}
 			}
-		} catch (IOException e) {
-			log.error(e.getLocalizedMessage());
 		}
-		for (String string : reposToUnfold) {
-			log.debug(string);
+		catch (IOException e)
+		{
+			log.error( e.getLocalizedMessage() );
 		}
-		if (log.isTraceEnabled()) log.trace(reposToUnfold.toString());
+		for ( String string : reposToUnfold )
+		{
+			log.debug( string );
+		}
+		if ( log.isTraceEnabled() )
+			log.trace( reposToUnfold.toString() );
 		return reposToUnfold;
 
 	}
 
-	List<String> getSpecs(String url) {
+	List<String> getSpecs( String url )
+	{
 
 		ArrayList<String> unfoldedSets = new ArrayList<>();
 		// skip if set is explicitly referenced
-		if (url.contains("set=") && unfoldedSets.add(url.substring(url.indexOf("set=") + 4)) || url.length() == 0) {
+		if ( url.contains( "set=" ) && unfoldedSets.add( url.substring( url.indexOf( "set=" ) + 4 ) )
+				|| url.length() == 0 )
+		{
 			return unfoldedSets;
 		}
-		try {
-			getSetStrings(url, unfoldedSets);
-		} catch (SAXParseException e) {
-			log.error(e.getMessage());
-			unfoldedSets.add(url);
-			return unfoldedSets;
-		} catch (IOException | TransformerException | ParserConfigurationException | SAXException e) {
-			log.error(e.getMessage(), e);
+		try
+		{
+			getSetStrings( url, unfoldedSets );
 		}
-		log.info("No. of sets: {}", unfoldedSets.size());
+		catch (SAXParseException e)
+		{
+			log.error( e.getMessage() );
+			unfoldedSets.add( url );
+			return unfoldedSets;
+		}
+		catch (IOException | TransformerException | ParserConfigurationException | SAXException e)
+		{
+			log.error( e.getMessage(), e );
+		}
+		log.info( "No. of sets: {}", unfoldedSets.size() );
 		return unfoldedSets;
 	}
 
-	private void getSetStrings(String url, ArrayList<String> unfoldedSets) throws IOException, ParserConfigurationException, SAXException, TransformerException {
+	private void getSetStrings( String url, ArrayList<String> unfoldedSets )
+			throws IOException, ParserConfigurationException, SAXException, TransformerException
+	{
 		ListSets ls;
-		try {
-			StringBuilder urlBuilder = new StringBuilder(url);
-			do {
-				if (log.isWarnEnabled()) log.warn(urlBuilder.toString());
-				ls = new ListSets(urlBuilder.toString().trim(), harvesterConfiguration.getTimeout());
+		try
+		{
+			StringBuilder urlBuilder = new StringBuilder( url );
+			do
+			{
+				if ( log.isWarnEnabled() )
+					log.warn( urlBuilder.toString() );
+				ls = new ListSets( urlBuilder.toString().trim(), harvesterConfiguration.getTimeout() );
 				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-				factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+				factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
 				DocumentBuilder builder = factory.newDocumentBuilder();
-				InputSource is = new InputSource(new StringReader(ls.toString()));
+				InputSource is = new InputSource( new StringReader( ls.toString() ) );
 
-				Document document = builder.parse(is);
+				Document document = builder.parse( is );
 
-				NodeList nl = document.getElementsByTagName("setSpec");
+				NodeList nl = document.getElementsByTagName( "setSpec" );
 
-				for (int i = 0; i <= nl.getLength() - 1; i++) {
-					String setSpec = nl.item(i).getTextContent();
-					unfoldedSets.add(setSpec);
-					log.info("Set: {}", setSpec);
+				for ( int i = 0; i <= nl.getLength() - 1; i++ )
+				{
+					String setSpec = nl.item( i ).getTextContent();
+					unfoldedSets.add( setSpec );
+					log.info( "Set: {}", setSpec );
 				}
-				if (ls.toString().contains("error")) {
-					log.error("Invalid request {}", ls);
+				if ( ls.toString().contains( "error" ) )
+				{
+					log.error( "Invalid request {}", ls );
 
 				}
-				if (!ls.getResumptionToken().equals("")) {
-					log.info(ls.getResumptionToken());
-					urlBuilder.append("?verb=ListSets&resumptionToken=").append(ls.getResumptionToken());
-					if (log.isInfoEnabled()) log.info(urlBuilder.toString());
+				if ( !ls.getResumptionToken().equals( "" ) )
+				{
+					log.info( ls.getResumptionToken() );
+					urlBuilder.append( "?verb=ListSets&resumptionToken=" ).append( ls.getResumptionToken() );
+					if ( log.isInfoEnabled() )
+						log.info( urlBuilder.toString() );
 				}
-			} while (unfoldedSets.size() % 50 == 0 && !ls.getResumptionToken().equals("") && !urlBuilder.toString().trim().equals("") && urlBuilder.toString().trim() != null);
+			} while (unfoldedSets.size() % 50 == 0 && !ls.getResumptionToken().equals( "" )
+					&& !urlBuilder.toString().trim().equals( "" ) && urlBuilder.toString().trim() != null);
 			url = urlBuilder.toString();
-			log.info("");
-		} catch (NoSuchFieldException e) {
-			log.info("less than 50 specs or end of spec list reached {}", e.getMessage(), e);
-		} catch (SocketTimeoutException ste) {
-			log.error("Request to oai endpoint timed out {}", harvesterConfiguration.getTimeout());
+			log.info( "" );
+		}
+		catch (NoSuchFieldException e)
+		{
+			log.info( "less than 50 specs or end of spec list reached {}", e.getMessage(), e );
+		}
+		catch (SocketTimeoutException ste)
+		{
+			log.error( "Request to oai endpoint timed out {}", harvesterConfiguration.getTimeout() );
 		}
 	}
 
-	void mem() {
+	void mem()
+	{
 
 		Runtime runtime = Runtime.getRuntime();
 		long total = runtime.totalMemory();
@@ -640,29 +821,32 @@ public class Server extends SpringBootServletInitializer {
 		long max = runtime.maxMemory();
 		long used = total - free;
 
-		log.trace("{} MB available before Cycle", Math.round(max / 1e6));
-		log.trace("{} MB allocated before Cycle", Math.round(total / 1e6));
-		log.trace("{} MB free before Cycle", Math.round(free / 1e6));
-		log.trace("{} MB used before Cycle", Math.round(used / 1e6));
+		log.trace( "{} MB available before Cycle", Math.round( max / 1e6 ) );
+		log.trace( "{} MB allocated before Cycle", Math.round( total / 1e6 ) );
+		log.trace( "{} MB free before Cycle", Math.round( free / 1e6 ) );
+		log.trace( "{} MB used before Cycle", Math.round( used / 1e6 ) );
 	}
 
-	protected void encoding() throws NoSuchFieldException, IllegalAccessException {
+	protected void encoding() throws NoSuchFieldException, IllegalAccessException
+	{
 
-		System.setProperty("file.encoding", "UTF-8");
-		Field charset = Charset.class.getDeclaredField("defaultCharset");
-		charset.setAccessible(true);
-		charset.set(null, null);
-		log.trace(System.getProperty("user.country"));
-		log.trace(System.getProperty("user.language"));
-		Locale.setDefault(new Locale("en", "GB"));
-		System.setProperty("user.country", "GB");
-		System.setProperty("user.language", "en");
-		log.trace(System.getProperty("user.country"));
-		log.trace(System.getProperty("user.language"));
+		System.setProperty( "file.encoding", "UTF-8" );
+		Field charset = Charset.class.getDeclaredField( "defaultCharset" );
+		charset.setAccessible( true );
+		charset.set( null, null );
+		log.trace( System.getProperty( "user.country" ) );
+		log.trace( System.getProperty( "user.language" ) );
+		Locale.setDefault( new Locale( "en", "GB" ) );
+		System.setProperty( "user.country", "GB" );
+		System.setProperty( "user.language", "en" );
+		log.trace( System.getProperty( "user.country" ) );
+		log.trace( System.getProperty( "user.language" ) );
 	}
 
 	@PreDestroy
-	void printConfig() {
-		if (log.isInfoEnabled()) hlog.info(harvesterConfiguration.toString());
+	void printConfig()
+	{
+		if ( log.isInfoEnabled() )
+			hlog.info( harvesterConfiguration.toString() );
 	}
 }
