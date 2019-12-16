@@ -16,6 +16,26 @@ To execute the microservice with a defined profile run the service with the `spr
 java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ukda 
 ```
 
+### Run all configurations
+```bash
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=csda 
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=dans 
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=dbk 
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ekke 
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=fsd 
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=fsd-ddi32 
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-questionConstructs
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-questions
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-questionGrids
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-series
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd-studies
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=nsd
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=snd
+java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ukda
+```
+
+
+
 ## Configuration
 The following properties are related to the harvesting process and extend the standard spring boot properties.
 Each of them can be overwritten in the command line such as 

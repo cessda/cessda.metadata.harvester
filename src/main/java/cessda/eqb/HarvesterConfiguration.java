@@ -25,25 +25,25 @@ import org.springframework.context.annotation.EnableMBeanExport;
 @Configuration
 @EnableMBeanExport
 @EnableConfigurationProperties
-@ConfigurationProperties(prefix = "harvester")
-public class HarvesterConfiguration {
+@ConfigurationProperties( prefix = "harvester" )
+public class HarvesterConfiguration
+{
 
 	private String dir = "/tmp";
 
 	private String recipient = null;
 
 	private String dialectDefinitionName = null;
-	
 
-
-	public String getDialectDefinitionName() {
+	public String getDialectDefinitionName()
+	{
 		return dialectDefinitionName;
 	}
 
-	public void setDialectDefinitionName(String dialectDefinitionName) {
+	public void setDialectDefinitionName( String dialectDefinitionName )
+	{
 		this.dialectDefinitionName = dialectDefinitionName;
 	}
-
 
 	private String metadataFormat = null;
 
@@ -55,54 +55,64 @@ public class HarvesterConfiguration {
 
 	private Integer timeout;
 
-	public String getRecipient() {
+	public String getRecipient()
+	{
 
 		return recipient;
 	}
 
-	public void setRecipient(String recipient) {
+	public void setRecipient( String recipient )
+	{
 
 		this.recipient = recipient;
 	}
 
-	public String getDir() {
+	public String getDir()
+	{
 
 		return dir;
 	}
 
-	public void setDir(String dir) {
+	public void setDir( String dir )
+	{
 
 		this.dir = dir;
 	}
 
-	public List<Repo> getRepos() {
+	public List<Repo> getRepos()
+	{
 
 		return repos;
 	}
 
-	public void setRepos(List<Repo> repos) {
+	public void setRepos( List<Repo> repos )
+	{
 
 		this.repos = repos;
 	}
 
 	@Override
-	public String toString() {
+	public String toString()
+	{
 
 		return "HarvesterConfiguration [dir=" + dir + ", recipient=" + recipient + ", repos=" + repos + ", cron=" + cron
 				+ ", from=" + from + "]";
 	}
 
-	public List<String> getRepoBaseUrls() {
+	public List<String> getRepoBaseUrls()
+	{
 
 		List<String> res = new ArrayList<>();
-		for (Repo repo : repos) {
+		for ( Repo repo : repos )
+		{
 
-			res.add(repo.url);
+			res.add( repo.url );
 		}
 		return res;
 	}
 
-	public static class From {
+	public static class From
+	{
 
 		private String incremental;
 
@@ -112,88 +122,104 @@ public class HarvesterConfiguration {
 
 		private String single;
 
-		public String getIncremental() {
+		public String getIncremental()
+		{
 
 			return incremental;
 		}
 
-		public void setIncremental(String incremental) {
+		public void setIncremental( String incremental )
+		{
 
 			this.incremental = incremental;
 		}
 
-		public String getInitial() {
+		public String getInitial()
+		{
 
 			return initial;
 		}
 
-		public void setInitial(String initial) {
+		public void setInitial( String initial )
+		{
 
 			this.initial = initial;
 		}
 
-		public String getFull() {
+		public String getFull()
+		{
 
 			return full;
 		}
 
-		public void setFull(String full) {
+		public void setFull( String full )
+		{
 
 			this.full = full;
 		}
 
 		@Override
-		public String toString() {
+		public String toString()
+		{
 
 			return "From [incremental=" + incremental + ", initial=" + initial + ", full=" + full + ", single=" + single
 					+ "]";
 		}
 
-		public String getSingle() {
+		public String getSingle()
+		{
 
 			return single;
 		}
 
-		public void setSingle(String single) {
+		public void setSingle( String single )
+		{
 
 			this.single = single;
 		}
 	}
 
-	public static class Cron {
+	public static class Cron
+	{
 
 		private String incremental;
 
 		private String full;
 
-		public String getIncremental() {
+		public String getIncremental()
+		{
 
 			return incremental;
 		}
 
-		public void setIncremental(String incremental) {
+		public void setIncremental( String incremental )
+		{
 
 			this.incremental = incremental;
 		}
 
-		public String getFull() {
+		public String getFull()
+		{
 
 			return full;
 		}
 
-		public void setFull(String full) {
+		public void setFull( String full )
+		{
 
 			this.full = full;
 		}
 
 		@Override
-		public String toString() {
+		public String toString()
+		{
 
 			return "Cron [incremental=" + incremental + ", full=" + full + "]";
 		}
 	}
 
-	public static class Repo {
+	public static class Repo
+	{
 
 		private String url;
 
@@ -203,93 +229,108 @@ public class HarvesterConfiguration {
 
 		private String metaDataProvider;
 
-		public String getUrl() {
+		public String getUrl()
+		{
 
 			return url;
 		}
 
-		public void setUrl(String url) {
+		public void setUrl( String url )
+		{
 
 			this.url = url;
 		}
 
-		public String getSetName() {
+		public String getSetName()
+		{
 
 			return setName;
 		}
 
-		public void setSetName(String setName) {
+		public void setSetName( String setName )
+		{
 
 			this.setName = setName;
 		}
 
-		public String getDataProvider() {
+		public String getDataProvider()
+		{
 
 			return dataProvider;
 		}
 
-		public void setDataProvider(String dataProvider) {
+		public void setDataProvider( String dataProvider )
+		{
 
 			this.dataProvider = dataProvider;
 		}
 
-		public String getMetaDataProvider() {
+		public String getMetaDataProvider()
+		{
 
 			return metaDataProvider;
 		}
 
-		public void setMetaDataProvider(String metaDataProvider) {
+		public void setMetaDataProvider( String metaDataProvider )
+		{
 
 			this.metaDataProvider = metaDataProvider;
 		}
 
 		@Override
-		public String toString() {
+		public String toString()
+		{
 
 			return "\n- url: " + url + "\n  setName: '" + setName + "' \n  dataProvider: '" + dataProvider
 					+ "' \n  metaDataProvider: '" + metaDataProvider + "'\n";
 		}
 	}
 
-	public Cron getCron() {
+	public Cron getCron()
+	{
 
 		return cron;
 	}
 
-	public void setCron(Cron cron) {
+	public void setCron( Cron cron )
+	{
 
 		this.cron = cron;
 	}
 
-	public From getFrom() {
+	public From getFrom()
+	{
 
 		return from;
 	}
 
-	public void setFrom(From from) {
+	public void setFrom( From from )
+	{
 
 		this.from = from;
 	}
 
-	public Integer getTimeout() {
+	public Integer getTimeout()
+	{
 
 		return timeout;
 	}
 
-	public void setTimeout(Integer timeout) {
+	public void setTimeout( Integer timeout )
+	{
 
 		this.timeout = timeout;
 	}
 
-	
-	public String getMetadataFormat() {
-	
+	public String getMetadataFormat()
+	{
+
 		return metadataFormat;
 	}
 
-	
-	public void setMetadataFormat(String metadataFormat) {
-	
+	public void setMetadataFormat( String metadataFormat )
+	{
+
 		this.metadataFormat = metadataFormat;
 	}
 

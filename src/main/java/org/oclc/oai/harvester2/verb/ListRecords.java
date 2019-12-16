@@ -16,6 +16,7 @@
 package org.oclc.oai.harvester2.verb;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -109,8 +110,9 @@ public class ListRecords extends HarvesterVerb {
      * @param baseURL
      * @param resumptionToken
      * @return
+     * @throws UnsupportedEncodingException 
      */
-    private static String getRequestURL(String baseURL, String resumptionToken) {
-        return baseURL + "?verb=ListRecords" + "&resumptionToken=" + URLEncoder.encode(resumptionToken, StandardCharsets.UTF_8);
+    private static String getRequestURL(String baseURL, String resumptionToken) throws UnsupportedEncodingException {
+        return baseURL + "?verb=ListRecords" + "&resumptionToken=" + URLEncoder.encode(resumptionToken, StandardCharsets.UTF_8.toString());
     }
 }

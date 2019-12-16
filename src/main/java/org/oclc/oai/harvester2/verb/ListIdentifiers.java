@@ -16,13 +16,12 @@
 package org.oclc.oai.harvester2.verb;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,18 +47,14 @@ public class ListIdentifiers extends HarvesterVerb {
 	/**
 	 * Client-side ListIdentifiers verb constructor
 	 *
-	 * @param baseURL
-	 *            the baseURL of the server to be queried
-	 * @exception MalformedURLException
-	 *                the baseURL is bad
-	 * @exception SAXException
-	 *                the xml response is bad
-	 * @exception IOException
-	 *                an I/O error occurred
+	 * @param baseURL the baseURL of the server to be queried
+	 * @exception MalformedURLException the baseURL is bad
+	 * @exception SAXException          the xml response is bad
+	 * @exception IOException           an I/O error occurred
 	 */
-	public ListIdentifiers(String baseURL, String from, String until, String set, String metadataPrefix, Integer timeout)
-			throws IOException, ParserConfigurationException, SAXException, TransformerException {
-		super(getRequestURL(baseURL, from, until, set, metadataPrefix),timeout);
+	public ListIdentifiers(String baseURL, String from, String until, String set, String metadataPrefix,
+			Integer timeout) throws IOException, ParserConfigurationException, SAXException, TransformerException {
+		super(getRequestURL(baseURL, from, until, set, metadataPrefix), timeout);
 	}
 
 	/**
@@ -126,6 +121,13 @@ public class ListIdentifiers extends HarvesterVerb {
 	 * @return
 	 */
 	private static String getRequestURL(String baseURL, String resumptionToken) {
-		return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode(resumptionToken, StandardCharsets.UTF_8);
+		try {
+			return baseURL + "?verb=ListIdentifiers" + "&resumptionToken="
+					+ URLEncoder.encode(resumptionToken, StandardCharsets.UTF_8.toString());
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return baseURL + " /  " + resumptionToken;
 	}
 }
