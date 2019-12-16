@@ -15,15 +15,14 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import org.xml.sax.SAXException;
 
 /**
  * This class represents an ListRecords response on either the server or
@@ -104,15 +103,15 @@ public class ListRecords extends HarvesterVerb {
         requestURL.append("&metadataPrefix=").append(metadataPrefix);
         return requestURL.toString();
     }
-    
+
     /**
      * Construct the query portion of the http request (resumptionToken version)
+     *
      * @param baseURL
      * @param resumptionToken
      * @return
-     * @throws UnsupportedEncodingException 
      */
     private static String getRequestURL(String baseURL, String resumptionToken) throws UnsupportedEncodingException {
-        return baseURL + "?verb=ListRecords" + "&resumptionToken=" + URLEncoder.encode(resumptionToken, StandardCharsets.UTF_8.toString());
+        return baseURL + "?verb=ListRecords" + "&resumptionToken=" + URLEncoder.encode(resumptionToken, "UTF-8");
     }
 }

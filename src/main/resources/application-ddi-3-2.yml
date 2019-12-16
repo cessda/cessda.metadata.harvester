@@ -2,19 +2,17 @@ logging:
   file: '@logging.file@'
   pattern:
     console: '%d{yyyy-dd-MM HH:mm:ss.SSS} %highlight(%-5level) %30.30((%M\)) %40.40((%file:%line\)) - %message%n'
-    file: '%d{yyyy-dd-MM HH:mm:ss.SSS}  %-5level  %30.30((%M\)) %40.40((%file:%line\)) - %message%n'  
+    file: '%d{yyyy-dd-MM HH:mm:ss.SSS}  %-5level  %30.30((%M\)) %40.40((%file:%line\)) - %message%n'
   level:
     org:
       springframework: '@logging.level.org.springframework@'
-      gesis: TRACE
-    cessda.eqb: TRACE
     de.codecentric.boot.admin: DEBUG
     springfox.documentation.spring.web.readers.operation: WARN
 management:
   endpoints:
     web:
       exposure:
-        include: "*"  
+        include: "*"
   endpoint:
     health:
       show-details: ALWAYS
@@ -47,7 +45,7 @@ spring:
   boot:
     admin:
       client:
-        url: "http://admin:1111" 
+        url: "http://admin:1111"
         instance:
           name: harvester
           health-url: "http://harvester:@server.port@"
@@ -57,8 +55,8 @@ spring:
       auto-registration: true
       period: 5000
 harvester:
-  metadataFormat: oai_ddi
-  dialectDefinitionName: gesisCMM-ddi122
+  metadataFormat: ddi_3_2
+  dialectDefinitionName: gesisCMM-ddi32
   dir: '@documents@'
   recipient: thomas.kraemer@gesis.org
   timeout: 60
@@ -71,5 +69,7 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: http://nesstar.soc.cas.cz/oai-pmh
-
+    - url: https://snd.gu.se/en/oai-pmh
+      setName: discipline:social-science
+    - url: https://oai-pmh.centerdata.nl/lissdata/
+      setName:
