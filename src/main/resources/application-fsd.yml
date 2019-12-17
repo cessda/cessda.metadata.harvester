@@ -56,7 +56,7 @@ spring:
       period: 5000
 harvester:
   metadataFormat: ddi_c
-  dialectDefinitionName: gesisCMM-ddi32
+  dialectDefinitionName: gesisCMM-ddi25
   dir: '@documents@'
   recipient: thomas.kraemer@gesis.org
   timeout: 60

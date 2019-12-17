@@ -58,7 +58,7 @@ spring:
       period: 5000
 harvester:
   metadataFormat: ddi
-  dialectDefinitionName: gesisCMM-ddi32
+  dialectDefinitionName: gesisCMM-ddi25
   dir: '@documents@'
   recipient: thomas.kraemer@gesis.org
   timeout: 60
@@ -71,6 +71,5 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: https://oai.ukdataservice.ac.uk:8443/oai/provider
-    setName: DataCollections
+  - url: https://oai.ukdataservice.ac.uk:8443/oai/provider?verb=ListIdentifiers&set=DataCollections
 
