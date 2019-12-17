@@ -1,8 +1,10 @@
 logging:
   file: '@logging.file@'
   pattern:
-    console: '%d{yyyy-dd-MM HH:mm:ss.SSS} %highlight(%-5level) %30.30((%M\)) %40.40((%file:%line\)) - %message%n'
-    file: '%d{yyyy-dd-MM HH:mm:ss.SSS}  %-5level  %30.30((%M\)) %40.40((%file:%line\)) - %message%n'
+    console: '%d{yyyy-dd-MM HH:mm:ss.SSS} %highlight(%-5level) %30.30((%M\)) %40.40((%file:%line\))
+      - %message%n'
+    file: '%d{yyyy-dd-MM HH:mm:ss.SSS}  %-5level  %30.30((%M\)) %40.40((%file:%line\))
+      - %message%n'
   level:
     org:
       springframework: '@logging.level.org.springframework@'
@@ -12,7 +14,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: '*'
   endpoint:
     health:
       show-details: ALWAYS
@@ -45,10 +47,10 @@ spring:
   boot:
     admin:
       client:
-        url: "http://admin:1111"
+        url: http://admin:1111
         instance:
           name: harvester
-          health-url: "http://harvester:@server.port@"
+          health-url: http://harvester:@server.port@
         username: ${SPRING_BOOT_ADMIN_USER_NAME:admin}
         password: ${SPRING_BOOT_ADMIN_USER_PASSWORD:admin}
       auto-deregistration: true
@@ -69,7 +71,4 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-    - url: https://snd.gu.se/en/oai-pmh
-      setName: discipline:social-science
-    - url: https://oai-pmh.centerdata.nl/lissdata/
-      setName:
+  - url: https://snd.gu.se/en/oai-pmh?verb=ListIdentifiers&set=discipline:social-science

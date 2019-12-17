@@ -69,5 +69,4 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: https://snd.gu.se/en/oai-pmh
-    setName: discipline:social-science
+  - url: https://snd.gu.se/en/oai-pmh?verb=ListIdentifiers&set=discipline:social-science

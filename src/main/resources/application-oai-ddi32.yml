@@ -71,15 +71,9 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-    - url: https://dbk.gesis.org/dbkoai/
-      setName: DBK
-    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
-      setName: 30ea0200-7121-4f01-8d21-a931a182b86d
-    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
-      setName: 4bd6eef6-99df-40e6-9b11-5b8f64e5cb23
-    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
-      setName: a1b8a30e-2f35-4056-8467-40e7ed0e7379
-    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
-      setName: f433e43d-29a4-4c25-9610-9dd9819a0519
-    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
-      setName: a1bb19bd-a24a-4443-8728-a6ad80eb42b8
+    - url: https://dbk.gesis.org/dbkoai/?verb=ListIdentifiers&set=DBK
+    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers&set=30ea0200-7121-4f01-8d21-a931a182b86d
+    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers&set=4bd6eef6-99df-40e6-9b11-5b8f64e5cb23
+    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers&set=a1b8a30e-2f35-4056-8467-40e7ed0e7379
+    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers&set=f433e43d-29a4-4c25-9610-9dd9819a0519
+    - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers&set=a1bb19bd-a24a-4443-8728-a6ad80eb42b8

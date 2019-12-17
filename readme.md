@@ -63,12 +63,18 @@ java -jar cessda.eqb.oaiharvester.jar --harvester.metadataFormat=ddi32 --server.
 
 #### Define a list of repositories to be harvested
 
+The following configuration will harvest the set `discipline:solcial-sciences` of the oai server `https://snd.gu.se/en/oai-pmh` in the metadataformat `ddi_3_2`.  
+
+
+
 ```yml
 harvester:
- repos:
-  - url: https://dbk.gesis.org/dbkoai/
-    setName: DBK
+  metadataFormat: ddi_3_2
+  repos:
+  - https://snd.gu.se/en/oai-pmh?verb=ListIdentifiers&set=discipline:social-science
 ```
+
+Please note: The `setName` property is optional and has no effect on the harvesting process. 
 
 #### metadataPrefix
 

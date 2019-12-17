@@ -69,5 +69,4 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: https://oai-pmh.centerdata.nl/lissdata/
-    setName: 
+  - url: https://oai-pmh.centerdata.nl/lissdata/oai2.php?verb=ListIdentifiers

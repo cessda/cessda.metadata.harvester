@@ -69,6 +69,5 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers
-    setName: 4bd6eef6-99df-40e6-9b11-5b8f64e5cb23
+  - url: https://colectica.nsd.no/oai/request?verb=ListIdentifiers&set=4bd6eef6-99df-40e6-9b11-5b8f64e5cb23
     
