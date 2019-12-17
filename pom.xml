@@ -24,11 +24,9 @@
 		<revision>0.0.2-${buildNumber}</revision>
 		<buildNumber>SNAPSHOT</buildNumber>
 		<java.version>1.8</java.version>
-		<gesis.repository.visibility>public</gesis.repository.visibility><!-- valid 
-			values: (private|public) -->
+		<gesis.repository.visibility>public</gesis.repository.visibility>
 		<image_tag>cessda/${project.artifactId}:${project.version}</image_tag>
-		<code-generation-comment>This file is generated, all changes will be
-			overriden</code-generation-comment>
+		<code-generation-comment>This file is generated, all changes will be overriden</code-generation-comment>
 		<logging.file>target/application.log</logging.file>
 		<logging.level.org.springframework>INFO</logging.level.org.springframework>
 		<server.port>8083</server.port>
@@ -128,13 +126,6 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-javadoc-plugin</artifactId> 
-				<version>3.1.0</version> <executions> <execution> <id>javadoc-jar</id> <phase>package</phase> 
-				<goals> <goal>jar</goal> </goals> <configuration> <quiet>true</quiet> <charset>UTF-8</charset> 
-				<docencoding>UTF-8</docencoding> <docfilessubdirs>true</docfilessubdirs> 
-				<includeDependencySources>true</includeDependencySources> <dependencySourceIncludes> 
-				<dependencySourceInclude>org.gesis.commons:*</dependencySourceInclude> </dependencySourceIncludes> 
-				</configuration> </execution> </executions> </plugin> -->
 			<plugin>
 				<groupId>pl.project13.maven</groupId>
 				<artifactId>git-commit-id-plugin</artifactId>
@@ -195,15 +186,13 @@
 							<exportAntProperties>true</exportAntProperties>
 							<target>
 								<condition property="isSnapshot">
-									<contains string="${project.version}"
-										substring="SNAPSHOT" />
+									<contains string="${project.version}" substring="SNAPSHOT" />
 								</condition>
 								<condition property="docker.registry.uri"
 									value="docker-private-snapshots.gesis.intra">
 									<isset property="isSnapshot" />
 								</condition>
-								<property name="docker.registry.uri"
-									value="docker-private-releases.gesis.intra" />
+								<property name="docker.registry.uri" value="docker-private-releases.gesis.intra" />
 							</target>
 						</configuration>
 						<goals>
@@ -267,8 +256,6 @@
 		</resources>
 		<pluginManagement>
 			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
-					only. It has no influence on the Maven build itself. -->
 				<plugin>
 					<groupId>org.eclipse.m2e</groupId>
 					<artifactId>lifecycle-mapping</artifactId>
