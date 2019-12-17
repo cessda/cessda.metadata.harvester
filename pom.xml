@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>eu.cessda.eqb</groupId>
@@ -30,7 +29,7 @@
 		<logging.file>target/application.log</logging.file>
 		<logging.level.org.springframework>INFO</logging.level.org.springframework>
 		<server.port>8083</server.port>
-		<server.servlet.context-path />
+		<server.servlet.context-path/>
 		<documents>data</documents>
 	</properties>
 
@@ -188,8 +187,7 @@
 								<condition property="isSnapshot">
 									<contains string="${project.version}" substring="SNAPSHOT" />
 								</condition>
-								<condition property="docker.registry.uri"
-									value="docker-private-snapshots.gesis.intra">
+								<condition property="docker.registry.uri" value="docker-private-snapshots.gesis.intra">
 									<isset property="isSnapshot" />
 								</condition>
 								<property name="docker.registry.uri" value="docker-private-releases.gesis.intra" />
@@ -279,7 +277,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore />
+										<ignore/>
 									</action>
 								</pluginExecution>
 							</pluginExecutions>
