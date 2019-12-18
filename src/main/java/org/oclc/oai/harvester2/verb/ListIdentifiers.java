@@ -70,9 +70,9 @@ public class ListIdentifiers extends HarvesterVerb {
 	 * @throws SAXException
 	 * @throws TransformerException
 	 */
-	public ListIdentifiers(String baseURL, String resumptionToken)
+	public ListIdentifiers(String baseURL, String resumptionToken, String set, String metadataPrefix)
 			throws IOException, ParserConfigurationException, SAXException, TransformerException {
-		super(getRequestURL(baseURL, resumptionToken));
+		super(getRequestURL(baseURL, resumptionToken,set,metadataPrefix));
 	}
 
 	/**
@@ -123,7 +123,19 @@ public class ListIdentifiers extends HarvesterVerb {
 	 * @param resumptionToken
 	 * @return
 	 */
-	private static String getRequestURL(String baseURL, String resumptionToken) throws UnsupportedEncodingException {
-		return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode(resumptionToken, "UTF-8");
+	private static String getRequestURL(String baseURL, String resumptionToken, String set, String metadataPrefix ) throws UnsupportedEncodingException {
+		StringBuilder requestURLBuilder = new StringBuilder(baseURL);
+		requestURLBuilder.append("?verb=ListIdentifiers");
+		if (resumptionToken != null)
+			requestURLBuilder.append("&resumptionToken=").append(resumptionToken);
+		if (set != null)
+			requestURLBuilder.append("&set=").append(set);
+		if (metadataPrefix != null)
+			requestURLBuilder.append("&metadataPrefix=").append(metadataPrefix);
+
+		String requestURL = requestURLBuilder.toString();
+
+		log.info(requestURL);
+		return requestURL;
 	}
 }

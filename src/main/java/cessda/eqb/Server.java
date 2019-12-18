@@ -201,7 +201,7 @@ public class Server extends SpringBootServletInitializer
 			{
 				return new URI( prefix.substring( 1 ) ).toString();
 			}
-			log.debug( oaiUrl );
+			log.trace( oaiUrl );
 			return prefix + new URI( oaiUrl ).getHost().replace( ".", "_" ).replace( ":", "-" ).toLowerCase();
 		}
 		catch (URISyntaxException e)
@@ -411,15 +411,21 @@ public class Server extends SpringBootServletInitializer
 			Optional<String> overwrite,
 			String fromDate )
 	{
+		if ( resumptionToken != null && !resumptionToken.isEmpty() )
+		{
+			resumptionToken = resumptionToken.replace( "from%3A1-01-01", "from%3A0001-01-01" );
+		}
+		log.info( resumptionToken );
 		String oaiBaseUrl = oaiBase( url );
-		log.info( "Harvesting started for {}?verb=ListRecords&set={}&metadataPrefix={}&from={}&resumptionToken={}",
+		log.info(
+				"Harvesting started for \n{}?verb=ListIdentifiers&set={}&metadataPrefix={}&from={}&resumptionToken={}",
 				oaiBaseUrl, set, mdFormat, fromDate, resumptionToken );
+
 		ArrayList<String> records = list;
-		log.debug( "URL: " + url + " list size : " + list.size() + " restoken " + resumptionToken );
-		log.trace( "limit : " + largeHarvestLimit + " recordssize: " + records.size() );
+		log.info( "limit : " + largeHarvestLimit + " recordssize: " + records.size() );
 		if ( records.size() >= largeHarvestLimit )
 		{
-			largeHarvestInteruptedToken = resumptionToken;
+			largeHarvestInteruptedToken = resumptionToken;// incrementCursor( null, resumptionToken, records.size() );
 			log.info( "reached limit of " + largeHarvestLimit + ". Processing " + records.size()
 					+ " records and then resume with " + largeHarvestInteruptedToken );
 			return records;
@@ -428,14 +434,12 @@ public class Server extends SpringBootServletInitializer
 		try
 		{
 			factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
-			log.trace( "recurse:\turl " + url + " set " + set + " token " + resumptionToken + "  " );
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			ListIdentifiers li;
-			log.trace( resumptionToken );
+
 			if ( resumptionToken != null )
 			{
-				log.trace( url );
-				li = new ListIdentifiers( oaiBase( url ), resumptionToken );
+				li = new ListIdentifiers( oaiBase( url ), resumptionToken, set, mdFormat );
 			}
 			else
 			{
@@ -452,32 +456,28 @@ public class Server extends SpringBootServletInitializer
 			log.trace( li.getRequestURL() );
 			InputSource is = new InputSource( new StringReader( li.toString() ) );
 			Document identfiers = builder.parse( is );
+
 			NodeList resumptionTokenReq = identfiers.getElementsByTagName( "resumptionToken" );
 			// add to list of records to fetch
 			NodeList identifiersIDs = identfiers.getElementsByTagName( "identifier" );
-			if ( identifiersIDs != null )
+			log.info( identifiersIDs.toString() );
+			for ( int j = 0; j < identifiersIDs.getLength(); j++ )
 			{
-				for ( int j = 0; j < identifiersIDs.getLength(); j++ )
+				Node n = identifiersIDs.item( j );
+				if ( n.getTextContent() != null )
 				{
-					Node n = identifiersIDs.item( j );
-					if ( n.getTextContent() != null )
-					{
-						records.add( n.getTextContent() );
-					}
-					else
-					{
-						log.warn( "Node {} is null", n );
-					}
+					records.add( n.getTextContent() );
 				}
-			}
-			else
-			{
-				log.warn( "Identifiers in this block are null for resumption token {}", resumptionToken );
+				else
+				{
+					log.warn( "Node {} is null", n );
+				}
 			}
 			// need to recurse?
 			if ( resumptionTokenReq.getLength() > 0 && resumptionTokenReq.item( 0 ).getTextContent() != "" )
 			{
 				String rTok = resumptionTokenReq.item( 0 ).getTextContent();
+
 				log.info( "\tSet\t" + set + "\tToken\t" + rTok + "\tSize \t " + records.size() + "\tURL\t" + url );
 				records = getIdentifiersForSet( url, set, rTok, records, Optional.empty(), fromDate );
 				// need to interrupt recursion?
@@ -498,10 +498,9 @@ public class Server extends SpringBootServletInitializer
 			}
 			else
 			{
-				log.info( " - " );
+				log.info( " - " + resumptionToken );
 			}
-			if ( log.isTraceEnabled() )
-				log.trace( itemsInCurrentSet.toString() );
+
 		}
 		catch (SocketTimeoutException ste)
 		{
@@ -511,6 +510,7 @@ public class Server extends SpringBootServletInitializer
 		catch (Exception e)
 		{
 			log.error( e.getMessage(), e );
+			e.printStackTrace();
 			StringBuilder m = new StringBuilder( "\n" );
 			for ( StackTraceElement ste : e.getStackTrace() )
 			{
@@ -581,18 +581,12 @@ public class Server extends SpringBootServletInitializer
 		try
 		{
 			Files.createDirectories( dest );
-		}
-		catch (IOException e1)
-		{
-			log.error( e1.getMessage() );
-		}
-		log.info( dest.toFile().getAbsolutePath() + "  " + dest.toFile().exists() + "" );
 
-		records.stream().map( String::trim ).forEach( currentRecord ->
-		{
-			String fname = "";
-			try
+			log.trace( dest.toFile().getAbsolutePath() + "  " + dest.toFile().exists() + "" );
+
+			records.stream().map( String::trim ).forEach( currentRecord ->
 			{
+				String fname = "";
 
 				fname = "";
 				GetRecord pmhRecord = null;
@@ -601,82 +595,88 @@ public class Server extends SpringBootServletInitializer
 
 				try
 				{
-					log.trace( oaiUrl );
-					try
+					pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
+							harvesterConfiguration.getTimeout() );
+				}
+				catch (IOException | ParserConfigurationException | SAXException | TransformerException e1)
+				{
+					log.error( e1.getMessage() );
+				}
+
+				Path fdest = Paths.get( path,
+						indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
+				File f = new File( fdest.toString() );
+				if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 ) != null )
+				{
+					NodeList nl = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
+							.getChildNodes();
+					for ( int i = 0; i < nl.getLength(); i++ )
 					{
-						pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
-								harvesterConfiguration.getTimeout() );
-					}
-					catch (SocketTimeoutException e)
-					{
-						log.error( oaiUrl + " " + currentRecord + " " + e.getMessage(), e );
-					}
-					Path fdest = Paths.get( path,
-							indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
-					File f = new File( fdest.toString() );
-					if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 ) != null )
-					{
-						NodeList nl = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
-								.getChildNodes();
-						for ( int i = 0; i < nl.getLength(); i++ )
+						Node child = nl.item( i );
+						if ( child instanceof Element )
 						{
-							Node child = nl.item( i );
-							if ( child instanceof Element )
+							Source input = new DOMSource( child );
+							TransformerFactory factory = TransformerFactory.newInstance();
+							try
 							{
-								Source input = new DOMSource( child );
-								TransformerFactory factory = TransformerFactory.newInstance();
 								factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
 								Transformer transformer = factory.newTransformer();
 								Result output = new StreamResult( f );
 								log.trace( "Stored : " + f.getAbsolutePath() );
 								transformer.transform( input, output );
-								break;
-
 							}
-						}
+							catch (TransformerException e)
+							{
+								log.error( e.getMessage() );
+							}
 
+							break;
+
+						}
+					}
+
+				}
+				else
+				{
+					NodeList errorList = pmhRecord.getDocument().getElementsByTagName( "error" );
+					if ( errorList.getLength() == 0 )
+					{
+						log.error( pmhRecord.getDocument().getTextContent() );
 					}
 					else
 					{
-						NodeList errorList = pmhRecord.getDocument().getElementsByTagName( "error" );
-						if(errorList.getLength()==0) {
-							log.error( pmhRecord.getDocument().getTextContent() );
-						}else {
 
-							log.error( errorList.item( 0 ).getTextContent() );
-						}
+						log.error( errorList.item( 0 ).getTextContent() );
 					}
-
 				}
-				catch (ClosedByInterruptException cbie)
-				{
-					log.trace( "Storing metadata interupted. Restart requested while processing {}", fname );
-				}
-				catch (NullPointerException | IOException | InvalidPathException e)
-				{
-					log.error( e.getMessage(), e );
-					log.error( pmhRecord.getDocument().toString() );
-				}
-			}
-			catch (SAXParseException e)
-			{
 
-				log.error( fname + " : " + e.getMessage() );
+			} );
+		}
+		catch (SocketTimeoutException e)
+		{
+			log.error( oaiUrl + e.getMessage(), e );
+		}
+		catch (ClosedByInterruptException cbie)
+		{
+			log.trace( "Storing metadata interupted. Restart requested while processing {}", cbie.getMessage() );
+		}
+		catch (NullPointerException | InvalidPathException e)
+		{
+			log.error( e.getMessage(), e );
+		}
+		catch (DOMException e)
+		{
+			log.error( e.getMessage(), e );
 
-			}
-			catch (DOMException | ParserConfigurationException | SAXException | TransformerException e)
-			{
-
-				log.error( fname );
-				log.error( e.getMessage(), e );
-
-			}
-			catch (Exception z)
-			{
-				log.error( z.getMessage(), z );
-			}
-		} );
-
+		}
+		catch (IOException e1)
+		{
+			log.error( e1.getMessage() );
+		}
+		catch (Exception z)
+		{
+			log.error( z.getMessage(), z );
+		}
 	}
 
 	@Autowired

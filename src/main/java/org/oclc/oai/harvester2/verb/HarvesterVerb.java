@@ -185,7 +185,7 @@ public abstract class HarvesterVerb {
 	
 	public HarvesterVerb(String requestURL, Integer timeout)
 			throws IOException, ParserConfigurationException, SAXException, TransformerException {
-		log.info(requestURL);
+		log.trace(requestURL);
 		harvest(requestURL, timeout);
 	}
 			
