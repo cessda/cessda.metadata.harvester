@@ -118,6 +118,32 @@ public abstract class HarvesterVerb {
 	}
 
 	/**
+	 * Mock object creator (for unit testing purposes)
+	 */
+	public HarvesterVerb() {
+	}
+
+	/**
+	 * Performs the OAI request
+	 * 
+	 * @param requestURL
+	 * @throws IOException
+	 * @throws ParserConfigurationException
+	 * @throws SAXException
+	 * @throws TransformerException
+	 */
+	public HarvesterVerb(String requestURL)
+			throws IOException, ParserConfigurationException, SAXException, TransformerException {
+		harvest(requestURL, 2);
+	}
+
+	public HarvesterVerb(String requestURL, Integer timeout)
+			throws IOException, ParserConfigurationException, SAXException, TransformerException {
+		log.trace(requestURL);
+		harvest(requestURL, timeout);
+	}
+
+	/**
 	 * Get the OAI response as a DOM object
 	 * 
 	 * @return the DOM for the OAI response
@@ -161,35 +187,6 @@ public abstract class HarvesterVerb {
 
 		return requestURL;
 	}
-
-	/**
-	 * Mock object creator (for unit testing purposes)
-	 */
-	public HarvesterVerb() {
-	}
-
-	/**
-	 * Performs the OAI request
-	 * 
-	 * @param requestURL
-	 * @throws IOException
-	 * @throws ParserConfigurationException
-	 * @throws SAXException
-	 * @throws TransformerException
-	 */
-	public HarvesterVerb(String requestURL)
-			throws IOException, ParserConfigurationException, SAXException, TransformerException {
-		harvest(requestURL, 2);
-	}
-	
-	
-	public HarvesterVerb(String requestURL, Integer timeout)
-			throws IOException, ParserConfigurationException, SAXException, TransformerException {
-		log.trace(requestURL);
-		harvest(requestURL, timeout);
-	}
-			
-			
 
 	/**
 	 * Preforms the OAI request
