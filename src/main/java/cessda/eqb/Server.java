@@ -483,7 +483,7 @@ public class Server extends SpringBootServletInitializer
 			{
 				String rTok = resumptionTokenReq.item( 0 ).getTextContent();
 
-				log.info( "\tSet\t %s \tToken\t %s \tSize \t %s\tURL\t" + url, set, rTok, records.size()+"" );
+				log.info( "\tSet\t {0} \tToken\t {1} \tSize \t {2} \tURL\t" + url, set, rTok, records.size() );
 				records = getIdentifiersForSet( url, set, rTok, records, Optional.empty(), fromDate );
 				// need to interrupt recursion?
 
