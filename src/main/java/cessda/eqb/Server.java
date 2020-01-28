@@ -57,13 +57,17 @@ public class Server extends SpringBootServletInitializer
 
 	private static final Logger log = LoggerFactory.getLogger( Server.class );
 
-	static boolean fullIsRunning = false;
+	protected boolean fullIsRunning = false;
 
-	static boolean incrementalIsRunning = false;
+	protected boolean incrementalIsRunning = false;
 
 	@Async
 	@ManagedOperation(
-			description = "Run harvesting on several repo starting from 'harvester.from.single'. Separate more than one repo with comma. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. The position corresponds to the number given in the list of repos in the configuration view, starting from 0. See environments tab and search for 'harvester.repos'" )
+			description = "Run harvesting on several repo starting from 'harvester.from.single'. " +
+					"Separate more than one repo with comma. Can be used to harvest an new repository, " +
+					"after the list of repos has been cleared, and the newly added repo url is set."
+					+ "The position corresponds to the number given in the list of repos in the configuration view,"
+					+ "starting from 0. See environments tab and search for 'harvester.repos'" )
 	public String bundleHarvesting( String commaSeparatedIntegerPositionInRepoList )
 	{
 
@@ -684,58 +688,6 @@ public class Server extends SpringBootServletInitializer
 
 	Properties existingIndexes = null;
 
-	@Deprecated
-	List<String> getRepoBaseUrls( String file )
-	{
-
-		ArrayList<String> reposToUnfold = new ArrayList<>();
-		File fil = new File( file );
-		if ( !fil.exists() )
-		{
-			reposToUnfold.add( "http://www.da-ra.de/oaip/oai?verb=ListIdentifiers&metadataPrefix=oai_dc&set=16" );
-			reposToUnfold.add( "http://www.da-ra.de/oaip/oai?verb=ListIdentifiers&metadataPrefix=oai_dc&set=18" );
-			return reposToUnfold;
-		}
-		try (BufferedReader br = new BufferedReader( new FileReader( fil ) ))
-		{
-			String line;
-			while ((line = br.readLine()) != null)
-			{
-				if ( !line.startsWith( "#" ) && line.trim().equals( "" ) && line.trim() != null )
-				{
-					line = line.trim();
-					if ( line.contains( "&set=" ) )
-					{
-						reposToUnfold.add( line );
-					}
-					else
-					{
-						if ( line.contains( "?" ) )
-						{
-							reposToUnfold.add( line.substring( 0, line.indexOf( '?' ) ) );
-						}
-						else
-						{
-							reposToUnfold.add( line );
-						}
-					}
-				}
-			}
-		}
-		catch (IOException e)
-		{
-			log.error( e.getLocalizedMessage() );
-		}
-		for ( String string : reposToUnfold )
-		{
-			log.debug( string );
-		}
-		if ( log.isTraceEnabled() )
-			log.trace( reposToUnfold.toString() );
-		return reposToUnfold;
-
-	}
-
 	List<String> getSpecs( String url )
 	{
 
@@ -818,20 +770,6 @@ public class Server extends SpringBootServletInitializer
 		}
 	}
 
-	void mem()
-	{
-
-		Runtime runtime = Runtime.getRuntime();
-		long total = runtime.totalMemory();
-		long free = runtime.freeMemory();
-		long max = runtime.maxMemory();
-		long used = total - free;
-
-		log.trace( "{} MB available before Cycle", Math.round( max / 1e6 ) );
-		log.trace( "{} MB allocated before Cycle", Math.round( total / 1e6 ) );
-		log.trace( "{} MB free before Cycle", Math.round( free / 1e6 ) );
-		log.trace( "{} MB used before Cycle", Math.round( used / 1e6 ) );
-	}
 
 	protected void encoding() throws NoSuchFieldException, IllegalAccessException
 	{
@@ -840,13 +778,9 @@ public class Server extends SpringBootServletInitializer
 		Field charset = Charset.class.getDeclaredField( "defaultCharset" );
 		charset.setAccessible( true );
 		charset.set( null, null );
-		log.trace( System.getProperty( "user.country" ) );
-		log.trace( System.getProperty( "user.language" ) );
 		Locale.setDefault( new Locale( "en", "GB" ) );
 		System.setProperty( "user.country", "GB" );
 		System.setProperty( "user.language", "en" );
-		log.trace( System.getProperty( "user.country" ) );
-		log.trace( System.getProperty( "user.language" ) );
 	}
 
 	@PreDestroy
