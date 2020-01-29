@@ -19,6 +19,7 @@ java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ukda
 ### Clone, compile & run all configurations (EQB)
 
 
+
 If you want to run multiple instances on one server, you need to assign different 'server.port' values either in the application*.properties, in the maven during the compilation or as a cli param --server.port=8992
 
 Missing SSL certs need to be imported to the java keystore before running the harvester.
@@ -31,12 +32,31 @@ mvn clean compile package
 keytool -import  -alias letsenc -file src\main\resources\missing-letsencrypt-root-and-intermediate-certificate\letsencrypt-x3.cer
 keytool -import  -alias letsenc-root -file src\main\resources\missing-letsencrypt-root-and-intermediate-certificate\dst-root-ca-x3.cer
 keytool -import  -alias ukdacrt -file src\main\resources\missing-ukda-intermediate-ssl-certificate\qvg3int.cer
-
 java -jar target/oaiharvester.jar --spring.profiles.active=cdc-oai_ddi25_en --server.port=8801 
 java -jar target/oaiharvester.jar --spring.profiles.active=cdc-oai_ddi25_nl --server.port=8802  
 java -jar target/oaiharvester.jar --spring.profiles.active=cdc-oai_ddi25 --server.port=8803 
 java -jar target/oaiharvester.jar --spring.profiles.active=cdc-oai_ddi --server.port=8804 
 java -jar target/oaiharvester.jar --spring.profiles.active=cdc-ddi --server.port=8805 
+```
+ 
+
+
+### Run all configurations (EQB)
+```bash
+java -jar oaiharvester.jar --spring.profiles.active=csda --server.port=8801
+java -jar oaiharvester.jar --spring.profiles.active=dans --server.port=8802
+java -jar oaiharvester.jar --spring.profiles.active=dbk --server.port=8803
+java -jar oaiharvester.jar --spring.profiles.active=ekke --server.port=8804
+java -jar oaiharvester.jar --spring.profiles.active=fsd --server.port=8805
+java -jar oaiharvester.jar --spring.profiles.active=fsd-ddi32 --server.port=8806
+java -jar oaiharvester.jar --spring.profiles.active=nsd-questionConstructs --server.port=8807
+java -jar oaiharvester.jar --spring.profiles.active=nsd-questions --server.port=8808
+java -jar oaiharvester.jar --spring.profiles.active=nsd-questionGrids --server.port=8809
+java -jar oaiharvester.jar --spring.profiles.active=nsd-series --server.port=8810
+java -jar oaiharvester.jar --spring.profiles.active=nsd-studies --server.port=8811
+java -jar oaiharvester.jar --spring.profiles.active=nsd --server.port=8812
+java -jar oaiharvester.jar --spring.profiles.active=snd --server.port=8813
+java -jar oaiharvester.jar --spring.profiles.active=ukda --server.port=8814
 ```
 
 
