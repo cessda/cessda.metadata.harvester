@@ -57,15 +57,14 @@ public class ListSets extends HarvesterVerb {
      * @throws NoSuchFieldException
      */
     public String getResumptionToken()
-    throws TransformerException, NoSuchFieldException {
+    throws TransformerException {
         if (SCHEMA_LOCATION_V2_0.equals(getSchemaLocation())) {
             return getSingleString("/oai20:OAI-PMH/oai20:ListSets/oai20:resumptionToken");
         } else if (SCHEMA_LOCATION_V1_1_LIST_SETS.equals(getSchemaLocation())) {
             return getSingleString("/oai11_ListSets:ListSets/oai11_ListSets:resumptionToken");
         } else {
             log.error("{}-", getSchemaLocation());
-            if (log.isErrorEnabled()) log.error(this.toString());
-            throw new NoSuchFieldException(getSchemaLocation());
+           return "";
         }
     }
     
