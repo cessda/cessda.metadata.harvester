@@ -1,4 +1,5 @@
-/*
+
+/**
  Copyright 2006 OCLC, Online Computer Library Center
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -15,31 +16,30 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URLEncoder;
-
 /**
- * This class represents an ListIdentifiers response on either the server or on
- * the client
+ * This class represents an ListIdentifiers response on either the server or on the client
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class ListIdentifiers extends HarvesterVerb {
+public class ListIdentifiers extends HarvesterVerb
+{
 
-	private static final Logger log = LoggerFactory.getLogger(ListIdentifiers.class);
+	public static Logger log = LoggerFactory.getLogger( ListIdentifiers.class );
 
 	/**
 	 * Mock object constructor (for unit testing purposes)
 	 */
-	public ListIdentifiers() {
+	public ListIdentifiers()
+	{
 		super();
 	}
 
@@ -55,9 +55,11 @@ public class ListIdentifiers extends HarvesterVerb {
 	 * @exception IOException
 	 *                an I/O error occurred
 	 */
-	public ListIdentifiers(String baseURL, String from, String until, String set, String metadataPrefix, Integer timeout)
-			throws IOException, ParserConfigurationException, SAXException, TransformerException {
-		super(getRequestURL(baseURL, from, until, set, metadataPrefix),timeout);
+	public ListIdentifiers( String baseURL, String from, String until, String set, String metadataPrefix,
+			Integer timeout )
+			throws IOException, ParserConfigurationException, SAXException, TransformerException
+	{
+		super( getRequestURL( baseURL, from, until, set, metadataPrefix ), timeout );
 	}
 
 	/**
@@ -70,9 +72,10 @@ public class ListIdentifiers extends HarvesterVerb {
 	 * @throws SAXException
 	 * @throws TransformerException
 	 */
-	public ListIdentifiers(String baseURL, String resumptionToken, String set, String metadataPrefix)
-			throws IOException, ParserConfigurationException, SAXException, TransformerException {
-		super(getRequestURL(baseURL, resumptionToken,set,metadataPrefix));
+	public ListIdentifiers( String baseURL, String resumptionToken )
+			throws IOException, ParserConfigurationException, SAXException, TransformerException
+	{
+		super( getRequestURL( baseURL, resumptionToken ) );
 	}
 
 	/**
@@ -82,14 +85,20 @@ public class ListIdentifiers extends HarvesterVerb {
 	 * @throws TransformerException
 	 * @throws NoSuchFieldException
 	 */
-	public String getResumptionToken() throws TransformerException, NoSuchFieldException {
+	public String getResumptionToken() throws TransformerException, NoSuchFieldException
+	{
 
-		if (SCHEMA_LOCATION_V2_0.equals(getSchemaLocation())) {
-			return getSingleString("/oai20:OAI-PMH/oai20:ListIdentifiers/oai20:resumptionToken");
-		} else if (SCHEMA_LOCATION_V1_1_LIST_IDENTIFIERS.equals(getSchemaLocation())) {
-			return getSingleString("/oai11_ListIdentifiers:ListIdentifiers/oai11_ListIdentifiers:resumptionToken");
-		} else {
-			throw new NoSuchFieldException(getSchemaLocation());
+		if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
+		{
+			return getSingleString( "/oai20:OAI-PMH/oai20:ListIdentifiers/oai20:resumptionToken" );
+		}
+		else if ( SCHEMA_LOCATION_V1_1_LIST_IDENTIFIERS.equals( getSchemaLocation() ) )
+		{
+			return getSingleString( "/oai11_ListIdentifiers:ListIdentifiers/oai11_ListIdentifiers:resumptionToken" );
+		}
+		else
+		{
+			throw new NoSuchFieldException( getSchemaLocation() );
 		}
 	}
 
@@ -98,44 +107,35 @@ public class ListIdentifiers extends HarvesterVerb {
 	 *
 	 * @return a String containing the query portion of the http request
 	 */
-	private static String getRequestURL(String baseURL, String from, String until, String set, String metadataPrefix) {
+	private static String getRequestURL( String baseURL, String from, String until, String set, String metadataPrefix )
+	{
 
-		StringBuilder requestURLBuilder = new StringBuilder(baseURL);
-		requestURLBuilder.append("?verb=ListIdentifiers");
-		if (from != null)
-			requestURLBuilder.append("&from=").append(from);
-		if (until != null)
-			requestURLBuilder.append("&until=").append(until);
-		if (set != null)
-			requestURLBuilder.append("&set=").append(set);
-		requestURLBuilder.append("&metadataPrefix=").append(metadataPrefix);
-
-		String requestURL = requestURLBuilder.toString();
-
-		log.info(requestURL);
-		return requestURL;
+		StringBuilder requestURL = new StringBuilder( baseURL );
+		requestURL.append( "?verb=ListIdentifiers" );
+		if ( from != null )
+			requestURL.append( "&from=" ).append( from );
+		if ( until != null )
+			requestURL.append( "&until=" ).append( until );
+		if ( set != null )
+			requestURL.append( "&set=" ).append( set );
+		requestURL.append( "&metadataPrefix=" ).append( metadataPrefix );
+		log.info( requestURL.toString() );
+		return requestURL.toString();
 	}
 
 	/**
 	 * Construct the query portion of the http request (resumptionToken version)
-	 *
+	 * 
 	 * @param baseURL
 	 * @param resumptionToken
 	 * @return
 	 */
-	private static String getRequestURL(String baseURL, String resumptionToken, String set, String metadataPrefix ) throws UnsupportedEncodingException {
-		StringBuilder requestURLBuilder = new StringBuilder(baseURL);
-		requestURLBuilder.append("?verb=ListIdentifiers");
-		if (resumptionToken != null)
-			requestURLBuilder.append("&resumptionToken=").append(resumptionToken);
-		if (set != null)
-			requestURLBuilder.append("&set=").append(set);
-		if (metadataPrefix != null)
-			requestURLBuilder.append("&metadataPrefix=").append(metadataPrefix);
+	private static String getRequestURL( String baseURL, String resumptionToken )
+	{
 
-		String requestURL = requestURLBuilder.toString();
-
-		log.info(requestURL);
-		return requestURL;
+		StringBuffer requestURL = new StringBuffer( baseURL );
+		requestURL.append( "?verb=ListIdentifiers" );
+		requestURL.append( "&resumptionToken=" ).append( URLEncoder.encode( resumptionToken ) );
+		return requestURL.toString();
 	}
 }

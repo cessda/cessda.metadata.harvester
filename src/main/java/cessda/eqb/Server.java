@@ -55,11 +55,40 @@ import java.util.*;
 public class Server extends SpringBootServletInitializer
 {
 
+	public static final String REPO_BASE_URL = "http://svko-dara-test.gesis.org:8080/oaip/oai";
+
 	private static final Logger log = LoggerFactory.getLogger( Server.class );
 
 	protected boolean fullIsRunning = false;
 
 	protected boolean incrementalIsRunning = false;
+
+	private static final Logger hlog = LoggerFactory.getLogger( Server.class );
+	protected static DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+	protected static String fromEmail = "system.wts@gesis.org";
+	protected static int largeHarvestLimit = 50;
+	protected static String to = "";
+	protected static TimeZone tZone = TimeZone.getTimeZone( "UTC" );
+	protected static String mdFormat = "oai_ddi";
+	static String largeHarvestInteruptedToken = null;
+	static Long itemsInCurrentSet = 0L;
+	protected final DateFormat oaiDtFrmt = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
+	protected final SimpleDateFormat rsmFlDtFrmt = new SimpleDateFormat( "yyyy-MM-dd" );
+	@Autowired
+	ApplicationContext applicationContext;
+	@Autowired
+	protected HarvesterConfiguration harvesterConfiguration;
+
+	Properties existingIndexes = null;
+
+	@Value( "${spring.mail.host}" )
+	String mailhost = "smtp.gmail.com";
+
+	public static void main( String[] args )
+	{
+		SpringApplication.run( Server.class, args );
+		log.info( "Harvester running. " );
+	}
 
 	@Async
 	@ManagedOperation(
@@ -141,30 +170,6 @@ public class Server extends SpringBootServletInitializer
 
 		incrementalIsRunning = false;
 		return "Initial harvesting finished from " + harvesterConfiguration.getFrom().getInitial();
-	}
-
-	public static final String REPO_BASE_URL = "http://svko-dara-test.gesis.org:8080/oaip/oai";
-	private static final Logger hlog = LoggerFactory.getLogger( Server.class );
-	protected static DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-	protected static String fromEmail = "system.wts@gesis.org";
-	protected static int largeHarvestLimit = 50;
-	protected static String to = "";
-	protected static TimeZone tZone = TimeZone.getTimeZone( "UTC" );
-	protected static String mdFormat = "oai_ddi";
-	protected static String type = "dc";
-	static String largeHarvestInteruptedToken = null;
-	static Long itemsInCurrentSet = 0L;
-	protected final DateFormat oaiDtFrmt = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
-	protected final SimpleDateFormat rsmFlDtFrmt = new SimpleDateFormat( "yyyy-MM-dd" );
-	@Autowired
-	ApplicationContext applicationContext;
-	@Value( "${spring.mail.host}" )
-	String mailhost = "smtp.gmail.com";
-
-	public static void main( String[] args )
-	{
-		SpringApplication.run( Server.class, args );
-		log.info( "Harvester running. " );
 	}
 
 	protected static String oaiBase( String u )
@@ -302,7 +307,6 @@ public class Server extends SpringBootServletInitializer
 		try
 		{
 			encoding();
-			type = "dc";
 			mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat()
 					: "oai_dc";
 			to = rsmFlDtFrmt.format( new Date() );
@@ -318,7 +322,7 @@ public class Server extends SpringBootServletInitializer
 				log.trace( "{} {}", baseUrl, fromDate );
 				for ( String set : getSpecs( baseUrl ) )
 				{
-					hlog.info( "Start to get {} records for {} / {} from {}", type, baseUrl, set, fromDate );
+					hlog.info( "Start to get  records for {} / {} from {}", baseUrl, set, fromDate );
 					fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
 				}
 			}
@@ -339,7 +343,6 @@ public class Server extends SpringBootServletInitializer
 		try
 		{
 			encoding();
-			type = "dc";
 			mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat()
 					: "oai_dc";
 			to = rsmFlDtFrmt.format( new Date() );
@@ -355,7 +358,7 @@ public class Server extends SpringBootServletInitializer
 					log.trace( "{} {}", baseUrl, fromDate );
 					for ( String set : getSpecs( baseUrl ) )
 					{
-						hlog.info( "Start to get {} records for {} / {} from {}", type, baseUrl, set, fromDate );
+						hlog.info( "Start to get records for {} / {} from {}", baseUrl, set, fromDate );
 						fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
 					}
 				}
@@ -384,7 +387,7 @@ public class Server extends SpringBootServletInitializer
 			ArrayList<String> currentlyRetrievedSet;
 			do
 			{
-				log.info( "Fetching {} records for repo {} and pmh set {}. Be patient, this can take hours.", type,
+				log.info( "Fetching records for repo {} and pmh set {}. Be patient, this can take hours.",
 						repoBase, setspec );
 				currentlyRetrievedSet = null;
 				do
@@ -394,8 +397,11 @@ public class Server extends SpringBootServletInitializer
 					writeToLocalFileSystem( currentlyRetrievedSet, repoBase, setspec, f.getAbsolutePath() );
 					if ( currentlyRetrievedSet.isEmpty() )
 					{
+						log.info( "Current set empty" );
 						break;
 					}
+					log.info( "" + currentlyRetrievedSet.size() );
+					log.info( largeHarvestInteruptedToken );
 					log.info( "\tSET\t" + setspec + "\tsize:\t" + currentlyRetrievedSet.size() + "\tURL\t" + repoBase );
 				} while (largeHarvestInteruptedToken != null && itemsInCurrentSet != 50);
 			} while (!currentlyRetrievedSet.isEmpty() && currentlyRetrievedSet.size() % 50 == 0
@@ -415,21 +421,15 @@ public class Server extends SpringBootServletInitializer
 			Optional<String> overwrite,
 			String fromDate )
 	{
-		if ( resumptionToken != null && !resumptionToken.isEmpty() )
-		{
-			resumptionToken = resumptionToken.replace( "from%3A1-01-01", "from%3A0001-01-01" );
-		}
-		log.info( resumptionToken );
-		String oaiBaseUrl = oaiBase( url );
-		log.info(
-				"Harvesting started for \n{}?verb=ListIdentifiers&set={}&metadataPrefix={}&from={}&resumptionToken={}",
-				oaiBaseUrl, set, mdFormat, fromDate, resumptionToken );
 
+		log.info( "Harvesting started for " + oaiBase( url ) + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix="
+				+ mdFormat + "&from=" + fromDate );
 		ArrayList<String> records = list;
+		log.debug( "URL: " + url + " list size : " + list.size() + " restoken " + resumptionToken );
 		log.info( "limit : " + largeHarvestLimit + " recordssize: " + records.size() );
 		if ( records.size() >= largeHarvestLimit )
 		{
-			largeHarvestInteruptedToken = resumptionToken;// incrementCursor( null, resumptionToken, records.size() );
+			largeHarvestInteruptedToken = resumptionToken;
 			log.info( "reached limit of " + largeHarvestLimit + ". Processing " + records.size()
 					+ " records and then resume with " + largeHarvestInteruptedToken );
 			return records;
@@ -437,17 +437,18 @@ public class Server extends SpringBootServletInitializer
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		try
 		{
-			factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
+			log.trace( "recurse:\turl " + url + " set " + set + " token " + resumptionToken + "  " );
 			DocumentBuilder builder = factory.newDocumentBuilder();
 			ListIdentifiers li;
-
+			log.trace( resumptionToken );
 			if ( resumptionToken != null )
 			{
-				li = new ListIdentifiers( oaiBase( url ), resumptionToken, set, mdFormat );
+				log.trace( url );
+				li = new ListIdentifiers( oaiBase( url ), resumptionToken );
 			}
 			else
 			{
-				if ( set.compareTo( url ) == 0 || set.startsWith( "http" ) )
+				if ( set.compareTo( url ) == 0 )
 				{
 					set = null;
 				}
@@ -455,36 +456,39 @@ public class Server extends SpringBootServletInitializer
 						"From " + fromDate + "  until " + to + "  " + oaiBase( url ) + "  " + set + "  " + mdFormat );
 				li = new ListIdentifiers( oaiBase( url ), fromDate, to, set, overwrite.orElse( mdFormat ),
 						harvesterConfiguration.getTimeout() );
-				log.debug( oaiBaseUrl );
+				log.debug( oaiBase( url ) );
 			}
 			log.trace( li.getRequestURL() );
 			InputSource is = new InputSource( new StringReader( li.toString() ) );
 			Document identfiers = builder.parse( is );
-
 			NodeList resumptionTokenReq = identfiers.getElementsByTagName( "resumptionToken" );
 			// add to list of records to fetch
 			NodeList identifiersIDs = identfiers.getElementsByTagName( "identifier" );
-			log.info( identifiersIDs.toString() );
-			for ( int j = 0; j < identifiersIDs.getLength(); j++ )
+			if ( identifiersIDs != null )
 			{
-				Node n = identifiersIDs.item( j );
-				if ( n.getTextContent() != null )
+				for ( int j = 0; j < identifiersIDs.getLength(); j++ )
 				{
-					records.add( n.getTextContent() );
-				}
-				else
-				{
-					log.warn( "Node {} is null", n );
+					Node n = identifiersIDs.item( j );
+					if ( n.getTextContent() != null )
+					{
+						records.add( n.getTextContent() );
+					}
+					else
+					{
+						log.warn( "Node " + n + " is null" );
+					}
 				}
 			}
+			else
+			{
+				log.warn( "Identifiers in this block are null for resumption token " + resumptionToken );
+			}
 			// need to recurse?
-			if ( resumptionTokenReq.getLength() > 0
-					&& resumptionTokenReq.item( 0 ).getTextContent().compareTo( "" ) == 0 )
+			if ( resumptionTokenReq.getLength() > 0 && resumptionTokenReq.item( 0 ).getTextContent() != "" )
 			{
 				String rTok = resumptionTokenReq.item( 0 ).getTextContent();
-
-				log.info( "\tSet\t {0} \tToken\t {1} \tSize \t {2} \tURL\t" + url, set, rTok, records.size() );
-				records = getIdentifiersForSet( url, set, rTok, records, Optional.empty(), fromDate );
+				log.info( "\tSet\t" + set + "\tToken\t" + rTok + "\tSize \t " + records.size() + "\tURL\t" + url );
+				records = getIdentifiersForSet( url, set, rTok, records, null, fromDate );
 				// need to interrupt recursion?
 
 			}
@@ -496,32 +500,33 @@ public class Server extends SpringBootServletInitializer
 					&& resumptionTokenReq.item( 0 ).getAttributes().getNamedItem( "completeListSize" ) != null )
 			{
 
-				itemsInCurrentSet = Long.parseLong( resumptionTokenReq.item( 0 ).getAttributes()
-						.getNamedItem( "completeListSize" ).getTextContent() );
-				log.info( "Items in current set: {}", itemsInCurrentSet );
+				itemsInCurrentSet = Long.parseLong(
+						resumptionTokenReq.item( 0 ).getAttributes().getNamedItem( "completeListSize" )
+								.getTextContent() );
+				log.info( "Items in current set: " + itemsInCurrentSet );
 
 			}
 			else
 			{
-				log.info( " - " + resumptionToken );
+				log.info( " - " );
 			}
-
+			log.trace( itemsInCurrentSet + "" );
 		}
 		catch (SocketTimeoutException ste)
 		{
-			log.error( "OAI response timed out  {}", harvesterConfiguration.getTimeout() );
+			log.error( "OAI response timed out  " + harvesterConfiguration.getTimeout() );
 
 		}
 		catch (Exception e)
 		{
-			log.error( e.getMessage(), e );
-			StringBuilder m = new StringBuilder( "\n" );
+			log.error( e.getMessage() );
+			e.printStackTrace();
+			String m = "\n";
 			for ( StackTraceElement ste : e.getStackTrace() )
 			{
 				if ( ste.getFileName() != null )
 				{
-					m.append( ste.getFileName() ).append( "  " ).append( ste.getMethodName() ).append( "   " )
-							.append( ste.getLineNumber() ).append( "\n" );
+					m += ste.getFileName() + "  " + ste.getMethodName() + "   " + ste.getLineNumber() + "\n";
 				}
 			}
 			this.notifyOnError(
@@ -530,7 +535,7 @@ public class Server extends SpringBootServletInitializer
 					e.getMessage() + "\n" + m );
 		}
 		resumptionToken = null;
-		log.trace( "Records to fetch : {}", records.size() );
+		log.trace( "Records to fetch : " + records.size() );
 
 		return records;
 	}
@@ -580,6 +585,7 @@ public class Server extends SpringBootServletInitializer
 	{
 
 		log.info( oaiUrl + "\t" + specId + "\t" + path );
+//		this.largeHarvestLimit = records.size();
 		String indexName = shortened( "", oaiUrl ) + "-" + specId;
 		Path dest = Paths.get( path, indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ) );
 		try
@@ -646,6 +652,7 @@ public class Server extends SpringBootServletInitializer
 					if ( errorList.getLength() == 0 )
 					{
 						log.error( pmhRecord.getDocument().getTextContent() );
+						// Util.printDocument( pmhRecord.getDocument(), System.out );
 					}
 					else
 					{
@@ -682,11 +689,6 @@ public class Server extends SpringBootServletInitializer
 			log.error( z.getMessage(), z );
 		}
 	}
-
-	@Autowired
-	protected HarvesterConfiguration harvesterConfiguration;
-
-	Properties existingIndexes = null;
 
 	List<String> getSpecs( String url )
 	{
@@ -760,10 +762,7 @@ public class Server extends SpringBootServletInitializer
 			url = urlBuilder.toString();
 			log.info( "" );
 		}
-		catch (NoSuchFieldException e)
-		{
-			log.info( "less than 50 specs or end of spec list reached {}", e.getMessage(), e );
-		}
+
 		catch (SocketTimeoutException ste)
 		{
 			log.error( "Request to oai endpoint timed out {}", harvesterConfiguration.getTimeout() );
