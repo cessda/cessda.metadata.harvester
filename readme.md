@@ -16,7 +16,7 @@ To execute the microservice with a defined profile run the service with the `spr
 java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=ukda 
 ```
 
-### Clone, compile & run all configurations (EQB)
+### Clone, compile & run all configurations (CDC)
 
 
 
