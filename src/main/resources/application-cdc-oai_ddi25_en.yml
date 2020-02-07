@@ -53,7 +53,7 @@ spring:
       period: 5000
 harvester:
   metadataFormat: oai_ddi25_en
-  dialectDefinitionName: gesisCMM-ddi122
+  dialectDefinitionName: gesisCMM-ddi25
   dir: '@documents@'
   recipient: john.shepherdson@essex.ac.uk,toni.sissala@tuni.fi
   timeout: 100
