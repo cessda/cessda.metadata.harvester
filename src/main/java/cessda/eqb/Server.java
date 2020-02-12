@@ -246,6 +246,7 @@ public class Server extends SpringBootServletInitializer
 		runHarvest( harvesterConfiguration.getFrom().getFull() );
 		hlog.info( "Full harvesting finished" );
 		fullIsRunning = false;
+		hlog.info( "Full harvesting finished from " + harvesterConfiguration.getFrom().getFull() );
 		return "Full harvesting finished from " + harvesterConfiguration.getFrom().getFull();
 	}
 
@@ -282,12 +283,10 @@ public class Server extends SpringBootServletInitializer
 			}
 			else
 			{
-				String o = "Incremental harvesting already running.";
-				hlog.info( o );
-				return o;
+				msg = "Incremental harvesting already running.";
 
 			}
-
+			hlog.info( msg );
 		}
 		else
 		{
@@ -296,6 +295,7 @@ public class Server extends SpringBootServletInitializer
 		}
 
 		incrementalIsRunning = false;
+
 		return msg;
 	}
 
@@ -585,7 +585,7 @@ public class Server extends SpringBootServletInitializer
 	{
 
 		log.info( oaiUrl + "\t" + specId + "\t" + path );
-//		this.largeHarvestLimit = records.size();
+		// this.largeHarvestLimit = records.size();
 		String indexName = shortened( "", oaiUrl ) + "-" + specId;
 		Path dest = Paths.get( path, indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ) );
 		try
