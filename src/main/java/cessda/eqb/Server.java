@@ -400,8 +400,8 @@ public class Server extends SpringBootServletInitializer
 						log.info( "Current set empty" );
 						break;
 					}
-					log.info( "" + currentlyRetrievedSet.size() );
-					log.info( largeHarvestInteruptedToken );
+					log.info( "retrieved files: " + currentlyRetrievedSet.size() );
+					log.info( "largeHarvestInteruptedToken" + largeHarvestInteruptedToken );
 					log.info( "\tSET\t" + setspec + "\tsize:\t" + currentlyRetrievedSet.size() + "\tURL\t" + repoBase );
 				} while (largeHarvestInteruptedToken != null && itemsInCurrentSet != 50);
 			} while (!currentlyRetrievedSet.isEmpty() && currentlyRetrievedSet.size() % 50 == 0
