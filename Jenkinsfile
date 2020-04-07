@@ -14,39 +14,47 @@ pipeline {
 
     stages {
         // Building on master
-        stage('Build Project') {
-            steps {
-                withMaven {
-                    sh "mvn clean install -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose"
+        stage('Pull SDK Docker Image') {
+            agent {
+                docker {
+                    image 'maven:3-jdk-11'
+                    reuseNode true
                 }
             }
-            when { branch 'master' }
-        }
-        // Not running on master - test only (for PRs and integration branches)
-        stage('Test Project') {
-            steps {
-                withMaven {
-                    sh 'mvn clean test -Pdocker-compose'
-                }
-            }
-            when { not { branch 'master' } }
-        }
-        stage('Record Issues') {
-            steps {
-                recordIssues(tools: [java()])
-            }
-        }
-        stage('Run Sonar Scan') {
-            steps {
-                withSonarQubeEnv('cessda-sonar') {
-                    nodejs('node') {
+            stages {
+                stage('Build Project') {
+                    steps {
                         withMaven {
-                            sh "mvn sonar:sonar -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose"
+                            sh "$MVN_CMD clean install -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose"
                         }
                     }
+                    when { branch 'master' }
+                }
+                // Not running on master - test only (for PRs and integration branches)
+                stage('Test Project') {
+                    steps {
+                        withMaven {
+                            sh '$MVN_CMD clean test -Pdocker-compose'
+                        }
+                    }
+                    when { not { branch 'master' } }
+                }
+                stage('Record Issues') {
+                    steps {
+                        recordIssues aggregatingResults: true, tools: [errorProne(), java()]
+                    }
+                }
+                stage('Run Sonar Scan') {
+                    steps {
+                        withSonarQubeEnv('cessda-sonar') {
+                            withMaven {
+                                sh "$MVN_CMD sonar:sonar -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose"
+                            }
+                        }
+                    }
+                    when { branch 'master' }
                 }
             }
-            when { branch 'master' }
         }
         stage("Get Sonar Quality Gate") {
             steps {
