@@ -2,25 +2,18 @@
 # @code-generation-comment@
 #
 
-FROM openjdk:8-jre-alpine
+FROM openjdk:11-jre
 
-RUN addgroup user && adduser -D -G user user
-WORKDIR /@project.artifactId@
+WORKDIR /@project.artifactId@/
 
-RUN mkdir -p @documents@ && chmod 700 @documents@ 
+RUN useradd user
+RUN chown -R user /@project.artifactId@/
+USER user
+RUN mkdir -p @documents@
+RUN chmod 700 @documents@
 
 COPY maven/@project.build.finalName@.jar ./application.jar
 COPY entrypoint.sh ./entrypoint.sh
-RUN touch ./application.properties
-RUN touch ./application.yml
-
-RUN chmod 400 ./application.jar \
- && chmod 400 ./application.properties \
- && chmod 400 ./application.yml \
- && chmod 500 ./entrypoint.sh
-
-RUN chown -R user:user ./
-USER user:user
 
 HEALTHCHECK CMD exit $(echo $(echo $(wget http://localhost:@server.port@@server.servlet.context-path@/actuator/health -q -O -) | grep -cv UP))
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=50.0"
