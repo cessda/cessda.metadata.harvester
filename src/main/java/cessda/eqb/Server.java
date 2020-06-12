@@ -33,7 +33,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
@@ -680,20 +682,28 @@ public class Server extends SpringBootServletInitializer
 			log.error( e.getMessage(), e );
 
 		}
-		catch (IOException e1)
+		catch ( IOException e1 )
 		{
 			log.error( e1.getMessage() );
 		}
-		catch (Exception z)
+		catch ( Exception z )
 		{
 			log.error( z.getMessage(), z );
 		}
 	}
 
-	List<String> getSpecs( String url )
+	private static void addSet( String url, Set<String> unfoldedSets )
+	{
+		if ( unfoldedSets.add( url ) )
+		{
+			log.info( "Set: {}", url );
+		}
+	}
+
+	HashSet<String> getSpecs( String url )
 	{
 
-		ArrayList<String> unfoldedSets = new ArrayList<>();
+		HashSet<String> unfoldedSets = new HashSet<>();
 		// skip if set is explicitly referenced
 		if ( url.contains( "set=" ) && unfoldedSets.add( url.substring( url.indexOf( "set=" ) + 4 ) )
 				|| url.length() == 0 )
@@ -707,10 +717,10 @@ public class Server extends SpringBootServletInitializer
 		catch (SAXParseException e)
 		{
 			log.error( e.getMessage() );
-			unfoldedSets.add( url );
+			addSet( url, unfoldedSets );
 			return unfoldedSets;
 		}
-		catch (IOException | TransformerException | ParserConfigurationException | SAXException e)
+		catch ( IOException | TransformerException | ParserConfigurationException | SAXException e )
 		{
 			log.error( e.getMessage(), e );
 		}
@@ -718,7 +728,7 @@ public class Server extends SpringBootServletInitializer
 		return unfoldedSets;
 	}
 
-	private void getSetStrings( String url, ArrayList<String> unfoldedSets )
+	private void getSetStrings( String url, Set<String> unfoldedSets )
 			throws IOException, ParserConfigurationException, SAXException, TransformerException
 	{
 		ListSets ls;
@@ -728,7 +738,9 @@ public class Server extends SpringBootServletInitializer
 			do
 			{
 				if ( log.isWarnEnabled() )
+				{
 					log.warn( urlBuilder.toString() );
+				}
 				ls = new ListSets( urlBuilder.toString().trim(), harvesterConfiguration.getTimeout() );
 				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 				factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
@@ -742,8 +754,7 @@ public class Server extends SpringBootServletInitializer
 				for ( int i = 0; i <= nl.getLength() - 1; i++ )
 				{
 					String setSpec = nl.item( i ).getTextContent();
-					unfoldedSets.add( setSpec );
-					log.info( "Set: {}", setSpec );
+					addSet( setSpec, unfoldedSets );
 				}
 				if ( ls.toString().contains( "error" ) )
 				{
