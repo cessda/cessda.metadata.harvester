@@ -363,13 +363,16 @@ public class Server extends SpringBootServletInitializer
 					try
 					{
 						sets = getSpecs( baseUrl );
+						hlog.info( "Harvesting started from {}",baseUrl );
 					}
 					catch (Exception e)
 					{
 						sets = new HashSet<String>();
 						sets.add( "all" );
-						log.warn( " Repository has no sets defined / no response " );
+						hlog.error( " Repository has no sets defined / no response: set set=all", e );
+						hlog.info( "Harvesting started from {}", fromDate );
 					}
+					hlog.info( "Harvesting Xxxxxxxx {}", fromDate );
 
 					for ( String set : sets )
 					{
@@ -730,12 +733,16 @@ public class Server extends SpringBootServletInitializer
 		catch (SAXParseException e)
 		{
 			log.error( e.getMessage() );
-			addSet( url, unfoldedSets );
+			// set set=all in case of no sets found
+			addSet( "all", unfoldedSets );
 			return unfoldedSets;
 		}
 		catch (IOException | TransformerException | ParserConfigurationException | SAXException e)
 		{
 			log.error( e.getMessage(), e );
+			// set set=all in case of no sets found
+			addSet( "all", unfoldedSets );
+			return unfoldedSets;
 		}
 		log.info( "No. of sets: {}", unfoldedSets.size() );
 		return unfoldedSets;

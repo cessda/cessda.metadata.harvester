@@ -66,4 +66,4 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-    - url: http://nesstar.sciences-po.fr/oai-pmh/?verb=ListIdentifiers&metadataPrefix=oai_ddi
+    - url: http://nesstar.sciences-po.fr/oai-pmh/

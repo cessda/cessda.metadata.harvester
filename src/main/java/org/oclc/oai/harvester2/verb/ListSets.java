@@ -81,6 +81,7 @@ public class ListSets extends HarvesterVerb {
         }else{
         	requestURL.append("?verb=ListSets");
         }
+        log.info("get Sets: {}", requestURL.toString());
         return requestURL.toString();
     }
 }
