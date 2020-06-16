@@ -358,7 +358,20 @@ public class Server extends SpringBootServletInitializer
 						baseUrl = baseUrl.substring( 0, baseUrl.indexOf( '#' ) );
 					}
 					log.trace( "{} {}", baseUrl, fromDate );
-					for ( String set : getSpecs( baseUrl ) )
+
+					Set<String> sets = null;
+					try
+					{
+						sets = getSpecs( baseUrl );
+					}
+					catch (Exception e)
+					{
+						sets = new HashSet<String>();
+						sets.add( "all" );
+						log.warn( " Repository has no sets defined / no response " );
+					}
+
+					for ( String set : sets )
 					{
 						hlog.info( "Start to get records for {} / {} from {}", baseUrl, set, fromDate );
 						fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
@@ -682,11 +695,11 @@ public class Server extends SpringBootServletInitializer
 			log.error( e.getMessage(), e );
 
 		}
-		catch ( IOException e1 )
+		catch (IOException e1)
 		{
 			log.error( e1.getMessage() );
 		}
-		catch ( Exception z )
+		catch (Exception z)
 		{
 			log.error( z.getMessage(), z );
 		}
@@ -720,7 +733,7 @@ public class Server extends SpringBootServletInitializer
 			addSet( url, unfoldedSets );
 			return unfoldedSets;
 		}
-		catch ( IOException | TransformerException | ParserConfigurationException | SAXException e )
+		catch (IOException | TransformerException | ParserConfigurationException | SAXException e)
 		{
 			log.error( e.getMessage(), e );
 		}
