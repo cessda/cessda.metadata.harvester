@@ -17,7 +17,7 @@ pipeline {
         stage('Pull SDK Docker Image') {
             agent {
                 docker {
-                    image 'maven:3-jdk-11'
+                    image 'openjdk:11-jdk'
                     reuseNode true
                 }
             }
@@ -25,7 +25,7 @@ pipeline {
                 stage('Build Project') {
                     steps {
                         withMaven {
-                            sh "$MVN_CMD clean install -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose"
+                            sh "./mvnw clean install -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose"
                         }
                     }
                     when { branch 'master' }
@@ -34,7 +34,7 @@ pipeline {
                 stage('Test Project') {
                     steps {
                         withMaven {
-                            sh '$MVN_CMD clean test -Pdocker-compose'
+                            sh './mvnw clean test -Pdocker-compose'
                         }
                     }
                     when { not { branch 'master' } }
@@ -48,7 +48,7 @@ pipeline {
                     steps {
                         withSonarQubeEnv('cessda-sonar') {
                             withMaven {
-                                sh "$MVN_CMD sonar:sonar -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose"
+                                sh "./mvnw sonar:sonar -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose"
                             }
                         }
                     }
@@ -68,7 +68,7 @@ pipeline {
             steps {
                 sh 'gcloud auth configure-docker'
                 withMaven {
-                    sh "mvn docker:build docker:push -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose -Dimage_tag=${IMAGE_TAG}"
+                    sh "./mvnw docker:build docker:push -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose -Dimage_tag=${IMAGE_TAG}"
                 }
                 sh("gcloud container images add-tag ${IMAGE_TAG} ${docker_repo}/${product_name}-${module_name}:${env.BRANCH_NAME}-latest")
             }

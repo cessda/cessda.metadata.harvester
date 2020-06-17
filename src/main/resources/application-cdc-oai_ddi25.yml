@@ -69,6 +69,6 @@ harvester:
   - url: https://kuha.sa.dk/v0/oai
   - url: http://194.117.18.18:6003/v0/oai
   - url: http://services.fsd.uta.fi/v0/oai
-  # - url: https://dbk.gesis.org/dbkoai3/ currently out of service
+  - url: https://dbkapps.gesis.org/dbkoai3
   - url: http://147.213.4.44:6003/v0/oai
   - url: https://snd.gu.se/en/oai-pmh?set=discipline:social-science

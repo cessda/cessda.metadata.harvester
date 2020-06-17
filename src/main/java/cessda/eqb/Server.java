@@ -33,7 +33,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
@@ -356,7 +358,23 @@ public class Server extends SpringBootServletInitializer
 						baseUrl = baseUrl.substring( 0, baseUrl.indexOf( '#' ) );
 					}
 					log.trace( "{} {}", baseUrl, fromDate );
-					for ( String set : getSpecs( baseUrl ) )
+
+					Set<String> sets = null;
+					try
+					{
+						sets = getSpecs( baseUrl );
+						hlog.info( "Harvesting started from {}",baseUrl );
+					}
+					catch (Exception e)
+					{
+						sets = new HashSet<String>();
+						sets.add( "all" );
+						hlog.error( " Repository has no sets defined / no response: set set=all", e );
+						hlog.info( "Harvesting started from {}", fromDate );
+					}
+					hlog.info( "Harvesting Xxxxxxxx {}", fromDate );
+
+					for ( String set : sets )
 					{
 						hlog.info( "Start to get records for {} / {} from {}", baseUrl, set, fromDate );
 						fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
@@ -596,71 +614,66 @@ public class Server extends SpringBootServletInitializer
 
 			records.stream().map( String::trim ).forEach( currentRecord ->
 			{
-				String fname = "";
 
-				fname = "";
-				GetRecord pmhRecord = null;
-				fname = (indexName + "__" + currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName()
-						+ ".xml").replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" );
+				String fname = ( indexName + "__" + currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName()
+						+ ".xml" ).replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" );
 
 				try
 				{
-					pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
-							harvesterConfiguration.getTimeout() );
-				}
-				catch (IOException | ParserConfigurationException | SAXException | TransformerException e1)
-				{
-					log.error( e1.getMessage() );
-				}
+					GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout() );
 
-				Path fdest = Paths.get( path,
-						indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
-				File f = new File( fdest.toString() );
-				if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 ) != null )
-				{
-					NodeList nl = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
-							.getChildNodes();
-					for ( int i = 0; i < nl.getLength(); i++ )
+					Path fdest = Paths.get( path,
+							indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
+					File f = new File( fdest.toString() );
+					if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 ) != null )
 					{
-						Node child = nl.item( i );
-						if ( child instanceof Element )
+						NodeList nl = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
+								.getChildNodes();
+						for ( int i = 0; i < nl.getLength(); i++ )
 						{
-							Source input = new DOMSource( child );
-							TransformerFactory factory = TransformerFactory.newInstance();
-							try
+							Node child = nl.item( i );
+							if ( child instanceof Element )
 							{
-								factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
-								Transformer transformer = factory.newTransformer();
-								Result output = new StreamResult( f );
-								log.trace( "Stored : " + f.getAbsolutePath() );
-								transformer.transform( input, output );
-							}
-							catch (TransformerException e)
-							{
-								log.error( e.getMessage() );
-							}
+								Source input = new DOMSource( child );
+								TransformerFactory factory = TransformerFactory.newInstance();
+								try
+								{
+									factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
+									Transformer transformer = factory.newTransformer();
+									Result output = new StreamResult( f );
+									log.trace( "Stored : " + f.getAbsolutePath() );
+									transformer.transform( input, output );
+								}
+								catch ( TransformerException e )
+								{
+									log.error( e.getMessage() );
+								}
 
-							break;
+								break;
 
+							}
 						}
-					}
 
-				}
-				else
-				{
-					NodeList errorList = pmhRecord.getDocument().getElementsByTagName( "error" );
-					if ( errorList.getLength() == 0 )
-					{
-						log.error( pmhRecord.getDocument().getTextContent() );
-						// Util.printDocument( pmhRecord.getDocument(), System.out );
 					}
 					else
 					{
+						NodeList errorList = pmhRecord.getDocument().getElementsByTagName( "error" );
+						if ( errorList.getLength() == 0 )
+						{
+							log.error( pmhRecord.getDocument().getTextContent() );
+							// Util.printDocument( pmhRecord.getDocument(), System.out );
+						}
+						else
+						{
 
-						log.error( errorList.item( 0 ).getTextContent() );
+							log.error( errorList.item( 0 ).getTextContent() );
+						}
 					}
 				}
-
+				catch ( IOException | ParserConfigurationException | SAXException | TransformerException e1 )
+				{
+					log.error( e1.getMessage() );
+				}
 			} );
 		}
 		catch (SocketTimeoutException e)
@@ -690,10 +703,18 @@ public class Server extends SpringBootServletInitializer
 		}
 	}
 
-	List<String> getSpecs( String url )
+	private static void addSet( String url, Set<String> unfoldedSets )
+	{
+		if ( unfoldedSets.add( url ) )
+		{
+			log.info( "Set: {}", url );
+		}
+	}
+
+	HashSet<String> getSpecs( String url )
 	{
 
-		ArrayList<String> unfoldedSets = new ArrayList<>();
+		HashSet<String> unfoldedSets = new HashSet<>();
 		// skip if set is explicitly referenced
 		if ( url.contains( "set=" ) && unfoldedSets.add( url.substring( url.indexOf( "set=" ) + 4 ) )
 				|| url.length() == 0 )
@@ -707,18 +728,22 @@ public class Server extends SpringBootServletInitializer
 		catch (SAXParseException e)
 		{
 			log.error( e.getMessage() );
-			unfoldedSets.add( url );
+			// set set=all in case of no sets found
+			addSet( "all", unfoldedSets );
 			return unfoldedSets;
 		}
 		catch (IOException | TransformerException | ParserConfigurationException | SAXException e)
 		{
 			log.error( e.getMessage(), e );
+			// set set=all in case of no sets found
+			addSet( "all", unfoldedSets );
+			return unfoldedSets;
 		}
 		log.info( "No. of sets: {}", unfoldedSets.size() );
 		return unfoldedSets;
 	}
 
-	private void getSetStrings( String url, ArrayList<String> unfoldedSets )
+	private void getSetStrings( String url, Set<String> unfoldedSets )
 			throws IOException, ParserConfigurationException, SAXException, TransformerException
 	{
 		ListSets ls;
@@ -728,7 +753,9 @@ public class Server extends SpringBootServletInitializer
 			do
 			{
 				if ( log.isWarnEnabled() )
+				{
 					log.warn( urlBuilder.toString() );
+				}
 				ls = new ListSets( urlBuilder.toString().trim(), harvesterConfiguration.getTimeout() );
 				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 				factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
@@ -742,8 +769,7 @@ public class Server extends SpringBootServletInitializer
 				for ( int i = 0; i <= nl.getLength() - 1; i++ )
 				{
 					String setSpec = nl.item( i ).getTextContent();
-					unfoldedSets.add( setSpec );
-					log.info( "Set: {}", setSpec );
+					addSet( setSpec, unfoldedSets );
 				}
 				if ( ls.toString().contains( "error" ) )
 				{
