@@ -614,71 +614,66 @@ public class Server extends SpringBootServletInitializer
 
 			records.stream().map( String::trim ).forEach( currentRecord ->
 			{
-				String fname = "";
 
-				fname = "";
-				GetRecord pmhRecord = null;
-				fname = (indexName + "__" + currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName()
-						+ ".xml").replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" );
+				String fname = ( indexName + "__" + currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName()
+						+ ".xml" ).replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" );
 
 				try
 				{
-					pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
-							harvesterConfiguration.getTimeout() );
-				}
-				catch (IOException | ParserConfigurationException | SAXException | TransformerException e1)
-				{
-					log.error( e1.getMessage() );
-				}
+					GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout() );
 
-				Path fdest = Paths.get( path,
-						indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
-				File f = new File( fdest.toString() );
-				if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 ) != null )
-				{
-					NodeList nl = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
-							.getChildNodes();
-					for ( int i = 0; i < nl.getLength(); i++ )
+					Path fdest = Paths.get( path,
+							indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
+					File f = new File( fdest.toString() );
+					if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 ) != null )
 					{
-						Node child = nl.item( i );
-						if ( child instanceof Element )
+						NodeList nl = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
+								.getChildNodes();
+						for ( int i = 0; i < nl.getLength(); i++ )
 						{
-							Source input = new DOMSource( child );
-							TransformerFactory factory = TransformerFactory.newInstance();
-							try
+							Node child = nl.item( i );
+							if ( child instanceof Element )
 							{
-								factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
-								Transformer transformer = factory.newTransformer();
-								Result output = new StreamResult( f );
-								log.trace( "Stored : " + f.getAbsolutePath() );
-								transformer.transform( input, output );
-							}
-							catch (TransformerException e)
-							{
-								log.error( e.getMessage() );
-							}
+								Source input = new DOMSource( child );
+								TransformerFactory factory = TransformerFactory.newInstance();
+								try
+								{
+									factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
+									Transformer transformer = factory.newTransformer();
+									Result output = new StreamResult( f );
+									log.trace( "Stored : " + f.getAbsolutePath() );
+									transformer.transform( input, output );
+								}
+								catch ( TransformerException e )
+								{
+									log.error( e.getMessage() );
+								}
 
-							break;
+								break;
 
+							}
 						}
-					}
 
-				}
-				else
-				{
-					NodeList errorList = pmhRecord.getDocument().getElementsByTagName( "error" );
-					if ( errorList.getLength() == 0 )
-					{
-						log.error( pmhRecord.getDocument().getTextContent() );
-						// Util.printDocument( pmhRecord.getDocument(), System.out );
 					}
 					else
 					{
+						NodeList errorList = pmhRecord.getDocument().getElementsByTagName( "error" );
+						if ( errorList.getLength() == 0 )
+						{
+							log.error( pmhRecord.getDocument().getTextContent() );
+							// Util.printDocument( pmhRecord.getDocument(), System.out );
+						}
+						else
+						{
 
-						log.error( errorList.item( 0 ).getTextContent() );
+							log.error( errorList.item( 0 ).getTextContent() );
+						}
 					}
 				}
-
+				catch ( IOException | ParserConfigurationException | SAXException | TransformerException e1 )
+				{
+					log.error( e1.getMessage() );
+				}
 			} );
 		}
 		catch (SocketTimeoutException e)
