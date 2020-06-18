@@ -116,12 +116,13 @@ public class ListIdentifiers extends HarvesterVerb
 			requestURL.append( "&from=" ).append( from );
 		if ( until != null )
 			requestURL.append( "&until=" ).append( until );
-		if ( set != null && set !="all")
+		if ( set != null && set.equals( "all" ) )
 			requestURL.append( "&set=" ).append( set );
 		requestURL.append( "&metadataPrefix=" ).append( metadataPrefix );
 		log.info( requestURL.toString() );
 		return requestURL.toString();
 	}
+
 	/**
 	 * Construct the query portion of the http request (resumptionToken version)
 	 * 
