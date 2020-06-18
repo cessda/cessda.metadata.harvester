@@ -1,8 +1,45 @@
 package cessda.eqb;
 
-import jodd.mail.Email;
-import jodd.mail.SendMailSession;
-import jodd.mail.SmtpServer;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.lang.reflect.Field;
+import java.net.InetAddress;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.channels.ClosedByInterruptException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TimeZone;
+
+import javax.annotation.PreDestroy;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 import org.oclc.oai.harvester2.verb.GetRecord;
 import org.oclc.oai.harvester2.verb.ListIdentifiers;
 import org.oclc.oai.harvester2.verb.ListSets;
@@ -20,36 +57,19 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.w3c.dom.*;
+import org.w3c.dom.DOMException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import javax.annotation.PreDestroy;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.lang.reflect.Field;
-import java.net.InetAddress;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.channels.ClosedByInterruptException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import jodd.mail.Email;
+import jodd.mail.SendMailSession;
+import jodd.mail.SmtpServer;
+import jodd.mail.SmtpSslServer;
 
 @EnableScheduling
 @SpringBootApplication
@@ -328,8 +348,6 @@ public class Server extends SpringBootServletInitializer
 					fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
 				}
 			}
-
-			File[] directories = new File( harvesterConfiguration.getDir() ).listFiles( File::isDirectory );
 		}
 		catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e)
 		{
@@ -363,14 +381,13 @@ public class Server extends SpringBootServletInitializer
 					try
 					{
 						sets = getSpecs( baseUrl );
-						hlog.info( "Harvesting started from {}",baseUrl );
+						hlog.info( "Harvesting started for {}", baseUrl );
 					}
 					catch (Exception e)
 					{
 						sets = new HashSet<String>();
 						sets.add( "all" );
 						hlog.error( " Repository has no sets defined / no response: set set=all", e );
-						hlog.info( "Harvesting started from {}", fromDate );
 					}
 					hlog.info( "Harvesting Xxxxxxxx {}", fromDate );
 
@@ -382,7 +399,6 @@ public class Server extends SpringBootServletInitializer
 				}
 			}
 
-			File[] directories = new File( harvesterConfiguration.getDir() ).listFiles( File::isDirectory );
 		}
 		catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e)
 		{
@@ -453,6 +469,9 @@ public class Server extends SpringBootServletInitializer
 			return records;
 		}
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+		factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
+		factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
 		try
 		{
 			log.trace( "recurse:\turl " + url + " set " + set + " token " + resumptionToken + "  " );
@@ -502,7 +521,7 @@ public class Server extends SpringBootServletInitializer
 				log.warn( "Identifiers in this block are null for resumption token " + resumptionToken );
 			}
 			// need to recurse?
-			if ( resumptionTokenReq.getLength() > 0 && resumptionTokenReq.item( 0 ).getTextContent() != "" )
+			if ( resumptionTokenReq.getLength() > 0 && resumptionTokenReq.item( 0 ).getTextContent() .equals( "" ) )
 			{
 				String rTok = resumptionTokenReq.item( 0 ).getTextContent();
 				log.info( "\tSet\t" + set + "\tToken\t" + rTok + "\tSize \t " + records.size() + "\tURL\t" + url );
@@ -583,7 +602,7 @@ public class Server extends SpringBootServletInitializer
 			msg += "\n" + InetAddress.getLoopbackAddress().getHostAddress() + "\n"
 					+ InetAddress.getLoopbackAddress().getHostName();
 			noti.addText( msg );
-			SmtpServer smtpServer = SmtpServer.create( this.mailhost );
+			SmtpSslServer smtpServer = SmtpSslServer.create( this.mailhost );
 			log.warn( "smtp port {}", smtpServer.getPort() );
 			SendMailSession session = smtpServer.createSession();
 			session.open();
@@ -615,12 +634,14 @@ public class Server extends SpringBootServletInitializer
 			records.stream().map( String::trim ).forEach( currentRecord ->
 			{
 
-				String fname = ( indexName + "__" + currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName()
-						+ ".xml" ).replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" );
+				String fname = (indexName + "__" + currentRecord + "_"
+						+ harvesterConfiguration.getDialectDefinitionName()
+						+ ".xml").replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" );
 
 				try
 				{
-					GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout() );
+					GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
+							harvesterConfiguration.getTimeout() );
 
 					Path fdest = Paths.get( path,
 							indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
@@ -644,7 +665,7 @@ public class Server extends SpringBootServletInitializer
 									log.trace( "Stored : " + f.getAbsolutePath() );
 									transformer.transform( input, output );
 								}
-								catch ( TransformerException e )
+								catch (TransformerException e)
 								{
 									log.error( e.getMessage() );
 								}
@@ -670,7 +691,7 @@ public class Server extends SpringBootServletInitializer
 						}
 					}
 				}
-				catch ( IOException | ParserConfigurationException | SAXException | TransformerException e1 )
+				catch (IOException | ParserConfigurationException | SAXException | TransformerException e1)
 				{
 					log.error( e1.getMessage() );
 				}
@@ -759,6 +780,8 @@ public class Server extends SpringBootServletInitializer
 				ls = new ListSets( urlBuilder.toString().trim(), harvesterConfiguration.getTimeout() );
 				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 				factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
+				factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
+				factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
 				DocumentBuilder builder = factory.newDocumentBuilder();
 				InputSource is = new InputSource( new StringReader( ls.toString() ) );
 

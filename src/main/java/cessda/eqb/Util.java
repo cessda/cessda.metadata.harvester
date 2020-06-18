@@ -4,6 +4,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -25,6 +26,9 @@ public class Util
 		try
 		{
 			TransformerFactory tf = TransformerFactory.newInstance();
+
+			tf.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" ); 
+			tf.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
 			Transformer transformer = tf.newTransformer();
 			transformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "no" );
 			transformer.setOutputProperty( OutputKeys.METHOD, "xml" );
