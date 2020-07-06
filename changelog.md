@@ -1,8 +1,23 @@
-# Version 1
+# Changelog
 
-bla 
+## [Unreleased]
 
-# Version 2
+## [0.0.2-SNAPHSOT]   
 
-bla
-blo
+### Added
+n/a
+
+### Changed 
+n/a
+
+### Deprecated
+n/a
+
+### Removed
+n/a
+
+### Fixed
+n/a
+
+### Security 
+n/a
