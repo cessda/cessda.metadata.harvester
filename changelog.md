@@ -6,6 +6,7 @@
 
 ### Added
 * Harvesting of OAI servers that have no sets specified
+* Apart from standard application logging at class level, the harvester has a special logger (hlog), that prints out status information on the harvesting process only. It contains explicit information on e.g. the start, end and result of a harversting run. 
 * Configurations for 
     * CSDA
     * DANS
