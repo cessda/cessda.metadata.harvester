@@ -5,7 +5,18 @@
 ## [0.0.2-SNAPHSOT]   
 
 ### Added
-n/a
+* Harvesting of OAI servers that have no sets specified
+* Configurations for 
+ * CSDA
+ * DANS
+ * DBK
+ * DNA
+ * EKKE
+ * FSD
+ * NSD
+ * SND
+ * UKDA
+ 
 
 ### Changed 
 n/a
@@ -20,4 +31,4 @@ n/a
 n/a
 
 ### Security 
-n/a
+* added letsencrypt certs - to be imported into the JRE when harvesting OAI servers available via HTTPS only and using letsencrypt SSL certificates
