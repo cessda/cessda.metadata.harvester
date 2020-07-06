@@ -7,15 +7,15 @@
 ### Added
 * Harvesting of OAI servers that have no sets specified
 * Configurations for 
- * CSDA
- * DANS
- * DBK
- * DNA
- * EKKE
- * FSD
- * NSD
- * SND
- * UKDA
+  * CSDA
+  * DANS
+  * DBK
+  * DNA
+  * EKKE
+  * FSD
+  * NSD
+  * SND
+  * UKDA
  
 
 ### Changed 
