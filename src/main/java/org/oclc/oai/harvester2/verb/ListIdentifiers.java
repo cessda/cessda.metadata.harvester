@@ -16,14 +16,13 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import java.io.IOException;
-import java.net.URLEncoder;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
+
+import javax.xml.transform.TransformerException;
+import java.io.IOException;
+import java.net.URLEncoder;
 
 /**
  * This class represents an ListIdentifiers response on either the server or on the client
@@ -46,34 +45,26 @@ public class ListIdentifiers extends HarvesterVerb
 	/**
 	 * Client-side ListIdentifiers verb constructor
 	 *
-	 * @param baseURL
-	 *            the baseURL of the server to be queried
-	 * @exception MalformedURLException
-	 *                the baseURL is bad
-	 * @exception SAXException
-	 *                the xml response is bad
-	 * @exception IOException
-	 *                an I/O error occurred
+	 * @param baseURL the baseURL of the server to be queried
+	 * @throws SAXException the xml response is bad
+	 * @throws IOException  an I/O error occurred
 	 */
-	public ListIdentifiers( String baseURL, String from, String until, String set, String metadataPrefix,
-			Integer timeout )
-			throws IOException, ParserConfigurationException, SAXException, TransformerException
+	public ListIdentifiers( String baseURL, String from, String until, String set, String metadataPrefix, Integer timeout )
+			throws IOException, SAXException, TransformerException
 	{
 		super( getRequestURL( baseURL, from, until, set, metadataPrefix ), timeout );
 	}
 
 	/**
 	 * Client-side ListIdentifiers verb constructor (resumptionToken version)
-	 * 
+	 *
 	 * @param baseURL
 	 * @param resumptionToken
 	 * @throws IOException
-	 * @throws ParserConfigurationException
 	 * @throws SAXException
 	 * @throws TransformerException
 	 */
-	public ListIdentifiers( String baseURL, String resumptionToken )
-			throws IOException, ParserConfigurationException, SAXException, TransformerException
+	public ListIdentifiers( String baseURL, String resumptionToken ) throws IOException, SAXException, TransformerException
 	{
 		super( getRequestURL( baseURL, resumptionToken ) );
 	}

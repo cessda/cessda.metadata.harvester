@@ -15,11 +15,11 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import org.xml.sax.SAXException;
+
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import org.xml.sax.SAXException;
 
 /**
  * This class represents an ListMetadataFormats response on either the server or
@@ -34,34 +34,33 @@ public class ListMetadataFormats extends HarvesterVerb {
     public ListMetadataFormats() {
         super();
     }
-    
+
     /**
      * Client-side ListMetadataFormats verb constructor
      *
      * @param baseURL the baseURL of the server to be queried
-     * @exception MalformedURLException the baseURL is bad
-     * @exception SAXException the xml response is bad
-     * @exception IOException an I/O error occurred
+     * @throws MalformedURLException the baseURL is bad
+     * @throws SAXException          the xml response is bad
+     * @throws IOException           an I/O error occurred
      */
-    public ListMetadataFormats(String baseURL)
-    throws IOException, ParserConfigurationException, SAXException,
-    TransformerException {
-        this(baseURL, null);
+    public ListMetadataFormats( String baseURL ) throws IOException, SAXException, TransformerException
+    {
+        this( baseURL, null );
     }
-    
+
     /**
      * Client-side ListMetadataFormats verb constructor (identifier version)
+     *
      * @param baseURL
      * @param identifier
      * @throws IOException
-     * @throws ParserConfigurationException
      * @throws SAXException
      * @throws TransformerException
      */
-    public ListMetadataFormats(String baseURL, String identifier)
-    throws IOException, ParserConfigurationException, SAXException,
-    TransformerException {
-        super(getRequestURL(baseURL, identifier));
+    public ListMetadataFormats( String baseURL, String identifier ) throws IOException, SAXException,
+            TransformerException
+    {
+        super( getRequestURL( baseURL, identifier ) );
     }
     
     /**

@@ -1,45 +1,8 @@
 package cessda.eqb;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.lang.reflect.Field;
-import java.net.InetAddress;
-import java.net.SocketTimeoutException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.channels.ClosedByInterruptException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TimeZone;
-
-import javax.annotation.PreDestroy;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
+import jodd.mail.Email;
+import jodd.mail.SendMailSession;
+import jodd.mail.SmtpSslServer;
 import org.oclc.oai.harvester2.verb.GetRecord;
 import org.oclc.oai.harvester2.verb.ListIdentifiers;
 import org.oclc.oai.harvester2.verb.ListSets;
@@ -51,25 +14,39 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.context.ApplicationContext;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.w3c.dom.DOMException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
-import jodd.mail.Email;
-import jodd.mail.SendMailSession;
-import jodd.mail.SmtpServer;
-import jodd.mail.SmtpSslServer;
+import javax.annotation.PreDestroy;
+import javax.xml.XMLConstants;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.File;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @EnableScheduling
 @SpringBootApplication
@@ -77,34 +54,28 @@ import jodd.mail.SmtpSslServer;
 public class Server extends SpringBootServletInitializer
 {
 
-    public static final String REPO_BASE_URL = "http://svko-dara-test.gesis.org:8080/oaip/oai";
-
     private static final Logger log = LoggerFactory.getLogger( Server.class );
 
-    protected boolean fullIsRunning = false;
-
-    protected boolean incrementalIsRunning = false;
+    private final HarvesterConfiguration harvesterConfiguration;
+    private final String mailHost;
 
     private static final Logger hlog = LoggerFactory.getLogger( Server.class );
-    protected static DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-    protected static String fromEmail = "system.wts@gesis.org";
-    protected static int largeHarvestLimit = 50;
-    protected static String to = "";
-    protected static TimeZone tZone = TimeZone.getTimeZone( "UTC" );
-    protected static String mdFormat = "oai_ddi";
-    static String largeHarvestInteruptedToken = null;
-    static Long itemsInCurrentSet = 0L;
-    protected final DateFormat oaiDtFrmt = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
-    protected final SimpleDateFormat rsmFlDtFrmt = new SimpleDateFormat( "yyyy-MM-dd" );
-    @Autowired
-    ApplicationContext applicationContext;
-    @Autowired
-    protected HarvesterConfiguration harvesterConfiguration;
+    private final TransformerFactory factory;
+    private boolean fullIsRunning = false;
+    private boolean incrementalIsRunning = false;
+    private String to = "";
+    private String mdFormat = "oai_ddi";
+    private String largeHarvestInterruptedToken = null;
+    private long itemsInCurrentSet = 0L;
 
-    Properties existingIndexes = null;
-
-    @Value( "${spring.mail.host}" )
-    String mailhost = "smtp.gmail.com";
+    @Autowired
+    public Server( HarvesterConfiguration harvesterConfiguration, @Value( "${spring.mail.host}" ) String mailHost ) throws TransformerConfigurationException
+    {
+        this.harvesterConfiguration = harvesterConfiguration;
+        this.mailHost = mailHost;
+        factory = TransformerFactory.newInstance();
+        factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
+    }
 
     public static void main( String[] args )
     {
@@ -122,15 +93,11 @@ public class Server extends SpringBootServletInitializer
     public String bundleHarvesting( String commaSeparatedIntegerPositionInRepoList )
     {
 
-        StringBuilder res = new StringBuilder();
-        int[] numbers = Arrays.stream( commaSeparatedIntegerPositionInRepoList.split( "," ) ).map( String::trim )
-                .mapToInt( Integer::parseInt ).toArray();
-        for ( int i : numbers )
-        {
-            res.append( "Repo " ).append( i ).append( " : " ).append( singleHarvesting( i ) )
-                    .append( "                           \n" );
-        }
-        return res + "    Bundle harvesting finished from " + harvesterConfiguration.getFrom().getSingle();
+        String res = Arrays.stream( commaSeparatedIntegerPositionInRepoList.split( "," ) )
+                .map( String::trim ).mapToInt( Integer::parseInt )
+                .mapToObj( i -> "Repo " + i + " : " + singleHarvesting( i ) + "\n" )
+                .collect( Collectors.joining() );
+        return res + "Bundle harvesting finished from " + harvesterConfiguration.getFrom().getSingle();
     }
 
     @Async
@@ -165,10 +132,8 @@ public class Server extends SpringBootServletInitializer
     {
 
         log.info( harvesterConfiguration.getMetadataFormat() );
-        Calendar cal = Calendar.getInstance();
-        cal.setTime( new Date() );
-        cal.add( Calendar.DAY_OF_MONTH, -2 );
-        String newInitial = rsmFlDtFrmt.format( cal.getTime() );
+        LocalDate date = LocalDate.now().minusDays( 2 );
+        String newInitial = date.toString();
         // set initial value dynamically
         if ( harvesterConfiguration.getFrom().getInitial() == null )
         {
@@ -268,7 +233,7 @@ public class Server extends SpringBootServletInitializer
         runHarvest( harvesterConfiguration.getFrom().getFull() );
         hlog.info( "Full harvesting finished" );
         fullIsRunning = false;
-        hlog.info( "Full harvesting finished from " + harvesterConfiguration.getFrom().getFull() );
+        hlog.info( "Full harvesting finished from {}", harvesterConfiguration.getFrom().getFull() );
         return "Full harvesting finished from " + harvesterConfiguration.getFrom().getFull();
     }
 
@@ -283,18 +248,15 @@ public class Server extends SpringBootServletInitializer
     public String incrementalHarvesting()
     {
 
-        Calendar cal = Calendar.getInstance();
-        cal.setTime( new Date() );
-        cal.add( Calendar.DAY_OF_MONTH, -2 );
-        String newIncFrom = rsmFlDtFrmt.format( cal.getTime() );
+        LocalDate date = LocalDate.now().minusDays( 2 );
+        String newIncFrom = date.toString();
         String msg;
         if ( !fullIsRunning )
         {
             if ( !incrementalIsRunning )
             {
                 incrementalIsRunning = true;
-                hlog.info( "Incremental harvesting started from {}",
-                        harvesterConfiguration.getFrom().getIncremental() );
+                hlog.info( "Incremental harvesting started from {}", harvesterConfiguration.getFrom().getIncremental() );
                 runHarvest( harvesterConfiguration.getFrom().getIncremental() );
                 hlog.info( "Incremental harvesting finished" );
 
@@ -306,7 +268,6 @@ public class Server extends SpringBootServletInitializer
             else
             {
                 msg = "Incremental harvesting already running.";
-
             }
             hlog.info( msg );
         }
@@ -328,14 +289,12 @@ public class Server extends SpringBootServletInitializer
         hlog.info( "Harvesting started from {} for repo {}", fromDate, position );
         try
         {
-            encoding();
-            mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat()
-                    : "oai_dc";
-            to = rsmFlDtFrmt.format( new Date() );
+            mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat() : "oai_dc";
+            to = LocalDate.now().toString();
 
             String baseUrl = harvesterConfiguration.getRepoBaseUrls().get( position );
             hlog.info( "Single harvesting {} from {}", baseUrl, fromDate );
-            if ( !baseUrl.trim().equals( "" ) )
+            if ( !baseUrl.trim().isEmpty() )
             {
                 if ( baseUrl.contains( "#" ) )
                 {
@@ -349,7 +308,7 @@ public class Server extends SpringBootServletInitializer
                 }
             }
         }
-        catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e)
+        catch ( SecurityException | IllegalArgumentException e )
         {
             log.error( e.getMessage(), e );
             incrementalIsRunning = false;
@@ -362,14 +321,13 @@ public class Server extends SpringBootServletInitializer
         hlog.info( "Harvesting started from {}", fromDate );
         try
         {
-            encoding();
             mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat()
                     : "oai_dc";
-            to = rsmFlDtFrmt.format( new Date() );
+            to = LocalDate.now().toString();
 
             for ( String baseUrl : harvesterConfiguration.getRepoBaseUrls() )
             {
-                if ( !baseUrl.trim().equals( "" ) )
+                if ( !baseUrl.trim().isEmpty() )
                 {
                     if ( baseUrl.contains( "#" ) )
                     {
@@ -377,7 +335,7 @@ public class Server extends SpringBootServletInitializer
                     }
                     log.trace( "{} {}", baseUrl, fromDate );
 
-                    Set<String> sets = null;
+                    Set<String> sets;
                     try
                     {
                         sets = getSpecs( baseUrl );
@@ -385,8 +343,7 @@ public class Server extends SpringBootServletInitializer
                     }
                     catch (Exception e)
                     {
-                        sets = new HashSet<String>();
-                        sets.add( "all" );
+                        sets = Collections.singleton( "all" );
                         hlog.error( " Repository has no sets defined / no response: set set=all", e );
                     }
                     hlog.info( "Harvesting Xxxxxxxx {}", fromDate );
@@ -400,7 +357,7 @@ public class Server extends SpringBootServletInitializer
             }
 
         }
-        catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e)
+        catch ( SecurityException | IllegalArgumentException e )
         {
             log.error( e.getMessage(), e );
         }
@@ -418,26 +375,25 @@ public class Server extends SpringBootServletInitializer
         }
         try
         {
-            ArrayList<String> currentlyRetrievedSet;
+            List<String> currentlyRetrievedSet;
             do
             {
                 log.info( "Fetching records for repo {} and pmh set {}. Be patient, this can take hours.",
                         repoBase, setspec );
-                currentlyRetrievedSet = null;
                 do
                 {
-                    currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, largeHarvestInteruptedToken,
-                            new ArrayList<>(), Optional.of( mdFormat ), fromDate );
+                    currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, largeHarvestInterruptedToken, new ArrayList<>(), mdFormat, fromDate );
                     writeToLocalFileSystem( currentlyRetrievedSet, repoBase, setspec, f.getAbsolutePath() );
                     if ( currentlyRetrievedSet.isEmpty() )
                     {
                         log.info( "Current set empty" );
                         break;
                     }
-                    log.info( "retrieved files: " + currentlyRetrievedSet.size() );
-                    log.info( "largeHarvestInteruptedToken" + largeHarvestInteruptedToken );
+                    log.info( "retrieved files: {}", currentlyRetrievedSet.size() );
+                    log.info( "largeHarvestInteruptedToken {}", largeHarvestInterruptedToken );
                     log.info( "\tSET\t" + setspec + "\tsize:\t" + currentlyRetrievedSet.size() + "\tURL\t" + repoBase );
-                } while (largeHarvestInteruptedToken != null && itemsInCurrentSet != 50);
+                }
+                while ( largeHarvestInterruptedToken != null && itemsInCurrentSet != 50 );
             } while (!currentlyRetrievedSet.isEmpty() && currentlyRetrievedSet.size() % 50 == 0
                     && itemsInCurrentSet != 50 && itemsInCurrentSet % currentlyRetrievedSet.size() != 0);
         }
@@ -447,41 +403,39 @@ public class Server extends SpringBootServletInitializer
         }
     }
 
-    protected ArrayList<String> getIdentifiersForSet(
+    protected List<String> getIdentifiersForSet(
             String url,
             String set,
             String resumptionToken,
-            ArrayList<String> list,
-            Optional<String> overwrite,
+            List<String> records,
+            String overwrite,
             String fromDate )
     {
 
-        log.info( "Harvesting started for " + oaiBase( url ) + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix="
-                + mdFormat + "&from=" + fromDate );
-        ArrayList<String> records = list;
-        log.debug( "URL: " + url + " list size : " + list.size() + " restoken " + resumptionToken );
-        log.info( "limit : " + largeHarvestLimit + " recordssize: " + records.size() );
+        final String oaiBaseUrl = oaiBase( url );
+        log.info( "Harvesting started for {}?verb=ListRecords&set={}&metadataPrefix={}&from={}",
+                oaiBaseUrl, set, mdFormat, fromDate
+        );
+        log.debug( "URL: {}, list size: {}, restoken {}", url, records.size(), resumptionToken );
+        int largeHarvestLimit = 50;
+        log.info( "limit: {}  recordssize: {}", largeHarvestLimit, records.size() );
         if ( records.size() >= largeHarvestLimit )
         {
-            largeHarvestInteruptedToken = resumptionToken;
-            log.info( "reached limit of " + largeHarvestLimit + ". Processing " + records.size()
-                    + " records and then resume with " + largeHarvestInteruptedToken );
+            largeHarvestInterruptedToken = resumptionToken;
+            log.info( "reached limit of {}. Processing {} records and then resume with {}",
+                    largeHarvestLimit, records.size(), largeHarvestInterruptedToken
+            );
             return records;
         }
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-
-        factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
-        factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
         try
         {
             log.trace( "recurse:\turl " + url + " set " + set + " token " + resumptionToken + "  " );
-            DocumentBuilder builder = factory.newDocumentBuilder();
             ListIdentifiers li;
             log.trace( resumptionToken );
             if ( resumptionToken != null )
             {
                 log.trace( url );
-                li = new ListIdentifiers( oaiBase( url ), resumptionToken );
+                li = new ListIdentifiers( oaiBaseUrl, resumptionToken );
             }
             else
             {
@@ -489,16 +443,13 @@ public class Server extends SpringBootServletInitializer
                 {
                     set = null;
                 }
-                log.debug(
-                        "From " + fromDate + "  until " + to + "  " + oaiBase( url ) + "  " + set + "  " + mdFormat );
-                li = new ListIdentifiers( oaiBase( url ), fromDate, to, set, overwrite.orElse( mdFormat ),
-                        harvesterConfiguration.getTimeout() );
-                log.debug( oaiBase( url ) );
+                log.debug( "From " + fromDate + "  until " + to + "  " + oaiBaseUrl + "  " + set + "  " + mdFormat );
+                li = new ListIdentifiers( oaiBaseUrl, fromDate, to, set, Optional.ofNullable( overwrite ).orElse( mdFormat ), harvesterConfiguration.getTimeout() );
+                log.debug( oaiBaseUrl );
             }
             log.trace( li.getRequestURL() );
-            InputSource is = new InputSource( new StringReader( li.toString() ) );
-            Document identfiers = builder.parse( is );
-            NodeList resumptionTokenReq = identfiers.getElementsByTagName( "resumptionToken" );
+            Document identfiers = li.getDocument();
+
             // add to list of records to fetch
             NodeList identifiersIDs = identfiers.getElementsByTagName( "identifier" );
             if ( identifiersIDs != null )
@@ -512,16 +463,18 @@ public class Server extends SpringBootServletInitializer
                     }
                     else
                     {
-                        log.warn( "Node " + n + " is null" );
+                        log.warn( "Node {} is null", n );
                     }
                 }
             }
             else
             {
-                log.warn( "Identifiers in this block are null for resumption token " + resumptionToken );
+                log.warn( "Identifiers in this block are null for resumption token {}", resumptionToken );
             }
+
             // need to recurse?
-            if ( resumptionTokenReq.getLength() > 0 && resumptionTokenReq.item( 0 ).getTextContent().equals( "" ) )
+            NodeList resumptionTokenReq = identfiers.getElementsByTagName( "resumptionToken" );
+            if ( resumptionTokenReq.getLength() > 0 && !resumptionTokenReq.item( 0 ).getTextContent().isEmpty() )
             {
                 String rTok = resumptionTokenReq.item( 0 ).getTextContent();
                 log.info( "\tSet\t" + set + "\tToken\t" + rTok + "\tSize \t " + records.size() + "\tURL\t" + url );
@@ -531,48 +484,40 @@ public class Server extends SpringBootServletInitializer
             }
             else
             {
-                largeHarvestInteruptedToken = null;
+                largeHarvestInterruptedToken = null;
             }
             if ( resumptionTokenReq.getLength() != 0 && resumptionTokenReq.item( 0 ).hasAttributes()
                     && resumptionTokenReq.item( 0 ).getAttributes().getNamedItem( "completeListSize" ) != null )
             {
 
                 itemsInCurrentSet = Long.parseLong(
-                        resumptionTokenReq.item( 0 ).getAttributes().getNamedItem( "completeListSize" )
-                                .getTextContent() );
-                log.info( "Items in current set: " + itemsInCurrentSet );
+                        resumptionTokenReq.item( 0 ).getAttributes().getNamedItem( "completeListSize" ).getTextContent()
+                );
+                log.info( "Items in current set: {}", itemsInCurrentSet );
 
             }
             else
             {
                 log.info( " - " );
             }
-            log.trace( itemsInCurrentSet + "" );
+            log.trace( "{}", itemsInCurrentSet );
         }
         catch (SocketTimeoutException ste)
         {
-            log.error( "OAI response timed out  " + harvesterConfiguration.getTimeout() );
-
+            log.error( "OAI response timed out {}", harvesterConfiguration.getTimeout(), ste );
         }
         catch (Exception e)
         {
-            log.error( e.getMessage() );
-            e.printStackTrace();
-            String m = "\n";
-            for ( StackTraceElement ste : e.getStackTrace() )
-            {
-                if ( ste.getFileName() != null )
-                {
-                    m += ste.getFileName() + "  " + ste.getMethodName() + "   " + ste.getLineNumber() + "\n";
-                }
-            }
+            log.error( e.toString(), e );
+            String m = Arrays.stream( e.getStackTrace() ).filter( ste -> ste.getFileName() != null )
+                    .map( ste -> ste.getFileName() + "  " + ste.getMethodName() + "   " + ste.getLineNumber() + "\n" )
+                    .collect( Collectors.joining( "", "\n", "" ) );
             this.notifyOnError(
-                    "Harvesting failed for " + oaiBase( url ) + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix="
+                    "Harvesting failed for " + oaiBaseUrl + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix="
                             + mdFormat + "&from=" + fromDate + "&resumptionToken=" + resumptionToken,
                     e.getMessage() + "\n" + m );
         }
-        resumptionToken = null;
-        log.trace( "Records to fetch : " + records.size() );
+        log.trace( "Records to fetch : {}", records.size() );
 
         return records;
     }
@@ -591,8 +536,8 @@ public class Server extends SpringBootServletInitializer
             java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
 
             Email noti = new Email();
+            String fromEmail = "system.wts@gesis.org";
             noti.from( fromEmail );
-            // log.debug(harvesterConfiguration.recipient.split(",") + "");
             log.debug( fromEmail );
             if ( log.isDebugEnabled() )
                 log.debug( harvesterConfiguration.getRecipient() );
@@ -602,7 +547,7 @@ public class Server extends SpringBootServletInitializer
             msg += "\n" + InetAddress.getLoopbackAddress().getHostAddress() + "\n"
                     + InetAddress.getLoopbackAddress().getHostName();
             noti.addText( msg );
-            SmtpSslServer smtpServer = SmtpSslServer.create( this.mailhost );
+            SmtpSslServer smtpServer = SmtpSslServer.create( this.mailHost );
             log.warn( "smtp port {}", smtpServer.getPort() );
             SendMailSession session = smtpServer.createSession();
             session.open();
@@ -618,11 +563,10 @@ public class Server extends SpringBootServletInitializer
 
     }
 
-    protected void writeToLocalFileSystem( ArrayList<String> records, String oaiUrl, String specId, String path )
+    protected void writeToLocalFileSystem( Collection<String> records, String oaiUrl, String specId, String path )
     {
 
         log.info( oaiUrl + "\t" + specId + "\t" + path );
-        // this.largeHarvestLimit = records.size();
         String indexName = shortened( "", oaiUrl ) + "-" + specId;
         Path dest = Paths.get( path, indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ) );
         try
@@ -640,41 +584,20 @@ public class Server extends SpringBootServletInitializer
 
                 try
                 {
-                    GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
-                            harvesterConfiguration.getTimeout() );
+                    GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout() );
 
                     Path fdest = Paths.get( path,
                             indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
-                    File f = new File( fdest.toString() );
-                    if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 ) != null )
+                    if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).getLength() > 0 )
                     {
-                        NodeList nl = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
-                                .getChildNodes();
-                        for ( int i = 0; i < nl.getLength(); i++ )
-                        {
-                            Node child = nl.item( i );
-                            if ( child instanceof Element )
-                            {
-                                Source input = new DOMSource( child );
-                                TransformerFactory factory = TransformerFactory.newInstance();
-                                try
-                                {
-                                    factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
-                                    Transformer transformer = factory.newTransformer();
-                                    Result output = new StreamResult( f );
-                                    log.trace( "Stored : " + f.getAbsolutePath() );
-                                    transformer.transform( input, output );
-                                }
-                                catch (TransformerException e)
-                                {
-                                    log.error( e.getMessage() );
-                                }
+                        NodeList nl = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 ).getChildNodes();
+                        Node child = IntStream.range( 0, nl.getLength() ).mapToObj( nl::item )
+                                .filter( Element.class::isInstance )
+                                .findAny().orElseThrow( () -> new NoSuchElementException( "No elements with the tag name 'metadata' were found" ) );
 
-                                break;
-
-                            }
-                        }
-
+                        Transformer transformer = factory.newTransformer();
+                        log.trace( "Stored : {}", fdest.toAbsolutePath() );
+                        transformer.transform( new DOMSource( child ), new StreamResult( Files.newOutputStream( fdest ) ) );
                     }
                     else
                     {
@@ -683,49 +606,25 @@ public class Server extends SpringBootServletInitializer
                         {
                             log.error( " no error provided\n" + fdest.toString() + "\n" +
                                     oaiUrl + "\n" + currentRecord + "\n" );
-                            // Util.printDocument( pmhRecord.getDocument(), System.out );
                             NodeList header = pmhRecord.getDocument().getElementsByTagName( "header" );
-                            
                             Node status = header.item( 0 ).getAttributes().getNamedItem( "status" );
-                            log.warn( "Status: " + status.getTextContent() );
+                            log.warn( "Status: {}", status.getTextContent() );
                         }
                         else
                         {
-
-                            log.error( " error provided:\n" + errorList.item( 0 ).getTextContent() );
+                            log.error( " error provided:\n{}", errorList.item( 0 ).getTextContent() );
                         }
                     }
                 }
-                catch (IOException | ParserConfigurationException | SAXException | TransformerException e1)
+                catch ( IOException | SAXException | TransformerException e1 )
                 {
-                    log.error( e1.getMessage() );
+                    log.error( e1.toString() );
                 }
             } );
         }
-        catch (SocketTimeoutException e)
+        catch ( IOException e )
         {
-            log.error( oaiUrl + e.getMessage(), e );
-        }
-        catch (ClosedByInterruptException cbie)
-        {
-            log.trace( "Storing metadata interupted. Restart requested while processing {}", cbie.getMessage() );
-        }
-        catch (NullPointerException | InvalidPathException e)
-        {
-            log.error( e.getMessage(), e );
-        }
-        catch (DOMException e)
-        {
-            log.error( e.getMessage(), e );
-
-        }
-        catch (IOException e1)
-        {
-            log.error( e1.getMessage() );
-        }
-        catch (Exception z)
-        {
-            log.error( z.getMessage(), z );
+            log.error( "{}", oaiUrl, e );
         }
     }
 
@@ -737,13 +636,12 @@ public class Server extends SpringBootServletInitializer
         }
     }
 
-    HashSet<String> getSpecs( String url )
+    Set<String> getSpecs( String url )
     {
 
         HashSet<String> unfoldedSets = new HashSet<>();
         // skip if set is explicitly referenced
-        if ( url.contains( "set=" ) && unfoldedSets.add( url.substring( url.indexOf( "set=" ) + 4 ) )
-                || url.length() == 0 )
+        if ( url.contains( "set=" ) && unfoldedSets.add( url.substring( url.indexOf( "set=" ) + 4 ) ) || url.isEmpty() )
         {
             return unfoldedSets;
         }
@@ -751,14 +649,14 @@ public class Server extends SpringBootServletInitializer
         {
             getSetStrings( url, unfoldedSets );
         }
-        catch (SAXParseException e)
+        catch ( SAXParseException e )
         {
             log.error( e.getMessage() );
             // set set=all in case of no sets found
             addSet( "all", unfoldedSets );
             return unfoldedSets;
         }
-        catch (IOException | TransformerException | ParserConfigurationException | SAXException e)
+        catch ( IOException | TransformerException | SAXException e )
         {
             log.error( e.getMessage(), e );
             // set set=all in case of no sets found
@@ -769,8 +667,7 @@ public class Server extends SpringBootServletInitializer
         return unfoldedSets;
     }
 
-    private void getSetStrings( String url, Set<String> unfoldedSets )
-            throws IOException, ParserConfigurationException, SAXException, TransformerException
+    private void getSetStrings( String url, Set<String> unfoldedSets ) throws IOException, SAXException, TransformerException
     {
         ListSets ls;
         try
@@ -783,14 +680,8 @@ public class Server extends SpringBootServletInitializer
                     log.warn( urlBuilder.toString() );
                 }
                 ls = new ListSets( urlBuilder.toString().trim(), harvesterConfiguration.getTimeout() );
-                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
-                factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
-                factory.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
-                DocumentBuilder builder = factory.newDocumentBuilder();
-                InputSource is = new InputSource( new StringReader( ls.toString() ) );
 
-                Document document = builder.parse( is );
+                Document document = ls.getDocument();
 
                 NodeList nl = document.getElementsByTagName( "setSpec" );
 
@@ -804,16 +695,17 @@ public class Server extends SpringBootServletInitializer
                     log.error( "Invalid request {}", ls );
 
                 }
-                if ( !ls.getResumptionToken().equals( "" ) )
+                if ( !ls.getResumptionToken().isEmpty() )
                 {
                     log.info( ls.getResumptionToken() );
                     urlBuilder.append( "?verb=ListSets&resumptionToken=" ).append( ls.getResumptionToken() );
                     if ( log.isInfoEnabled() )
+                    {
                         log.info( urlBuilder.toString() );
+                    }
                 }
-            } while (unfoldedSets.size() % 50 == 0 && !ls.getResumptionToken().equals( "" )
-                    && !urlBuilder.toString().trim().equals( "" ) && urlBuilder.toString().trim() != null);
-            url = urlBuilder.toString();
+            }
+            while ( unfoldedSets.size() % 50 == 0 && !ls.getResumptionToken().isEmpty() && !urlBuilder.toString().trim().isEmpty() );
             log.info( "" );
         }
 
@@ -821,18 +713,6 @@ public class Server extends SpringBootServletInitializer
         {
             log.error( "Request to oai endpoint timed out {}", harvesterConfiguration.getTimeout() );
         }
-    }
-
-    protected void encoding() throws NoSuchFieldException, IllegalAccessException
-    {
-
-        System.setProperty( "file.encoding", "UTF-8" );
-        Field charset = Charset.class.getDeclaredField( "defaultCharset" );
-        charset.setAccessible( true );
-        charset.set( null, null );
-        Locale.setDefault( new Locale( "en", "GB" ) );
-        System.setProperty( "user.country", "GB" );
-        System.setProperty( "user.language", "en" );
     }
 
     @PreDestroy
