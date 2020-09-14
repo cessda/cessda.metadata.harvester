@@ -14,16 +14,22 @@ import java.nio.charset.StandardCharsets;
 
 public class Util
 {
-	public static Logger log = LoggerFactory.getLogger( Util.class );
+	public static final Logger log = LoggerFactory.getLogger( Util.class );
 
-	public static void printDocument( Document doc, OutputStream out )
+	private final TransformerFactory tf;
+
+	public Util()
+	{
+		tf = TransformerFactory.newInstance();
+		tf.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
+		tf.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
+		tf.setAttribute( XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "" );
+	}
+
+	public void printDocument( Document doc, OutputStream out ) throws TransformerException
 	{
 		try
 		{
-			TransformerFactory tf = TransformerFactory.newInstance();
-
-			tf.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" ); 
-			tf.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
 			Transformer transformer = tf.newTransformer();
 			transformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "no" );
 			transformer.setOutputProperty( OutputKeys.METHOD, "xml" );
@@ -31,14 +37,11 @@ public class Util
 			transformer.setOutputProperty( OutputKeys.ENCODING, "UTF-8" );
 			transformer.setOutputProperty( "{http://xml.apache.org/xslt}indent-amount", "4" );
 
-			transformer.transform( new DOMSource( doc ),
-					new StreamResult( new OutputStreamWriter( out, StandardCharsets.UTF_8 ) ) );
+			transformer.transform( new DOMSource( doc ), new StreamResult( new OutputStreamWriter( out, StandardCharsets.UTF_8 ) ) );
 		}
-		catch ( IllegalArgumentException | TransformerFactoryConfigurationError
-				| TransformerException e )
+		catch ( TransformerConfigurationException e )
 		{
-			log.error( e.getLocalizedMessage() );
-
+			throw new IllegalStateException( e );
 		}
 	}
 }

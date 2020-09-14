@@ -50,6 +50,7 @@ public abstract class HarvesterVerb
 	private static final String RETRY_AFTER = "Retry-After";
 	private static final String LOCATION = "Location";
 
+	// Logger
 	private static final Logger log = LoggerFactory.getLogger( HarvesterVerb.class );
 
 	/* Primary OAI namespaces */
@@ -139,13 +140,9 @@ public abstract class HarvesterVerb
 	 */
 	public HarvesterVerb( String requestURL, Integer timeout ) throws IOException, SAXException, TransformerException
 	{
-		log.trace( requestURL );
-
 		this.requestURL = requestURL;
-		log.trace( "requestURL={}", requestURL );
-		URL url = new URL( requestURL );
 
-		try ( InputStream in = getHttpResponse( url, timeout ) )
+		try ( InputStream in = getHttpResponse( new URL( requestURL ), timeout ) )
 		{
 			doc = factory.newDocumentBuilder().parse( in );
 		}
@@ -157,10 +154,11 @@ public abstract class HarvesterVerb
 		this.schemaLocation = getSingleString( "/*/@xsi:schemaLocation" );
 	}
 
-	private InputStream getHttpResponse( URL requestURL, Integer timeout ) throws IOException
+	private static InputStream getHttpResponse( URL requestURL, Integer timeout ) throws IOException
 	{
 		HttpURLConnection con;
 		int responseCode;
+		int retries = 0;
 		do
 		{
 			con = (HttpURLConnection) requestURL.openConnection();
@@ -206,7 +204,7 @@ public abstract class HarvesterVerb
 				}
 			}
 		}
-		while ( responseCode == HttpURLConnection.HTTP_UNAVAILABLE );
+		while ( responseCode == HttpURLConnection.HTTP_UNAVAILABLE && retries++ < 3 );
 		return decodeHttpInputStream( con );
 	}
 
@@ -257,7 +255,7 @@ public abstract class HarvesterVerb
 		return requestURL;
 	}
 
-	private InputStream decodeHttpInputStream( HttpURLConnection con ) throws IOException
+	private static InputStream decodeHttpInputStream( HttpURLConnection con ) throws IOException
 	{
 		String contentEncoding = con.getHeaderField( "Content-Encoding" );
 		log.trace( "contentEncoding={}", contentEncoding );

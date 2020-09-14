@@ -1,5 +1,4 @@
-
-/**
+/*
  Copyright 2006 OCLC, Online Computer Library Center
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,12 +15,11 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 /**
@@ -31,8 +29,6 @@ import java.net.URLEncoder;
  */
 public class ListIdentifiers extends HarvesterVerb
 {
-
-	public static Logger log = LoggerFactory.getLogger( ListIdentifiers.class );
 
 	/**
 	 * Mock object constructor (for unit testing purposes)
@@ -64,9 +60,9 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @throws SAXException
 	 * @throws TransformerException
 	 */
-	public ListIdentifiers( String baseURL, String resumptionToken ) throws IOException, SAXException, TransformerException
+	public ListIdentifiers( String baseURL, String resumptionToken, int timeout ) throws IOException, SAXException, TransformerException
 	{
-		super( getRequestURL( baseURL, resumptionToken ) );
+		super( getRequestURL( baseURL, resumptionToken ), timeout );
 	}
 
 	/**
@@ -104,13 +100,18 @@ public class ListIdentifiers extends HarvesterVerb
 		StringBuilder requestURL = new StringBuilder( baseURL );
 		requestURL.append( "?verb=ListIdentifiers" );
 		if ( from != null )
+		{
 			requestURL.append( "&from=" ).append( from );
+		}
 		if ( until != null )
+		{
 			requestURL.append( "&until=" ).append( until );
-		if ( set != null && set.equals( "all" ) )
+		}
+		if ( set != null && !set.equals( "all" ) )
+		{
 			requestURL.append( "&set=" ).append( set );
+		}
 		requestURL.append( "&metadataPrefix=" ).append( metadataPrefix );
-		log.info( requestURL.toString() );
 		return requestURL.toString();
 	}
 
@@ -123,10 +124,13 @@ public class ListIdentifiers extends HarvesterVerb
 	 */
 	private static String getRequestURL( String baseURL, String resumptionToken )
 	{
-
-		StringBuffer requestURL = new StringBuffer( baseURL );
-		requestURL.append( "?verb=ListIdentifiers" );
-		requestURL.append( "&resumptionToken=" ).append( URLEncoder.encode( resumptionToken ) );
-		return requestURL.toString();
+		try
+		{
+			return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode( resumptionToken, "UTF-8" );
+		}
+		catch ( UnsupportedEncodingException e )
+		{
+			throw new IllegalStateException(e);
+		}
 	}
 }
