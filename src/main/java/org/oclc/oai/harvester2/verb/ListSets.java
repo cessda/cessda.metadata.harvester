@@ -15,9 +15,10 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -28,60 +29,72 @@ import java.net.MalformedURLException;
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class ListSets extends HarvesterVerb {
+public class ListSets extends HarvesterVerb
+{
+
+    private static final Logger log = LoggerFactory.getLogger( ListSets.class );
+
     /**
      * Mock object constructor (for unit testing purposes)
      */
-    public ListSets() {
+    public ListSets()
+    {
         super();
     }
-    
+
     /**
      * Client-side ListSets verb constructor
      *
      * @param baseURL the baseURL of the server to be queried
-     * @exception MalformedURLException the baseURL is bad
-     * @exception IOException an I/O error occurred
+     * @throws MalformedURLException the baseURL is bad
+     * @throws IOException           an I/O error occurred
      */
-    public ListSets(String baseURL, Integer timout)
-    throws IOException, ParserConfigurationException, SAXException,
-    TransformerException {
-        super(getRequestURL(baseURL),timout);
+    public ListSets( String baseURL, Integer timout ) throws IOException, SAXException, TransformerException
+    {
+        super( getRequestURL( baseURL ), timout );
     }
-    
-    /**
-     * Get the oai:resumptionToken from the response
-     * 
-     * @return the oai:resumptionToken as a String
-     * @throws TransformerException
-     * @throws NoSuchFieldException
-     */
-    public String getResumptionToken()
-    throws TransformerException {
-        if (SCHEMA_LOCATION_V2_0.equals(getSchemaLocation())) {
-            return getSingleString("/oai20:OAI-PMH/oai20:ListSets/oai20:resumptionToken");
-        } else if (SCHEMA_LOCATION_V1_1_LIST_SETS.equals(getSchemaLocation())) {
-            return getSingleString("/oai11_ListSets:ListSets/oai11_ListSets:resumptionToken");
-        } else {
-            log.error("{}-", getSchemaLocation());
-           return "";
-        }
-    }
-    
+
     /**
      * Generate a ListSets request for the given baseURL
-     * 
+     *
      * @param baseURL
      * @return
      */
-    private static String getRequestURL(String baseURL) {
-        StringBuilder requestURL =  new StringBuilder(baseURL);
-        if(baseURL.contains("?")){
-        	requestURL.append("&verb=ListSets");
-        }else{
-        	requestURL.append("?verb=ListSets");
+    private static String getRequestURL( String baseURL )
+    {
+        StringBuilder requestURL = new StringBuilder( baseURL );
+        if ( baseURL.contains( "?" ) )
+        {
+            requestURL.append( "&verb=ListSets" );
         }
-        log.info("get Sets: {}", requestURL.toString());
+        else
+        {
+            requestURL.append( "?verb=ListSets" );
+        }
+        log.info( "get Sets: {}", requestURL );
         return requestURL.toString();
+    }
+
+    /**
+     * Get the oai:resumptionToken from the response
+     *
+     * @return the oai:resumptionToken as a String
+     * @throws TransformerException
+     */
+    public String getResumptionToken() throws TransformerException
+    {
+        if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
+        {
+            return getSingleString( "/oai20:OAI-PMH/oai20:ListSets/oai20:resumptionToken" );
+        }
+        else if ( SCHEMA_LOCATION_V1_1_LIST_SETS.equals( getSchemaLocation() ) )
+        {
+            return getSingleString( "/oai11_ListSets:ListSets/oai11_ListSets:resumptionToken" );
+        }
+        else
+        {
+            log.error( "{}-", getSchemaLocation() );
+            return "";
+        }
     }
 }

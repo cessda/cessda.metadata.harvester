@@ -15,11 +15,11 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import org.xml.sax.SAXException;
+
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-import org.xml.sax.SAXException;
 
 /**
  * This class represents an Identify response on either the server or
@@ -34,18 +34,18 @@ public class Identify extends HarvesterVerb {
     public Identify() {
         super();
     }
-    
+
     /**
      * Client-side Identify verb constructor
      *
      * @param baseURL the baseURL of the server to be queried
-     * @exception MalformedURLException the baseURL is bad
-     * @exception IOException an I/O error occurred
+     * @throws MalformedURLException the baseURL is bad
+     * @throws IOException           an I/O error occurred
      */
-    public Identify(String baseURL)
-    throws IOException, ParserConfigurationException, SAXException,
-    TransformerException {
-        super(getRequestURL(baseURL));
+    public Identify( String baseURL )
+            throws IOException, SAXException, TransformerException
+    {
+        super( getRequestURL( baseURL ) );
     }
     
     /**

@@ -19,137 +19,202 @@ import org.apache.xpath.XPathAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.*;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.FileNotFoundException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.StringTokenizer;
+import java.time.Instant;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipInputStream;
 
 /**
  * HarvesterVerb is the parent class for each of the OAI verbs.
- * 
+ *
  * @author Jefffrey A. Young, OCLC Online Computer Library Center
  */
-public abstract class HarvesterVerb {
+public abstract class HarvesterVerb
+{
 
-	protected static Logger log = LoggerFactory.getLogger(HarvesterVerb.class);
+	// Constants used by the HTTP client
+	private static final String RETRY_AFTER = "Retry-After";
+	private static final String LOCATION = "Location";
 
-	private static final String XMLNS_NAMESPACE_URI = "http://www.w3.org/2000/xmlns/";
+	// Logger
+	private static final Logger log = LoggerFactory.getLogger( HarvesterVerb.class );
 
 	/* Primary OAI namespaces */
 	public static final String SCHEMA_LOCATION_V2_0 = "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd";
-
 	public static final String SCHEMA_LOCATION_V1_1_GET_RECORD = "http://www.openarchives.org/OAI/1.1/OAI_GetRecord http://www.openarchives.org/OAI/1.1/OAI_GetRecord.xsd";
-
 	public static final String SCHEMA_LOCATION_V1_1_IDENTIFY = "http://www.openarchives.org/OAI/1.1/OAI_Identify http://www.openarchives.org/OAI/1.1/OAI_Identify.xsd";
-
 	public static final String SCHEMA_LOCATION_V1_1_LIST_IDENTIFIERS = "http://www.openarchives.org/OAI/1.1/OAI_ListIdentifiers http://www.openarchives.org/OAI/1.1/OAI_ListIdentifiers.xsd";
-
 	public static final String SCHEMA_LOCATION_V1_1_LIST_METADATA_FORMATS = "http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats.xsd";
-
 	public static final String SCHEMA_LOCATION_V1_1_LIST_RECORDS = "http://www.openarchives.org/OAI/1.1/OAI_ListRecords http://www.openarchives.org/OAI/1.1/OAI_ListRecords.xsd";
-
 	public static final String SCHEMA_LOCATION_V1_1_LIST_SETS = "http://www.openarchives.org/OAI/1.1/OAI_ListSets http://www.openarchives.org/OAI/1.1/OAI_ListSets.xsd";
 
-	private Document doc = null;
+	private static final Element namespaceElement;
+	private static final DocumentBuilderFactory factory;
+	private static final TransformerFactory xformFactory = TransformerFactory.newInstance();
 
-	private String schemaLocation = null;
-
-	private String requestURL = null;
-
-	private static HashMap<Thread, DocumentBuilder> builderMap = new HashMap<>();
-
-	private static Element namespaceElement = null;
-
-	private static DocumentBuilderFactory factory = null;
-
-	private static TransformerFactory xformFactory = TransformerFactory.newInstance();
-
-	static {
-		try {
+	static
+	{
+		try
+		{
 			/* Load DOM Document */
 			factory = DocumentBuilderFactory.newInstance();
-			factory.setNamespaceAware(true);
-			Thread t = Thread.currentThread();
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			builderMap.put(t, builder);
-
-			DOMImplementation impl = builder.getDOMImplementation();
-			Document namespaceHolder = impl.createDocument("http://www.oclc.org/research/software/oai/harvester",
-					"harvester:namespaceHolder", null);
+			factory.setNamespaceAware( true );
+			DOMImplementation impl = factory.newDocumentBuilder().getDOMImplementation();
+			Document namespaceHolder = impl.createDocument( "http://www.oclc.org/research/software/oai/harvester",
+					"harvester:namespaceHolder", null );
 			namespaceElement = namespaceHolder.getDocumentElement();
-			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:harvester",
-					"http://www.oclc.org/research/software/oai/harvester");
-			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:xsi",
-					"http://www.w3.org/2001/XMLSchema-instance");
-			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai20",
-					"http://www.openarchives.org/OAI/2.0/");
-			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai11_GetRecord",
-					"http://www.openarchives.org/OAI/1.1/OAI_GetRecord");
-			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai11_Identify",
-					"http://www.openarchives.org/OAI/1.1/OAI_Identify");
-			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai11_ListIdentifiers",
-					"http://www.openarchives.org/OAI/1.1/OAI_ListIdentifiers");
-			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai11_ListMetadataFormats",
-					"http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats");
-			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai11_ListRecords",
-					"http://www.openarchives.org/OAI/1.1/OAI_ListRecords");
-			namespaceElement.setAttributeNS(XMLNS_NAMESPACE_URI, "xmlns:oai11_ListSets",
-					"http://www.openarchives.org/OAI/1.1/OAI_ListSets");
-		} catch (ParserConfigurationException e) {
-			log.error("Parser Error:", e);
+			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:harvester",
+					"http://www.oclc.org/research/software/oai/harvester" );
+			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:xsi",
+					"http://www.w3.org/2001/XMLSchema-instance" );
+			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai20",
+					"http://www.openarchives.org/OAI/2.0/" );
+			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_GetRecord",
+					"http://www.openarchives.org/OAI/1.1/OAI_GetRecord" );
+			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_Identify",
+					"http://www.openarchives.org/OAI/1.1/OAI_Identify" );
+			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_ListIdentifiers",
+					"http://www.openarchives.org/OAI/1.1/OAI_ListIdentifiers" );
+			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_ListMetadataFormats",
+					"http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats" );
+			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_ListRecords",
+					"http://www.openarchives.org/OAI/1.1/OAI_ListRecords" );
+			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_ListSets",
+					"http://www.openarchives.org/OAI/1.1/OAI_ListSets" );
+		}
+		catch ( ParserConfigurationException e )
+		{
+			throw new IllegalStateException( e );
 		}
 	}
+
+	// Instance variables
+	private final Document doc;
+	private final String schemaLocation;
+	private final String requestURL;
 
 	/**
 	 * Mock object creator (for unit testing purposes)
 	 */
-	public HarvesterVerb() {
+	public HarvesterVerb()
+	{
+		doc = null;
+		requestURL = null;
+		schemaLocation = null;
 	}
 
 	/**
 	 * Performs the OAI request
-	 * 
+	 *
 	 * @param requestURL
 	 * @throws IOException
-	 * @throws ParserConfigurationException
 	 * @throws SAXException
 	 * @throws TransformerException
 	 */
-	public HarvesterVerb(String requestURL)
-			throws IOException, ParserConfigurationException, SAXException, TransformerException {
-		harvest(requestURL, 2);
+	public HarvesterVerb( String requestURL ) throws IOException, SAXException, TransformerException
+	{
+		this( requestURL, 2 );
 	}
 
-	public HarvesterVerb(String requestURL, Integer timeout)
-			throws IOException, ParserConfigurationException, SAXException, TransformerException {
-		log.trace(requestURL);
-		harvest(requestURL, timeout);
+	/**
+	 * Performs the OAI request
+	 *
+	 * @param requestURL
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws TransformerException
+	 */
+	public HarvesterVerb( String requestURL, Integer timeout ) throws IOException, SAXException, TransformerException
+	{
+		this.requestURL = requestURL;
+
+		try ( InputStream in = getHttpResponse( new URL( requestURL ), timeout ) )
+		{
+			doc = factory.newDocumentBuilder().parse( in );
+		}
+		catch ( ParserConfigurationException e )
+		{
+			throw new IllegalStateException( e );
+		}
+
+		this.schemaLocation = getSingleString( "/*/@xsi:schemaLocation" );
+	}
+
+	private static InputStream getHttpResponse( URL requestURL, Integer timeout ) throws IOException
+	{
+		HttpURLConnection con;
+		int responseCode;
+		int retries = 0;
+		do
+		{
+			con = (HttpURLConnection) requestURL.openConnection();
+			con.setRequestProperty( "User-Agent", "OAIHarvester/2.0" );
+			con.setRequestProperty( "Accept-Encoding", "compress, gzip, identify" );
+
+			//TK  added default timeout for dataverses taking too long to respond / stall
+			log.trace( "Timeout : {} seconds", timeout );
+			con.setConnectTimeout( timeout * 1000 );
+			con.setReadTimeout( timeout * 1000 );
+
+			responseCode = con.getResponseCode();
+			log.trace( "responseCode={}", responseCode );
+
+			if ( responseCode == 302 )
+			{
+				if ( log.isInfoEnabled() ) log.info( con.getHeaderFields().toString() );
+				con.getHeaderFields().get( LOCATION ).forEach( log::info );
+				return getHttpResponse( new URL( con.getHeaderFields().get( LOCATION ).get( 0 ) ), timeout );
+			}
+
+			if ( responseCode == HttpURLConnection.HTTP_UNAVAILABLE )
+			{
+				long retrySeconds = con.getHeaderFieldInt( RETRY_AFTER, -1 );
+				if ( retrySeconds == -1 )
+				{
+					long now = Instant.now().toEpochMilli();
+					long retryDate = con.getHeaderFieldDate( RETRY_AFTER, now );
+					retrySeconds = retryDate - now;
+				}
+				if ( retrySeconds > 0 )
+				{
+					log.debug( "Server response: Retry-After={}", retrySeconds );
+					try
+					{
+						Thread.sleep( retrySeconds * 1000 );
+					}
+					catch ( InterruptedException ex )
+					{
+						Thread.currentThread().interrupt();
+						return new ByteArrayInputStream( new byte[0] );
+					}
+				}
+			}
+		}
+		while ( responseCode == HttpURLConnection.HTTP_UNAVAILABLE && retries++ < 3 );
+		return decodeHttpInputStream( con );
 	}
 
 	/**
 	 * Get the OAI response as a DOM object
-	 * 
+	 *
 	 * @return the DOM for the OAI response
 	 */
-	public Document getDocument() {
-
+	public Document getDocument()
+	{
 		return doc;
 	}
 
@@ -159,7 +224,6 @@ public abstract class HarvesterVerb {
 	 * @return the xsi:schemaLocation value
 	 */
 	public String getSchemaLocation() {
-
 		return schemaLocation;
 	}
 
@@ -169,129 +233,51 @@ public abstract class HarvesterVerb {
 	 * @return a NodeList of /oai:OAI-PMH/oai:error elements
 	 * @throws TransformerException
 	 */
-	public NodeList getErrors() throws TransformerException {
-
-		if (SCHEMA_LOCATION_V2_0.equals(getSchemaLocation())) {
-			return getNodeList("/oai20:OAI-PMH/oai20:error");
-		} else {
+	public NodeList getErrors() throws TransformerException
+	{
+		if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
+		{
+			return getNodeList( "/oai20:OAI-PMH/oai20:error" );
+		}
+		else
+		{
 			return null;
 		}
 	}
 
 	/**
 	 * Get the OAI request URL for this response
-	 * 
+	 *
 	 * @return the OAI request URL as a String
 	 */
-	public String getRequestURL() {
-
+	public String getRequestURL()
+	{
 		return requestURL;
 	}
 
-	/**
-	 * Preforms the OAI request
-	 * 
-	 * @param requestURL
-	 * @throws IOException
-	 * @throws ParserConfigurationException
-	 * @throws SAXException
-	 * @throws TransformerException
-	 */
-	public void harvest(String requestURL, Integer timeout)
-			throws IOException, ParserConfigurationException, SAXException, TransformerException {
+	private static InputStream decodeHttpInputStream( HttpURLConnection con ) throws IOException
+	{
+		String contentEncoding = con.getHeaderField( "Content-Encoding" );
+		log.trace( "contentEncoding={}", contentEncoding );
 
-		this.requestURL = requestURL;
-		log.trace("requestURL={}", requestURL);
-		InputStream in;
-		URL url = new URL(requestURL);
-		HttpURLConnection con;
-		int responseCode;
-		do {
-			con = (HttpURLConnection) url.openConnection();
-			con.setRequestProperty("User-Agent", "OAIHarvester/2.0");
-			con.setRequestProperty("Accept-Encoding", "compress, gzip, identify");
-			//TK  added default timeout for dataverses taking too long to respond / stall
-
-			log.trace("Timeout : {} seconds", timeout);
-            con.setConnectTimeout(timeout*1000);
-            con.setReadTimeout(timeout*1000);
-			try {
-				responseCode = con.getResponseCode();
-				log.trace("responseCode={}", responseCode);
-				if(responseCode==302){
-					con.getHeaderFields().values().forEach(v -> log.info(v.toString()));
-					con.getHeaderFields().get("Location").forEach(v -> log.info(v));
-					harvest(con.getHeaderFields().get("Location").get(0), timeout);
-				}
-			} catch (FileNotFoundException e) {
-				// assume it's a 503 response
-				log.info(requestURL, e);
-				responseCode = HttpURLConnection.HTTP_UNAVAILABLE;
-			}
-
-			if (responseCode == 302) {
-				return;
-			}
-
-			if (responseCode == HttpURLConnection.HTTP_UNAVAILABLE) {
-				long retrySeconds = con.getHeaderFieldInt("Retry-After", -1);
-				if (retrySeconds == -1) {
-					long now = (new Date()).getTime();
-					long retryDate = con.getHeaderFieldDate("Retry-After", now);
-					retrySeconds = retryDate - now;
-				}
-				if (retrySeconds == 0) { // Apparently, it's a bad URL
-					throw new FileNotFoundException("Bad URL?");
-				}
-				log.error("Server response: Retry-After={}", retrySeconds);
-				if (retrySeconds > 0) {
-					try {
-						Thread.sleep(retrySeconds * 1000);
-					} catch (InterruptedException ex) {
-						log.warn("Interrupted!", ex);
-						Thread.currentThread().interrupt();
-					}
-				}
-			}
-		} while (responseCode == HttpURLConnection.HTTP_UNAVAILABLE);
-		in = decodeHttpInputStream(con);
-
-		InputSource data = new InputSource(in);
-
-		Thread t = Thread.currentThread();
-		DocumentBuilder builder = builderMap.get(t);
-		if (builder == null) {
-			builder = factory.newDocumentBuilder();
-			builderMap.put(t, builder);
+		if ( contentEncoding == null )
+		{
+			contentEncoding = "";
 		}
-		doc = builder.parse(data);
-		con.disconnect();
-		StringTokenizer tokenizer = new StringTokenizer(getSingleString("/*/@xsi:schemaLocation"), " ");
-		StringBuilder sb = new StringBuilder();
-		while (tokenizer.hasMoreTokens()) {
-			if (sb.length() > 0)
-				sb.append(" ");
-			sb.append(tokenizer.nextToken());
-		}
-		this.schemaLocation = sb.toString();
-	}
 
-	private InputStream decodeHttpInputStream(HttpURLConnection con) throws IOException {
-		InputStream in;
-		String contentEncoding = con.getHeaderField("Content-Encoding");
-		log.trace("contentEncoding={}", contentEncoding);
-		if ("compress".equals(contentEncoding)) {
-			ZipInputStream zis = new ZipInputStream(con.getInputStream());
-			zis.getNextEntry();
-			in = zis;
-		} else if ("gzip".equals(contentEncoding)) {
-			in = new GZIPInputStream(con.getInputStream());
-		} else if ("deflate".equals(contentEncoding)) {
-			in = new InflaterInputStream(con.getInputStream());
-		} else {
-			in = con.getInputStream();
+		switch ( contentEncoding )
+		{
+			case "compress":
+				ZipInputStream zis = new ZipInputStream( con.getInputStream() );
+				zis.getNextEntry();
+				return zis;
+			case "gzip":
+				return new GZIPInputStream( con.getInputStream() );
+			case "deflate":
+				return new InflaterInputStream( con.getInputStream() );
+			default:
+				return con.getInputStream();
 		}
-		return in;
 	}
 
 	/**
@@ -302,51 +288,40 @@ public abstract class HarvesterVerb {
 	 * @throws TransformerException
 	 */
 	public String getSingleString(String xpath) throws TransformerException {
-
 		return getSingleString(getDocument(), xpath);
-		// return XPathAPI.eval(getDocument(), xpath, namespaceElement).str();
-		// String str = null;
-		// Node node = XPathAPI.selectSingleNode(getDocument(), xpath,
-		// namespaceElement);
-		// if (node != null) {
-		// XObject xObject = XPathAPI.eval(node, "string()");
-		// str = xObject.str();
-		// }
-		// return str;
 	}
 
-	public String getSingleString(Node node, String xpath) throws TransformerException {
-
-		return XPathAPI.eval(node, xpath, namespaceElement).str();
+	public String getSingleString(Node node, String xpath) throws TransformerException
+	{
+		return XPathAPI.eval( node, xpath, namespaceElement ).str();
 	}
 
 	/**
 	 * Get a NodeList containing the nodes in the response DOM for the specified
 	 * xpath
-	 * 
+	 *
 	 * @param xpath
 	 * @return the NodeList for the xpath into the response DOM
 	 * @throws TransformerException
 	 */
-	public NodeList getNodeList(String xpath) throws TransformerException {
-
-		return XPathAPI.selectNodeList(getDocument(), xpath, namespaceElement);
+	public NodeList getNodeList( String xpath ) throws TransformerException
+	{
+		return XPathAPI.selectNodeList( getDocument(), xpath, namespaceElement );
 	}
 
-	public String toString() {
-
-		// Element docEl = getDocument().getDocumentElement();
-		// return docEl.toString();
-		Source input = new DOMSource(getDocument());
-		StringWriter sw = new StringWriter();
-		Result output = new StreamResult(sw);
-		try {
+	public String toString()
+	{
+		try ( StringWriter sw = new StringWriter() )
+		{
+			Result output = new StreamResult( sw );
 			Transformer idTransformer = xformFactory.newTransformer();
-			idTransformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-			idTransformer.transform(input, output);
+			idTransformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "yes" );
+			idTransformer.transform( new DOMSource( getDocument() ), output );
 			return sw.toString();
-		} catch (TransformerException e) {
-			return e.getMessage();
+		}
+		catch ( TransformerException | IOException e )
+		{
+			return e.toString();
 		}
 	}
 }

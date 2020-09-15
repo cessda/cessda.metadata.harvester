@@ -1,34 +1,35 @@
 package cessda.eqb;
 
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
-
-import javax.xml.XMLConstants;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
+import javax.xml.XMLConstants;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+
 public class Util
 {
-	public static Logger log = LoggerFactory.getLogger( Util.class );
+	public static final Logger log = LoggerFactory.getLogger( Util.class );
 
-	public static void printDocument( Document doc, OutputStream out )
+	private final TransformerFactory tf;
+
+	public Util()
+	{
+		tf = TransformerFactory.newInstance();
+		tf.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" );
+		tf.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
+		tf.setAttribute( XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "" );
+	}
+
+	public void printDocument( Document doc, OutputStream out ) throws TransformerException
 	{
 		try
 		{
-			TransformerFactory tf = TransformerFactory.newInstance();
-
-			tf.setAttribute( XMLConstants.ACCESS_EXTERNAL_DTD, "" ); 
-			tf.setAttribute( XMLConstants.ACCESS_EXTERNAL_SCHEMA, "" );
 			Transformer transformer = tf.newTransformer();
 			transformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "no" );
 			transformer.setOutputProperty( OutputKeys.METHOD, "xml" );
@@ -36,14 +37,11 @@ public class Util
 			transformer.setOutputProperty( OutputKeys.ENCODING, "UTF-8" );
 			transformer.setOutputProperty( "{http://xml.apache.org/xslt}indent-amount", "4" );
 
-			transformer.transform( new DOMSource( doc ),
-					new StreamResult( new OutputStreamWriter( out, "UTF-8" ) ) );
+			transformer.transform( new DOMSource( doc ), new StreamResult( new OutputStreamWriter( out, StandardCharsets.UTF_8 ) ) );
 		}
-		catch (IllegalArgumentException | UnsupportedEncodingException | TransformerFactoryConfigurationError
-				| TransformerException e)
+		catch ( TransformerConfigurationException e )
 		{
-			log.error( e.getLocalizedMessage() );
-
+			throw new IllegalStateException( e );
 		}
 	}
 }

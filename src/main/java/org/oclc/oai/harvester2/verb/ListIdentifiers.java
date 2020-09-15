@@ -1,5 +1,4 @@
-
-/**
+/*
  Copyright 2006 OCLC, Online Computer Library Center
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,14 +15,12 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import java.io.IOException;
-import java.net.URLEncoder;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
+
+import javax.xml.transform.TransformerException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 /**
  * This class represents an ListIdentifiers response on either the server or on the client
@@ -32,8 +29,6 @@ import org.xml.sax.SAXException;
  */
 public class ListIdentifiers extends HarvesterVerb
 {
-
-	public static Logger log = LoggerFactory.getLogger( ListIdentifiers.class );
 
 	/**
 	 * Mock object constructor (for unit testing purposes)
@@ -46,36 +41,28 @@ public class ListIdentifiers extends HarvesterVerb
 	/**
 	 * Client-side ListIdentifiers verb constructor
 	 *
-	 * @param baseURL
-	 *            the baseURL of the server to be queried
-	 * @exception MalformedURLException
-	 *                the baseURL is bad
-	 * @exception SAXException
-	 *                the xml response is bad
-	 * @exception IOException
-	 *                an I/O error occurred
+	 * @param baseURL the baseURL of the server to be queried
+	 * @throws SAXException the xml response is bad
+	 * @throws IOException  an I/O error occurred
 	 */
-	public ListIdentifiers( String baseURL, String from, String until, String set, String metadataPrefix,
-			Integer timeout )
-			throws IOException, ParserConfigurationException, SAXException, TransformerException
+	public ListIdentifiers( String baseURL, String from, String until, String set, String metadataPrefix, Integer timeout )
+			throws IOException, SAXException, TransformerException
 	{
 		super( getRequestURL( baseURL, from, until, set, metadataPrefix ), timeout );
 	}
 
 	/**
 	 * Client-side ListIdentifiers verb constructor (resumptionToken version)
-	 * 
+	 *
 	 * @param baseURL
 	 * @param resumptionToken
 	 * @throws IOException
-	 * @throws ParserConfigurationException
 	 * @throws SAXException
 	 * @throws TransformerException
 	 */
-	public ListIdentifiers( String baseURL, String resumptionToken )
-			throws IOException, ParserConfigurationException, SAXException, TransformerException
+	public ListIdentifiers( String baseURL, String resumptionToken, int timeout ) throws IOException, SAXException, TransformerException
 	{
-		super( getRequestURL( baseURL, resumptionToken ) );
+		super( getRequestURL( baseURL, resumptionToken ), timeout );
 	}
 
 	/**
@@ -113,13 +100,18 @@ public class ListIdentifiers extends HarvesterVerb
 		StringBuilder requestURL = new StringBuilder( baseURL );
 		requestURL.append( "?verb=ListIdentifiers" );
 		if ( from != null )
+		{
 			requestURL.append( "&from=" ).append( from );
+		}
 		if ( until != null )
+		{
 			requestURL.append( "&until=" ).append( until );
-		if ( set != null && set.equals( "all" ) )
+		}
+		if ( set != null && !set.equals( "all" ) )
+		{
 			requestURL.append( "&set=" ).append( set );
+		}
 		requestURL.append( "&metadataPrefix=" ).append( metadataPrefix );
-		log.info( requestURL.toString() );
 		return requestURL.toString();
 	}
 
@@ -132,10 +124,13 @@ public class ListIdentifiers extends HarvesterVerb
 	 */
 	private static String getRequestURL( String baseURL, String resumptionToken )
 	{
-
-		StringBuffer requestURL = new StringBuffer( baseURL );
-		requestURL.append( "?verb=ListIdentifiers" );
-		requestURL.append( "&resumptionToken=" ).append( URLEncoder.encode( resumptionToken ) );
-		return requestURL.toString();
+		try
+		{
+			return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode( resumptionToken, "UTF-8" );
+		}
+		catch ( UnsupportedEncodingException e )
+		{
+			throw new IllegalStateException(e);
+		}
 	}
 }
