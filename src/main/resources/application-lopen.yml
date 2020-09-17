@@ -46,8 +46,8 @@ logging:
     de.codecentric.boot.admin.services.*: WARN
 harvester:
   metadataFormat: oai_wgl
-  dir: C:\Users\kraemets\lopen
-  recipient: thomas.kraemer@gesis.org
+  dir: lopen
+  recipient: claus-peter.klas@gesis.org
   timeout: 60
   from:
     single: '1800-01-01'
