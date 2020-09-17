@@ -131,12 +131,24 @@ harvester:
     dataProvider: ECONSTOR 48637
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/dspace-oai/request
+    setName: hdl_10419_213320
+    dataProvider: ECONSTOR 213320
+    metaDataProvider: ECONSTOR
+  - url: http://www.econstor.eu/dspace-oai/request
+    setName: hdl_10419_213349
+    dataProvider: ECONSTOR 213349
+    metaDataProvider: ECONSTOR
+  - url: http://www.econstor.eu/dspace-oai/request
     setName: hdl_10419_48638
     dataProvider: ECONSTOR 48638
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/dspace-oai/request
     setName: hdl_10419_48639
     dataProvider: ECONSTOR 48639
+    metaDataProvider: ECONSTOR
+  - url: http://www.econstor.eu/dspace-oai/request
+    setName: col_10419_8
+    dataProvider: ECONSTOR 10419 8
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/dspace-oai/request
     setName: hdl_10419_59810
@@ -178,3 +190,11 @@ harvester:
     setName: 
     dataProvider: Heidelberg-RGZM
     metaDataProvider: Heidelberg-RGZM
+  - url: http://repository.gei.de/oai/request
+    setName: 
+    dataProvider: GEI
+    metaDataProvider: GEI
+  - url: http://open.ifz-muenchen.de/api/v0/oai
+    setName: 
+    dataProvider: IFZ
+    metaDataProvider: IFZ
