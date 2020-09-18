@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,23 +13,23 @@ import java.util.stream.Stream;
 public class HarvesterReport
 {
 
-	public static final Logger hlog = LoggerFactory.getLogger( HarvesterReport.class );
+	private static final Logger hlog = LoggerFactory.getLogger( HarvesterReport.class );
 
 	public static void info( String m )
 	{
 		hlog.info( m );
 	}
 
-	public void filesCountLocally( File[] directories )
+	public void filesCountLocally( Path[] directories )
 	{
 
-		for ( File file : directories )
+		for ( Path file : directories )
 		{
-			try (Stream<Path> fileList = Files.list( file.toPath() ))
+			try ( Stream<Path> fileList = Files.list( file ) )
 			{
-				hlog.info( "\t" + fileList.count() + "\tFiles in folder " + file.getAbsolutePath() );
+				hlog.info( "\t{}\tFiles in folder {}", fileList.count(), file.toAbsolutePath() );
 			}
-			catch (IOException e)
+			catch ( IOException e )
 			{
 				hlog.error( e.getMessage() );
 			}

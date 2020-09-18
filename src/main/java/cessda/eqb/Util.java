@@ -1,7 +1,5 @@
 package cessda.eqb;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import javax.xml.XMLConstants;
@@ -14,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 
 public class Util
 {
-	public static final Logger log = LoggerFactory.getLogger( Util.class );
 
 	private final TransformerFactory tf;
 
