@@ -103,59 +103,59 @@ harvester:
     setName: open_access
     dataProvider: Zentrum für Zeithistorische Forschung(ZZF)
     metaDataProvider: Zentrum für Zeithistorische Forschung(ZZF)
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_157390
     dataProvider: ECONSTOR 157390
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_48632
     dataProvider: ECONSTOR 48632
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_48633
     dataProvider: ECONSTOR 48633
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_48634
     dataProvider: ECONSTOR 48634
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_48635
     dataProvider: ECONSTOR 48635
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_48636
     dataProvider: ECONSTOR 48636
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_48637
     dataProvider: ECONSTOR 48637
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_213320
     dataProvider: ECONSTOR 213320
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_213349
     dataProvider: ECONSTOR 213349
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_48638
     dataProvider: ECONSTOR 48638
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_48639
     dataProvider: ECONSTOR 48639
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_8
     dataProvider: ECONSTOR 10419 8
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: col_10419_59810
     dataProvider: ECONSTOR 59810
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/dspace-oai/request
+  - url: http://www.econstor.eu/oai/request
     setName: ECONSTOR-Set-8
     dataProvider: ECONSTOR 8
     metaDataProvider: ECONSTOR
