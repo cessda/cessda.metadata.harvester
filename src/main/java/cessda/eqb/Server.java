@@ -32,6 +32,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -531,21 +532,30 @@ public class Server extends SpringBootServletInitializer
                             indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
                     if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).getLength() > 0 )
                     {
-                        NodeList nl = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 ).getChildNodes();
-                        Node child = IntStream.range( 0, nl.getLength() ).mapToObj( nl::item )
-                                .filter( Element.class::isInstance )
-                                .findAny().orElseThrow( () -> new NoSuchElementException( "No elements with the tag name 'metadata' were found" ) );
+                        // remove envelope?
+                        if(harvesterConfiguration.isRemoveOAIEnvelope()) {
+                            NodeList nl = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 ).getChildNodes();
+                            Node child = IntStream.range( 0, nl.getLength() ).mapToObj( nl::item )
+                                    .filter( Element.class::isInstance )
+                                    .findAny().orElseThrow( () -> new NoSuchElementException( "No elements with the tag name 'metadata' were found" ) );
 
-                        Transformer transformer = factory.newTransformer();
+                            Transformer transformer = factory.newTransformer();
+                            transformer.transform( new DOMSource( child ), new StreamResult( Files.newOutputStream( fdest ) ) );    
+                        }else {
+                            FileWriter fw = new FileWriter(new File(fdest.toString()));
+                            fw.write(pmhRecord.toString());
+                            fw.close();
+                            fw = null;
+                        }
+                        
                         log.trace( "Stored : {}", fdest.toAbsolutePath() );
-                        transformer.transform( new DOMSource( child ), new StreamResult( Files.newOutputStream( fdest ) ) );
                     }
                     else
                     {
                         NodeList errorList = pmhRecord.getDocument().getElementsByTagName( "error" );
                         if ( errorList.getLength() == 0 )
                         {
-                            log.error( " no error provided\n" + fdest.toString() + "\n" +
+                            log.debug( " no error provided\n" + fdest.toString() + "\n" +
                                     oaiUrl + "\n" + currentRecord + "\n" );
                             NodeList header = pmhRecord.getDocument().getElementsByTagName( "header" );
                             Node status = header.item( 0 ).getAttributes().getNamedItem( "status" );

@@ -45,9 +45,20 @@ public class HarvesterConfiguration
 		this.dialectDefinitionName = dialectDefinitionName;
 	}
 
-	private String metadataFormat = null;
+    private String metadataFormat = null;
+    private boolean removeOAIEnvelope = false;
 
-	private List<Repo> repos = new ArrayList<>();
+	public boolean isRemoveOAIEnvelope()
+    {
+        return removeOAIEnvelope;
+    }
+
+    public void setRemoveOAIEnvelope( boolean removeOAIEnvelope )
+    {
+        this.removeOAIEnvelope = removeOAIEnvelope;
+    }
+
+    private List<Repo> repos = new ArrayList<>();
 
 	private Cron cron;
 

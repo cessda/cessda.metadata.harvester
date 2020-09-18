@@ -57,6 +57,7 @@ spring:
       auto-registration: true
       period: 5000
 harvester:
+  removeOAIEnvelope: true
   metadataFormat: oai_ddi32
   dialectDefinitionName: gesisCMM-ddi32
   dir: '@documents@'

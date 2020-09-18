@@ -45,6 +45,7 @@ logging:
     org.gesis.dsn.harvesting.HarvesterReport: DEBUG
     de.codecentric.boot.admin.services.*: WARN
 harvester:
+  removeOAIEnvelope: false
   metadataFormat: oai_wgl
   dir: lopen
   recipient: claus-peter.klas@gesis.org

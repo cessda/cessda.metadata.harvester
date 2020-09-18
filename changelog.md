@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+* configuration option 'removeOAIEnvelope' to store records with or without OAI envelope
 
 ## [0.0.2-SNAPHSOT]   
 
