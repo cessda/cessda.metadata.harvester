@@ -52,7 +52,7 @@ harvester:
   timeout: 60
   from:
     single: '1800-01-01'
-    initial: '2010-01-01'
+    initial: '1800-01-01'
     incremental: '2017-02-28'
     full: '1901-01-01'
   cron:
