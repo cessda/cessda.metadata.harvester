@@ -287,8 +287,9 @@ public class Server extends SpringBootServletInitializer
                 }
             }
         }
-        finally
+        catch ( SecurityException | IllegalArgumentException e )
         {
+            log.error( e.getMessage(), e );
             incrementalIsRunning = false;
         }
     }
@@ -421,7 +422,7 @@ public class Server extends SpringBootServletInitializer
         log.trace( "Records to fetch : {}", records.size() );
     }
 
-    private void notifyOnError( String subject, String msg )
+    protected void notifyOnError( String subject, String msg )
     {
 
         hlog.error( "{}\n{}", subject, msg );
@@ -432,7 +433,7 @@ public class Server extends SpringBootServletInitializer
         }
         try
         {
-            InetAddress localMachine = InetAddress.getLocalHost();
+            java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
 
             Email noti = new Email();
             String fromEmail = "system.wts@gesis.org";
@@ -476,18 +477,17 @@ public class Server extends SpringBootServletInitializer
 
             records.stream().map( String::trim ).forEach( currentRecord ->
             {
-                String fname = ( indexName + "__" + currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName() + ".xml" )
-                        .replace( ":", "-" )
-                        .replace( "\\", "-" )
-                        .replace( "/", "-" );
+
+                String fname = (indexName + "__" + currentRecord + "_"
+                        + harvesterConfiguration.getDialectDefinitionName()
+                        + ".xml").replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" );
 
                 try
                 {
                     GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout() );
 
-                    Path fdest = Paths.get( path, indexName.replace( ":", "-" )
-                            .replace( "\\", "-" )
-                            .replace( "/", "-" ), fname );
+                    Path fdest = Paths.get( path,
+                            indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
                     if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).getLength() > 0 )
                     {
                         final DOMSource source;
@@ -510,6 +510,7 @@ public class Server extends SpringBootServletInitializer
                         {
                             factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
                         }
+
                         log.trace( "Stored : {}", fdest.toAbsolutePath() );
                     }
                     else
@@ -517,7 +518,8 @@ public class Server extends SpringBootServletInitializer
                         NodeList errorList = pmhRecord.getDocument().getElementsByTagName( "error" );
                         if ( errorList.getLength() == 0 )
                         {
-                            log.debug( " no error provided\n{}\n{}\n{}", fdest, oaiUrl, currentRecord );
+                            log.debug( " no error provided\n" + fdest.toString() + "\n" +
+                                    oaiUrl + "\n" + currentRecord + "\n" );
                             NodeList header = pmhRecord.getDocument().getElementsByTagName( "header" );
                             Node status = header.item( 0 ).getAttributes().getNamedItem( "status" );
                             log.warn( "Status: {}", status.getTextContent() );
