@@ -20,7 +20,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<revision>0.0.2-${buildNumber}</revision>
+		<revision>1.0.0-${buildNumber}</revision>
 		<buildNumber>SNAPSHOT</buildNumber>
 		<java.version>1.8</java.version>
 		<gesis.repository.visibility>public</gesis.repository.visibility>
@@ -29,7 +29,7 @@
 		<logging.file>target/application.log</logging.file>
 		<logging.level.org.springframework>INFO</logging.level.org.springframework>
 		<server.port>8083</server.port>
-		<server.servlet.context-path/>
+		<server.servlet.context-path />
 		<documents>data</documents>
 	</properties>
 
