@@ -390,7 +390,9 @@ public class Server extends SpringBootServletInitializer
             }
             else
             {
-                if ( set.compareTo( url ) == 0 )
+            	// TODO Due to changes by setting set not to all in an exception I need to check for empty set.
+            	// set must be null or set = "all", if in configuration set is not set....
+                if ( set.compareTo( url ) == 0 || set.isEmpty())
                 {
                     set = null;
                 }
