@@ -155,10 +155,6 @@ harvester:
     setName: col_10419_59810
     dataProvider: ECONSTOR 59810
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    setName: col_10419_8
-    dataProvider: ECONSTOR 8
-    metaDataProvider: ECONSTOR
   - url: http://pub.zbw.eu/dspace-oai/request
     setName: open_access
     dataProvider: ECONSTOR-Set-open_access
