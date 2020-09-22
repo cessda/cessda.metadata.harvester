@@ -75,10 +75,10 @@ harvester:
     setName: WglSubject
     dataProvider:  IDS
     metaDataProvider: IDS
-  - url: https://psycharchives.zpid.de/oai/request
+  - url: https://www.psycharchives.org/oai/request
     setName: 
-    dataProvider: IWM
-    metaDataProvider: IWM
+    dataProvider: ZPID
+    metaDataProvider: ZPID
   - url: http://drops.dagstuhl.de/opus/phpoai/oai2.php
     setName: 
     dataProvider: LZI Dagstuhl 
@@ -156,7 +156,7 @@ harvester:
     dataProvider: ECONSTOR 59810
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: ECONSTOR-Set-8
+    setName: col_10419_8
     dataProvider: ECONSTOR 8
     metaDataProvider: ECONSTOR
   - url: http://pub.zbw.eu/dspace-oai/request
