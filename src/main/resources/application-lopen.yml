@@ -79,7 +79,7 @@ harvester:
     setName: 
     dataProvider: ZPID
     metaDataProvider: ZPID
-  - url: http://drops.dagstuhl.de/opus/phpoai/oai2.php
+  - url: https://drops.dagstuhl.de/opus/phpoai/oai2.php
     setName: 
     dataProvider: LZI Dagstuhl 
     metaDataProvider: LZI Dagstuhl
@@ -159,7 +159,7 @@ harvester:
     setName: open_access
     dataProvider: ECONSTOR-Set-open_access
     metaDataProvider: zbw
-  - url: http://journals.ub.uni-heidelberg.de/index.php/ak/oai
+  - url: https://journals.ub.uni-heidelberg.de/index.php/ak/oai
     setName: 
     dataProvider: Heidelberg-AK
     metaDataProvider: Heidelberg-AK
@@ -167,7 +167,7 @@ harvester:
     setName: 
     dataProvider: Heidelberg-AZGNM
     metaDataProvider: Heidelberg-AZGNM
-  - url: http://journals.ub.uni-heidelberg.de/index.php/kulturgut/oai
+  - url: https://journals.ub.uni-heidelberg.de/index.php/kulturgut/oai
     setName: 
     dataProvider: Heidelberg-KulturGut
     metaDataProvider: Heidelberg-KulturGut
@@ -179,11 +179,11 @@ harvester:
     setName: 
     dataProvider: Heidelberg-MA-GNM
     metaDataProvider: Heidelberg-MA-GNM
-  - url: http://books.ub.uni-heidelberg.de/index.php/propylaeum/oai
-    setName: 
+  - url: https://books.ub.uni-heidelberg.de/index.php/propylaeum/oai
+    setName: propylaeum:byzanzoo
     dataProvider: Heidelberg-Propyl-Byz
     metaDataProvider: Heidelberg-Propyl-Byz
-  - url: http://journals.ub.uni-heidelberg.de/index.php/jahrb-rgzm/oai
+  - url: https://journals.ub.uni-heidelberg.de/index.php/jahrb-rgzm/oai
     setName: 
     dataProvider: Heidelberg-RGZM
     metaDataProvider: Heidelberg-RGZM
