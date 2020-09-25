@@ -40,25 +40,56 @@ logging:
   level:
     net: WARN
     com: ERROR
-    de: INFO
-    org.gesis.dsn.harvesting: DEBUG
-    org.gesis.dsn.harvesting.HarvesterReport: DEBUG
-    de.codecentric.boot.admin.services.*: WARN
+    org.gesis: TRACE
+    cessda: TRACE
+    de.codecentric.boot.admin.services: WARN
 harvester:
-  removeOAIEnvelope: false
+  removeOAIEnvelope: true
   metadataFormat: oai_wgl
   dir: lopen
   recipient: claus-peter.klas@gesis.org
   timeout: 60
   from:
     single: '1800-01-01'
-    initial: '2010-01-01'
+    initial: '1800-01-01'
     incremental: '2017-02-28'
     full: '1901-01-01'
   cron:
     incremental: 0 0 */2 * * *
     full: 00 12 13 * * ?
   repos:
+  - url: https://journals.ub.uni-heidelberg.de/index.php/azgnm/oai
+    setName: 
+    dataProvider: Heidelberg-AZGNM
+    metaDataProvider: Heidelberg-AZGNM
+  - url: https://journals.ub.uni-heidelberg.de/index.php/kulturgut/oai
+    setName: 
+    dataProvider: Heidelberg-KulturGut
+    metaDataProvider: Heidelberg-KulturGut
+  - url: https://books.ub.uni-heidelberg.de/index.php/arthistoricum/oai
+    setName: 
+    dataProvider: Heidelberg-Kunstgeschichte
+    metaDataProvider: Heidelberg-Kunstgeschichte
+  - url: https://journals.ub.uni-heidelberg.de/index.php/ma/oai
+    setName: 
+    dataProvider: Heidelberg-MA-GNM
+    metaDataProvider: Heidelberg-MA-GNM
+  - url: https://books.ub.uni-heidelberg.de/index.php/propylaeum/oai
+    setName: propylaeum:byzanzoo
+    dataProvider: Heidelberg-Propyl-Byz
+    metaDataProvider: Heidelberg-Propyl-Byz
+  - url: https://journals.ub.uni-heidelberg.de/index.php/jahrb-rgzm/oai
+    setName: 
+    dataProvider: Heidelberg-RGZM
+    metaDataProvider: Heidelberg-RGZM
+  - url: http://repository.gei.de/oai/request
+    setName: 
+    dataProvider: GEI
+    metaDataProvider: GEI
+  - url: http://open.ifz-muenchen.de/api/v0/oai
+    setName: 
+    dataProvider: IFZ
+    metaDataProvider: IFZ
   - url: http://www.die-bonn.de/oai/default.aspx
     setName: oadie
     dataProvider: DIE
@@ -75,11 +106,11 @@ harvester:
     setName: WglSubject
     dataProvider:  IDS
     metaDataProvider: IDS
-  - url: https://psycharchives.zpid.de/oai/request
+  - url: https://www.psycharchives.org/oai/request
     setName: 
-    dataProvider: IWM
-    metaDataProvider: IWM
-  - url: http://drops.dagstuhl.de/opus/phpoai/oai2.php
+    dataProvider: ZPID
+    metaDataProvider: ZPID
+  - url: https://drops.dagstuhl.de/opus/phpoai/oai2.php
     setName: 
     dataProvider: LZI Dagstuhl 
     metaDataProvider: LZI Dagstuhl
@@ -155,47 +186,11 @@ harvester:
     setName: col_10419_59810
     dataProvider: ECONSTOR 59810
     metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    setName: ECONSTOR-Set-8
-    dataProvider: ECONSTOR 8
-    metaDataProvider: ECONSTOR
   - url: http://pub.zbw.eu/dspace-oai/request
     setName: open_access
     dataProvider: ECONSTOR-Set-open_access
     metaDataProvider: zbw
-  - url: http://journals.ub.uni-heidelberg.de/index.php/ak/oai
+  - url: https://journals.ub.uni-heidelberg.de/index.php/ak/oai
     setName: 
     dataProvider: Heidelberg-AK
-    metaDataProvider: Heidelberg-AK
-  - url: https://journals.ub.uni-heidelberg.de/index.php/azgnm/oai
-    setName: 
-    dataProvider: Heidelberg-AZGNM
-    metaDataProvider: Heidelberg-AZGNM
-  - url: http://journals.ub.uni-heidelberg.de/index.php/kulturgut/oai
-    setName: 
-    dataProvider: Heidelberg-KulturGut
-    metaDataProvider: Heidelberg-KulturGut
-  - url: https://books.ub.uni-heidelberg.de/index.php/arthistoricum/oai
-    setName: 
-    dataProvider: Heidelberg-Kunstgeschichte
-    metaDataProvider: Heidelberg-Kunstgeschichte
-  - url: https://journals.ub.uni-heidelberg.de/index.php/ma/oai
-    setName: 
-    dataProvider: Heidelberg-MA-GNM
-    metaDataProvider: Heidelberg-MA-GNM
-  - url: http://books.ub.uni-heidelberg.de/index.php/propylaeum/oai
-    setName: 
-    dataProvider: Heidelberg-Propyl-Byz
-    metaDataProvider: Heidelberg-Propyl-Byz
-  - url: http://journals.ub.uni-heidelberg.de/index.php/jahrb-rgzm/oai
-    setName: 
-    dataProvider: Heidelberg-RGZM
-    metaDataProvider: Heidelberg-RGZM
-  - url: http://repository.gei.de/oai/request
-    setName: 
-    dataProvider: GEI
-    metaDataProvider: GEI
-  - url: http://open.ifz-muenchen.de/api/v0/oai
-    setName: 
-    dataProvider: IFZ
-    metaDataProvider: IFZ
+    metaDataProvider: Heidelberg-AK    

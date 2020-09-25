@@ -58,7 +58,8 @@ public class Server extends SpringBootServletInitializer
     private String mdFormat = "oai_ddi";
 
     @Autowired
-    public Server( HarvesterConfiguration harvesterConfiguration, @Value( "${spring.mail.host}" ) String mailHost ) throws TransformerConfigurationException
+    public Server( HarvesterConfiguration harvesterConfiguration, @Value( "${spring.mail.host}" ) String mailHost )
+            throws TransformerConfigurationException
     {
         this.harvesterConfiguration = harvesterConfiguration;
         this.mailHost = mailHost;
@@ -110,7 +111,7 @@ public class Server extends SpringBootServletInitializer
             log.trace( oaiUrl );
             return new URI( oaiUrl ).getHost().replace( ".", "_" ).replace( ":", "-" ).toLowerCase();
         }
-        catch ( URISyntaxException e )
+        catch (URISyntaxException e)
         {
             log.error( e.getMessage(), e );
             return "";
@@ -235,7 +236,8 @@ public class Server extends SpringBootServletInitializer
             if ( !incrementalIsRunning )
             {
                 incrementalIsRunning = true;
-                hlog.info( "Incremental harvesting started from {}", harvesterConfiguration.getFrom().getIncremental() );
+                hlog.info( "Incremental harvesting started from {}",
+                        harvesterConfiguration.getFrom().getIncremental() );
                 runHarvest( harvesterConfiguration.getFrom().getIncremental() );
                 hlog.info( "Incremental harvesting finished" );
 
@@ -268,7 +270,8 @@ public class Server extends SpringBootServletInitializer
         hlog.info( "Harvesting started from {} for repo {}", fromDate, position );
         try
         {
-            mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat() : "oai_dc";
+            mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat()
+                    : "oai_dc";
             to = LocalDate.now().toString();
 
             String baseUrl = harvesterConfiguration.getRepoBaseUrls().get( position );
@@ -287,7 +290,7 @@ public class Server extends SpringBootServletInitializer
                 }
             }
         }
-        catch ( SecurityException | IllegalArgumentException e )
+        catch (SecurityException | IllegalArgumentException e)
         {
             log.error( e.getMessage(), e );
             incrementalIsRunning = false;
@@ -340,7 +343,8 @@ public class Server extends SpringBootServletInitializer
         log.info( "Fetching records for repo {} and pmh set {}. Be patient, this can take hours.", repoBase, setspec );
 
         final ArrayList<String> currentlyRetrievedSet = new ArrayList<>();
-        getIdentifiersForSet( repoBase, setspec, null, currentlyRetrievedSet, mdFormat, fromDate );
+        getIdentifiersForSet( repoBase, setspec, null, currentlyRetrievedSet, mdFormat,
+                fromDate );
         writeToLocalFileSystem( currentlyRetrievedSet, repoBase, setspec, f.getAbsolutePath() );
 
         log.info( "retrieved files: {}", currentlyRetrievedSet.size() );
@@ -369,12 +373,15 @@ public class Server extends SpringBootServletInitializer
             }
             else
             {
-                if ( set.compareTo( url ) == 0 )
+                // TODO Due to changes by setting set not to all in an exception I need to check for empty set.
+                // set must be null or set = "all", if in configuration set is not set....
+                if ( set.compareTo( url ) == 0 || set.isEmpty() )
                 {
                     set = null;
                 }
                 log.debug( "From {}, until {}, {}, {}, {}", fromDate, to, oaiBaseUrl, set, mdFormat );
-                li = new ListIdentifiers( oaiBaseUrl, fromDate, to, set, Optional.ofNullable( overwrite ).orElse( mdFormat ), harvesterConfiguration.getTimeout() );
+                li = new ListIdentifiers( oaiBaseUrl, fromDate, to, set,
+                        Optional.ofNullable( overwrite ).orElse( mdFormat ), harvesterConfiguration.getTimeout() );
             }
             log.trace( li.getRequestURL() );
             Document identifiers = li.getDocument();
@@ -399,22 +406,23 @@ public class Server extends SpringBootServletInitializer
                 if ( resumptionTokenNode.hasAttributes() && resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" ) != null )
                 {
                     long itemsInCurrentSet = Long.parseLong(
-                            resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" ).getTextContent()
-                    );
+                            resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" )
+                    .getTextContent() );
                     log.info( "Items in current set: {}", itemsInCurrentSet );
                 }
             }
         }
-        catch ( IOException | SAXException | DOMException | TransformerException | NumberFormatException e )
+        catch (IOException | SAXException | DOMException | TransformerException | NumberFormatException e)
         {
-            try ( StringWriter stackTraceWriter = new StringWriter() )
+            try (StringWriter stackTraceWriter = new StringWriter())
             {
                 e.printStackTrace( new PrintWriter( stackTraceWriter ) );
                 this.notifyOnError(
                         "Harvesting failed for " + oaiBaseUrl + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix="
-                                + mdFormat + "&from=" + fromDate + "&resumptionToken=" + resumptionToken, stackTraceWriter.toString() );
+                                + mdFormat + "&from=" + fromDate + "&resumptionToken=" + resumptionToken,
+                        stackTraceWriter.toString() );
             }
-            catch ( IOException ioException )
+            catch (IOException ioException)
             {
                 log.error( "Error occurred when printing stacktrace: {}", ioException.toString() );
             }
@@ -456,7 +464,7 @@ public class Server extends SpringBootServletInitializer
             log.debug( "mail sent to {}", harvesterConfiguration.getRecipient() );
             session.close();
         }
-        catch ( MailException | UnknownHostException e )
+        catch (MailException | UnknownHostException e)
         {
             log.error( "Failed to send notification: {}", e.toString() );
         }
@@ -484,7 +492,8 @@ public class Server extends SpringBootServletInitializer
 
                 try
                 {
-                    GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout() );
+                    GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
+                            harvesterConfiguration.getTimeout() );
 
                     Path fdest = Paths.get( path,
                             indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
@@ -495,11 +504,13 @@ public class Server extends SpringBootServletInitializer
                         // remove envelope?
                         if ( harvesterConfiguration.isRemoveOAIEnvelope() )
                         {
-                            NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 ).getChildNodes();
-                            source = IntStream.range( 0, metadataElements.getLength() ).mapToObj( metadataElements::item )
-                                    .filter( Element.class::isInstance )
-                                    .map( DOMSource::new )
-                                    .findAny().orElseThrow( () -> new NoSuchElementException( "No elements with the tag name 'metadata' were found" ) );
+                            NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
+                                        .getChildNodes();
+                                source = IntStream.range( 0, metadataElements.getLength() ).mapToObj( metadataElements::item )
+                                        .filter( Element.class::isInstance )
+                                        .map( DOMSource::new )
+                                    .findAny().orElseThrow( () -> new NoSuchElementException(
+                                                "No elements with the tag name 'metadata' were found" ) );
                         }
                         else
                         {
@@ -509,6 +520,12 @@ public class Server extends SpringBootServletInitializer
                         try ( OutputStream fOutputStream = Files.newOutputStream( fdest ) )
                         {
                             factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
+                        }
+                        catch (NoSuchElementException e1)
+                        {
+                            log.error( "Error processing {}. Skip and continue. ", fname );
+                            log.error( e1.getMessage() );
+                            log.trace( pmhRecord.toString());
                         }
 
                         log.trace( "Stored : {}", fdest.toAbsolutePath() );
@@ -530,13 +547,14 @@ public class Server extends SpringBootServletInitializer
                         }
                     }
                 }
-                catch ( IOException | SAXException | TransformerException e1 )
+
+                catch (IOException | SAXException | TransformerException e1)
                 {
-                    log.error( "Failed to harvest record {}: {}", currentRecord, e1.toString() );
+                    log.error( "Failed to harvest record {}: {}", currentRecord, e1.getMessage() );
                 }
             } );
         }
-        catch ( IOException e )
+        catch (IOException e)
         {
             log.error( "{}", oaiUrl, e );
         }
@@ -568,7 +586,7 @@ public class Server extends SpringBootServletInitializer
         {
             getSetStrings( url, unfoldedSets );
         }
-        catch ( IOException | TransformerException | SAXException e )
+        catch (IOException | TransformerException | SAXException e)
         {
             log.error( "Repository has no sets defined / no response: set set=all", e );
             // set set=all in case of no sets found
@@ -579,7 +597,8 @@ public class Server extends SpringBootServletInitializer
         return unfoldedSets;
     }
 
-    private void getSetStrings( String url, Set<String> unfoldedSets ) throws IOException, SAXException, TransformerException
+    private void getSetStrings( String url, Set<String> unfoldedSets )
+            throws IOException, SAXException, TransformerException
     {
         try
         {
@@ -616,8 +635,8 @@ public class Server extends SpringBootServletInitializer
                         log.info( urlBuilder.toString() );
                     }
                 }
-            }
-            while ( unfoldedSets.size() % 50 == 0 && !ls.getResumptionToken().isEmpty() && !urlBuilder.toString().trim().isEmpty() );
+            } while (unfoldedSets.size() % 50 == 0 && !ls.getResumptionToken().isEmpty()
+                    && !urlBuilder.toString().trim().isEmpty());
         }
 
         catch (SocketTimeoutException ste)
