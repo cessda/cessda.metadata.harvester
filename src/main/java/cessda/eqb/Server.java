@@ -494,6 +494,7 @@ public class Server extends SpringBootServletInitializer
                 {
                     GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
                             harvesterConfiguration.getTimeout() );
+                    log.trace( pmhRecord.toString() );
 
                     Path fdest = Paths.get( path,
                             indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
@@ -521,12 +522,6 @@ public class Server extends SpringBootServletInitializer
                         {
                             factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
                         }
-                        catch (NoSuchElementException e1)
-                        {
-                            log.error( "Error processing {}. Skip and continue. ", fname );
-                            log.error( e1.getMessage() );
-                            log.trace( pmhRecord.toString());
-                        }
 
                         log.trace( "Stored : {}", fdest.toAbsolutePath() );
                     }
@@ -547,8 +542,11 @@ public class Server extends SpringBootServletInitializer
                         }
                     }
                 }
-
-                catch (IOException | SAXException | TransformerException e1)
+                catch ( NoSuchElementException e1 )
+                {
+                    log.warn( "Error processing {}. Skip and continue: {}", fname, e1.getMessage() );
+                }
+                catch ( IOException | SAXException | TransformerException e1 )
                 {
                     log.error( "Failed to harvest record {}: {}", currentRecord, e1.getMessage() );
                 }
