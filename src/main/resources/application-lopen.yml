@@ -58,8 +58,8 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 12 13 * * ?
   repos:
-   - url: https://oar.tib.eu/oai/oaiwgl
-    setName:
+  - url: https://oar.tib.eu/oai/oaiwgl
+    setName: 
     dataProvider: TIB Hannover
     metaDataProvider: TIB Hannover
   - url: https://journals.ub.uni-heidelberg.de/index.php/azgnm/oai
