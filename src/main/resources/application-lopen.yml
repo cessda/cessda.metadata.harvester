@@ -44,9 +44,9 @@ logging:
     cessda: TRACE
     de.codecentric.boot.admin.services: WARN
 harvester:
-  removeOAIEnvelope: true
+  removeOAIEnvelope: false
   metadataFormat: oai_wgl
-  dir: lopen
+  dir:  ${user.home}${file.separator}lopen
   recipient: claus-peter.klas@gesis.org
   timeout: 60
   from:
