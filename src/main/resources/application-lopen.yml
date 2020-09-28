@@ -44,9 +44,9 @@ logging:
     cessda: TRACE
     de.codecentric.boot.admin.services: WARN
 harvester:
-  removeOAIEnvelope: true
+  removeOAIEnvelope: false
   metadataFormat: oai_wgl
-  dir: lopen
+  dir:  ${user.home}${file.separator}lopen
   recipient: claus-peter.klas@gesis.org
   timeout: 60
   from:
@@ -58,6 +58,10 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 12 13 * * ?
   repos:
+  - url: https://oar.tib.eu/oai/oaiwgl
+    setName: 
+    dataProvider: TIB Hannover
+    metaDataProvider: TIB Hannover
   - url: https://journals.ub.uni-heidelberg.de/index.php/azgnm/oai
     setName: 
     dataProvider: Heidelberg-AZGNM
@@ -122,7 +126,7 @@ harvester:
     setName: WGL
     dataProvider: SSOAR 
     metaDataProvider: SSOAR
-  - url: http://tib.fiz-karlsruhe.de/escidoc-oaiprovider/
+  - url: https://oar.tib.eu/oai/oaiwgl
     setName: 
     dataProvider: TIB Hannover
     metaDataProvider: TIB Hannover
