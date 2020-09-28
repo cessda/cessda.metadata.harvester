@@ -25,17 +25,12 @@ import org.xml.sax.SAXException;
 
 import javax.annotation.PreDestroy;
 import javax.xml.XMLConstants;
-import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.*;
 import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,7 +56,6 @@ public class Server extends SpringBootServletInitializer
     private boolean incrementalIsRunning = false;
     private String to = "";
     private String mdFormat = "oai_ddi";
-    private long itemsInCurrentSet = 0L;
 
     @Autowired
     public Server( HarvesterConfiguration harvesterConfiguration, @Value( "${spring.mail.host}" ) String mailHost )
@@ -303,57 +297,44 @@ public class Server extends SpringBootServletInitializer
         }
     }
 
-    public void runHarvest( String fromDate )
+    private void runHarvest( String fromDate )
     {
 
         hlog.info( "Harvesting started from {}", fromDate );
-        try
+
+        mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat() : "oai_dc";
+        to = LocalDate.now().toString();
+
+        for ( HarvesterConfiguration.Repo repo : harvesterConfiguration.getRepos() )
         {
-            mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat()
-                    : "oai_dc";
-            to = LocalDate.now().toString();
-
-            for ( HarvesterConfiguration.Repo repo : harvesterConfiguration.getRepos() )
+            String baseUrl = repo.getUrl();
+            if ( !baseUrl.trim().isEmpty() )
             {
-                String baseUrl = repo.getUrl();
-                if ( !baseUrl.trim().isEmpty() )
+                if ( baseUrl.contains( "#" ) )
                 {
-                    if ( baseUrl.contains( "#" ) )
-                    {
-                        baseUrl = baseUrl.substring( 0, baseUrl.indexOf( '#' ) );
-                    }
-                    log.trace( "{} {}", baseUrl, fromDate );
+                    baseUrl = baseUrl.substring( 0, baseUrl.indexOf( '#' ) );
+                }
 
-                    Set<String> sets;
-                    if ( repo.getSetName() != null )
-                    {
-                        sets = Collections.singleton( repo.getSetName() );
-                    }
-                    else
-                    {
-                        sets = getSpecs( baseUrl );
-                    }
+                Set<String> sets;
+                if ( repo.getSetName() != null )
+                {
+                    sets = Collections.singleton( repo.getSetName() );
+                }
+                else
+                {
+                    sets = getSpecs( baseUrl );
+                }
 
-                    hlog.info( "Harvesting started for {}", baseUrl );
-
-                    hlog.info( "Harvesting Xxxxxxxx {}", fromDate );
-
-                    for ( String set : sets )
-                    {
-                        hlog.info( "Start to get records for {} / {} from {}", baseUrl, set, fromDate );
-                        fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
-                    }
+                for ( String set : sets )
+                {
+                    hlog.info( "Start to get records for {} / {} from {}", baseUrl, set, fromDate );
+                    fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
                 }
             }
-
-        }
-        catch (SecurityException | IllegalArgumentException e)
-        {
-            log.error( e.getMessage(), e );
         }
     }
 
-    void fetchDCRecords( String repoBase, String setspec, String fromDate )
+    private void fetchDCRecords( String repoBase, String setspec, String fromDate )
     {
 
         log.info( harvesterConfiguration.getDir() );
@@ -361,15 +342,16 @@ public class Server extends SpringBootServletInitializer
 
         log.info( "Fetching records for repo {} and pmh set {}. Be patient, this can take hours.", repoBase, setspec );
 
-        List<String> currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, null, new ArrayList<>(), mdFormat,
+        final ArrayList<String> currentlyRetrievedSet = new ArrayList<>();
+        getIdentifiersForSet( repoBase, setspec, null, currentlyRetrievedSet, mdFormat,
                 fromDate );
         writeToLocalFileSystem( currentlyRetrievedSet, repoBase, setspec, f.getAbsolutePath() );
 
         log.info( "retrieved files: {}", currentlyRetrievedSet.size() );
-        log.info( "\tSET\t" + setspec + "\tsize:\t" + currentlyRetrievedSet.size() + "\tURL\t" + repoBase );
+        log.info( "\tSET\t{}\tsize:\t{}\tURL\t{}", setspec, currentlyRetrievedSet.size(), repoBase );
     }
 
-    protected List<String> getIdentifiersForSet(
+    private void getIdentifiersForSet(
             String url,
             String set,
             String resumptionToken,
@@ -379,14 +361,11 @@ public class Server extends SpringBootServletInitializer
     {
 
         final String oaiBaseUrl = oaiBase( url );
-        log.debug( "URL: {}, list size: {}, restoken {}", url, records.size(), resumptionToken );
-        int largeHarvestLimit = 50;
-        log.info( "limit: {}  recordssize: {}", largeHarvestLimit, records.size() );
+        log.info( "URL: {}, set: {}, list size: {}, restoken {}", url, set, records.size(), resumptionToken );
         try
         {
-            log.trace( "recurse:\turl " + url + " set " + set + " token " + resumptionToken + "  " );
+            log.trace( "recurse:\turl {} set {} token {}", url, set, resumptionToken );
             ListIdentifiers li;
-            log.trace( resumptionToken );
             if ( resumptionToken != null )
             {
                 log.trace( url );
@@ -403,54 +382,35 @@ public class Server extends SpringBootServletInitializer
                 log.debug( "From {}, until {}, {}, {}, {}", fromDate, to, oaiBaseUrl, set, mdFormat );
                 li = new ListIdentifiers( oaiBaseUrl, fromDate, to, set,
                         Optional.ofNullable( overwrite ).orElse( mdFormat ), harvesterConfiguration.getTimeout() );
-                log.debug( oaiBaseUrl );
             }
             log.trace( li.getRequestURL() );
-            Document identfiers = li.getDocument();
+            Document identifiers = li.getDocument();
 
             // add to list of records to fetch
-            NodeList identifiersIDs = identfiers.getElementsByTagName( "identifier" );
-            if ( identifiersIDs != null )
-            {
-                for ( int j = 0; j < identifiersIDs.getLength(); j++ )
-                {
-                    Node n = identifiersIDs.item( j );
-                    if ( n.getTextContent() != null )
-                    {
-                        records.add( n.getTextContent() );
-                    }
-                    else
-                    {
-                        log.warn( "Node {} is null", n );
-                    }
-                }
-            }
-            else
-            {
-                log.warn( "Identifiers in this block are null for resumption token {}", resumptionToken );
-            }
+            NodeList identifiersIDs = identifiers.getElementsByTagName( "identifier" );
+            IntStream.range( 0, identifiersIDs.getLength() ).mapToObj( identifiersIDs::item )
+                    .map( Node::getTextContent ).filter( Objects::nonNull )
+                    .forEach( records::add );
 
             // need to recurse?
-            NodeList resumptionTokenReq = identfiers.getElementsByTagName( "resumptionToken" );
-            if ( resumptionTokenReq.getLength() > 0 && !resumptionTokenReq.item( 0 ).getTextContent().isEmpty() )
+            NodeList resumptionTokenReq = identifiers.getElementsByTagName( "resumptionToken" );
+            if ( resumptionTokenReq.getLength() > 0 )
             {
-                String rTok = resumptionTokenReq.item( 0 ).getTextContent();
-                log.info( "\tSet\t" + set + "\tToken\t" + rTok + "\tSize \t " + records.size() + "\tURL\t" + url );
-                records = getIdentifiersForSet( url, set, rTok, records, null, fromDate );
-                // need to interrupt recursion?
-
+                Node resumptionTokenNode = resumptionTokenReq.item( 0 );
+                if ( !resumptionTokenNode.getTextContent().isEmpty() )
+                {
+                    String rTok = resumptionTokenNode.getTextContent();
+                    getIdentifiersForSet( url, set, rTok, records, null, fromDate );
+                    // need to interrupt recursion?
+                }
+                if ( resumptionTokenNode.hasAttributes() && resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" ) != null )
+                {
+                    long itemsInCurrentSet = Long.parseLong(
+                            resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" )
+                    .getTextContent() );
+                    log.info( "Items in current set: {}", itemsInCurrentSet );
+                }
             }
-            if ( resumptionTokenReq.getLength() != 0 && resumptionTokenReq.item( 0 ).hasAttributes()
-                    && resumptionTokenReq.item( 0 ).getAttributes().getNamedItem( "completeListSize" ) != null )
-            {
-
-                itemsInCurrentSet = Long.parseLong(
-                        resumptionTokenReq.item( 0 ).getAttributes().getNamedItem( "completeListSize" )
-                                .getTextContent() );
-                log.info( "Items in current set: {}", itemsInCurrentSet );
-
-            }
-            log.trace( "{}", itemsInCurrentSet );
         }
         catch (IOException | SAXException | DOMException | TransformerException | NumberFormatException e)
         {
@@ -468,8 +428,6 @@ public class Server extends SpringBootServletInitializer
             }
         }
         log.trace( "Records to fetch : {}", records.size() );
-
-        return records;
     }
 
     protected void notifyOnError( String subject, String msg )
@@ -516,14 +474,14 @@ public class Server extends SpringBootServletInitializer
     protected void writeToLocalFileSystem( Collection<String> records, String oaiUrl, String specId, String path )
     {
 
-        log.info( oaiUrl + "\t" + specId + "\t" + path );
+        log.info( "{}\t{}\t{}", oaiUrl, specId, path );
         String indexName = shortened( oaiUrl ) + "-" + specId;
         Path dest = Paths.get( path, indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ) );
         try
         {
             Files.createDirectories( dest );
 
-            log.trace( dest.toFile().getAbsolutePath() + "  " + dest.toFile().exists() + "" );
+            log.trace( "{}  {}", dest.toAbsolutePath(), Files.exists( dest ) );
 
             records.stream().map( String::trim ).forEach( currentRecord ->
             {
@@ -536,40 +494,33 @@ public class Server extends SpringBootServletInitializer
                 {
                     GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
                             harvesterConfiguration.getTimeout() );
+                    log.trace( pmhRecord.toString() );
 
                     Path fdest = Paths.get( path,
                             indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
                     if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).getLength() > 0 )
                     {
-                        // remove envelope?
-                        try
-                        {
-                            if ( harvesterConfiguration.isRemoveOAIEnvelope() )
-                            {
-                                NodeList nl = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
-                                        .getChildNodes();
-                                Node child = IntStream.range( 0, nl.getLength() ).mapToObj( nl::item )
-                                        .filter( Element.class::isInstance )
-                                        .findAny().orElseThrow( () -> new NoSuchElementException(
-                                                "No elements with the tag name 'metadata' were found" ) );
+                        final DOMSource source;
 
-                                Transformer transformer = factory.newTransformer();
-                                transformer.transform( new DOMSource( child ),
-                                        new StreamResult( Files.newOutputStream( fdest ) ) );
-                            }
-                            else
-                            {
-                                FileWriter fw = new FileWriter( new File( fdest.toString() ) );
-                                fw.write( pmhRecord.toString() );
-                                fw.close();
-                                fw = null;
-                            }
-                        }
-                        catch (NoSuchElementException e1)
+                        // remove envelope?
+                        if ( harvesterConfiguration.isRemoveOAIEnvelope() )
                         {
-                            log.error( "Error processing {}. Skip and continue. ", fname );
-                            log.error( e1.getMessage() );
-                            log.trace( pmhRecord.toString());
+                            NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
+                                        .getChildNodes();
+                                source = IntStream.range( 0, metadataElements.getLength() ).mapToObj( metadataElements::item )
+                                        .filter( Element.class::isInstance )
+                                        .map( DOMSource::new )
+                                    .findAny().orElseThrow( () -> new NoSuchElementException(
+                                                "No elements with the tag name 'metadata' were found" ) );
+                        }
+                        else
+                        {
+                            source = new DOMSource( pmhRecord.getDocument() );
+                        }
+
+                        try ( OutputStream fOutputStream = Files.newOutputStream( fdest ) )
+                        {
+                            factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
                         }
 
                         log.trace( "Stored : {}", fdest.toAbsolutePath() );
@@ -591,10 +542,13 @@ public class Server extends SpringBootServletInitializer
                         }
                     }
                 }
-
-                catch (IOException | SAXException | TransformerException e1)
+                catch ( NoSuchElementException e1 )
                 {
-                    log.error( e1.getMessage() );
+                    log.warn( "Error processing {}. Skip and continue: {}", fname, e1.getMessage() );
+                }
+                catch ( IOException | SAXException | TransformerException e1 )
+                {
+                    log.error( "Failed to harvest record {}: {}", currentRecord, e1.getMessage() );
                 }
             } );
         }
