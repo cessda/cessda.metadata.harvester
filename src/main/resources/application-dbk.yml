@@ -70,4 +70,4 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: https://dbk.gesis.org/dbkoai/?verb=ListIdentifiers&set=DBK
+  - url: http://svko-dbk02.gesis.intra/dbkoai/?verb=ListIdentifiers&set=DBK
