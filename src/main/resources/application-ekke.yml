@@ -8,9 +8,9 @@ logging:
   level:
     org:
       springframework: '@logging.level.org.springframework@'
-      gesis: TRACE
-    cessda.eqb: TRACE
-    de.codecentric.boot.admin: DEBUG
+      gesis: INFO
+    cessda.eqb: INFO
+    de.codecentric.boot.admin: WARN
     springfox.documentation.spring.web.readers.operation: WARN
 management:
   endpoints:
