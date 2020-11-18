@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+### Added
+* License header in Java source files
+
 ## [1.0.0]
 ### Added
 * configuration option 'removeOAIEnvelope' to store records with or without OAI envelope
