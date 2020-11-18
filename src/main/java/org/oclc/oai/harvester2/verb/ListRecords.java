@@ -15,101 +15,121 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import org.xml.sax.SAXException;
-
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
 
+import javax.xml.transform.TransformerException;
+
+import org.xml.sax.SAXException;
+
 /**
- * This class represents an ListRecords response on either the server or
- * on the client
+ * This class represents an ListRecords response on either the server or on the client
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class ListRecords extends HarvesterVerb {
-    /**
-     * Mock object constructor (for unit testing purposes)
-     */
-    public ListRecords() {
-        super();
-    }
-    
-    /**
-     * Client-side ListRecords verb constructor
-     *
-     * @param baseURL the baseURL of the server to be queried
-     * @throws MalformedURLException the baseURL is bad
-     * @throws SAXException          the xml response is bad
-     * @throws IOException           an I/O error occurred
-     */
-    public ListRecords( String baseURL, String from, String until,
-                        String set, String metadataPrefix ) throws IOException, SAXException, TransformerException
-    {
-        super( getRequestURL( baseURL, from, until, set, metadataPrefix ) );
-    }
+public class ListRecords extends HarvesterVerb
+{
+	/**
+	 * Mock object constructor (for unit testing purposes)
+	 */
+	public ListRecords()
+	{
+		super();
+	}
 
-    /**
-     * Client-side ListRecords verb constructor (resumptionToken version)
-     *
-     * @param baseURL
-     * @param resumptionToken
-     * @throws IOException
-     * @throws SAXException
-     * @throws TransformerException
-     */
-    public ListRecords( String baseURL, String resumptionToken ) throws IOException, SAXException,
-            TransformerException
-    {
-        super( getRequestURL( baseURL, resumptionToken ) );
-    }
-    
-    /**
-     * Get the oai:resumptionToken from the response
-     * 
-     * @return the oai:resumptionToken value
-     * @throws TransformerException
-     * @throws NoSuchFieldException
-     */
-    public String getResumptionToken()
-    throws TransformerException, NoSuchFieldException {
-        String schemaLocation = getSchemaLocation();
-        if (schemaLocation.contains(SCHEMA_LOCATION_V2_0)) {
-            return getSingleString("/oai20:OAI-PMH/oai20:ListRecords/oai20:resumptionToken");
-        } else if (schemaLocation.contains(SCHEMA_LOCATION_V1_1_LIST_RECORDS)) {
-            return getSingleString("/oai11_ListRecords:ListRecords/oai11_ListRecords:resumptionToken");
-        } else {
-            throw new NoSuchFieldException(schemaLocation);
-        }
-    }
-    
-    /**
-     * Construct the query portion of the http request
-     *
-     * @return a String containing the query portion of the http request
-     */
-    private static String getRequestURL(String baseURL, String from,
-            String until, String set,
-            String metadataPrefix) {
-        StringBuilder requestURL =  new StringBuilder(baseURL);
-        requestURL.append("?verb=ListRecords");
-        if (from != null) requestURL.append("&from=").append(from);
-        if (until != null) requestURL.append("&until=").append(until);
-        if (set != null) requestURL.append("&set=").append(set);
-        requestURL.append("&metadataPrefix=").append(metadataPrefix);
-        return requestURL.toString();
-    }
+	/**
+	 * Client-side ListRecords verb constructor
+	 *
+	 * @param baseURL
+	 *            the baseURL of the server to be queried
+	 * @throws MalformedURLException
+	 *             the baseURL is bad
+	 * @throws SAXException
+	 *             the xml response is bad
+	 * @throws IOException
+	 *             an I/O error occurred
+	 */
+	public ListRecords( String baseURL, String from, String until,
+			String set, String metadataPrefix ) throws IOException, SAXException, TransformerException
+	{
+		super( getRequestURL( baseURL, from, until, set, metadataPrefix ) );
+	}
 
-    /**
-     * Construct the query portion of the http request (resumptionToken version)
-     *
-     * @param baseURL
-     * @param resumptionToken
-     * @return
-     */
-    private static String getRequestURL(String baseURL, String resumptionToken) throws UnsupportedEncodingException {
-        return baseURL + "?verb=ListRecords" + "&resumptionToken=" + URLEncoder.encode(resumptionToken, "UTF-8");
-    }
+	/**
+	 * Client-side ListRecords verb constructor (resumptionToken version)
+	 *
+	 * @param baseURL
+	 * @param resumptionToken
+	 * @throws IOException
+	 * @throws SAXException
+	 * @throws TransformerException
+	 */
+	public ListRecords( String baseURL, String resumptionToken ) throws IOException, SAXException,
+			TransformerException
+	{
+		super( getRequestURL( baseURL, resumptionToken ) );
+	}
+
+	/**
+	 * Get the oai:resumptionToken from the response
+	 * 
+	 * @return the oai:resumptionToken value
+	 * @throws TransformerException
+	 * @throws NoSuchFieldException
+	 */
+	public String getResumptionToken()
+			throws TransformerException, NoSuchFieldException
+	{
+		String schemaLocation = getSchemaLocation();
+		if ( schemaLocation.contains( SCHEMA_LOCATION_V2_0 ) )
+		{
+			return getSingleString( "/oai20:OAI-PMH/oai20:ListRecords/oai20:resumptionToken" );
+		}
+		else if ( schemaLocation.contains( SCHEMA_LOCATION_V1_1_LIST_RECORDS ) )
+		{
+			return getSingleString( "/oai11_ListRecords:ListRecords/oai11_ListRecords:resumptionToken" );
+		}
+		else
+		{
+			throw new NoSuchFieldException( schemaLocation );
+		}
+	}
+
+	/**
+	 * Construct the query portion of the http request
+	 *
+	 * @return a String containing the query portion of the http request
+	 */
+	private static String getRequestURL(
+			String baseURL,
+			String from,
+			String until,
+			String set,
+			String metadataPrefix )
+	{
+		StringBuilder requestURL = new StringBuilder( baseURL );
+		requestURL.append( "?verb=ListRecords" );
+		if ( from != null )
+			requestURL.append( "&from=" ).append( from );
+		if ( until != null )
+			requestURL.append( "&until=" ).append( until );
+		if ( set != null )
+			requestURL.append( "&set=" ).append( set );
+		requestURL.append( "&metadataPrefix=" ).append( metadataPrefix );
+		return requestURL.toString();
+	}
+
+	/**
+	 * Construct the query portion of the http request (resumptionToken version)
+	 *
+	 * @param baseURL
+	 * @param resumptionToken
+	 * @return
+	 */
+	private static String getRequestURL( String baseURL, String resumptionToken ) throws UnsupportedEncodingException
+	{
+		return baseURL + "?verb=ListRecords" + "&resumptionToken=" + URLEncoder.encode( resumptionToken, "UTF-8" );
+	}
 }

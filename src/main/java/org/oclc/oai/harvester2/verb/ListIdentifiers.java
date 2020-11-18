@@ -34,7 +34,7 @@ public class ListIdentifiers extends HarvesterVerb
 	 * Mock object constructor (for unit testing purposes)
 	 */
 	public ListIdentifiers()
-	{
+{
 		super();
 	}
 
@@ -47,7 +47,7 @@ public class ListIdentifiers extends HarvesterVerb
 	 */
 	public ListIdentifiers( String baseURL, String from, String until, String set, String metadataPrefix, Integer timeout )
 			throws IOException, SAXException, TransformerException
-	{
+{
 		super( getRequestURL( baseURL, from, until, set, metadataPrefix ), timeout );
 	}
 
@@ -61,7 +61,7 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @throws TransformerException
 	 */
 	public ListIdentifiers( String baseURL, String resumptionToken, int timeout ) throws IOException, SAXException, TransformerException
-	{
+{
 		super( getRequestURL( baseURL, resumptionToken ), timeout );
 	}
 
@@ -73,18 +73,18 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @throws NoSuchFieldException
 	 */
 	public String getResumptionToken() throws TransformerException, NoSuchFieldException
-	{
+{
 
 		if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
-		{
+	{
 			return getSingleString( "/oai20:OAI-PMH/oai20:ListIdentifiers/oai20:resumptionToken" );
 		}
 		else if ( SCHEMA_LOCATION_V1_1_LIST_IDENTIFIERS.equals( getSchemaLocation() ) )
-		{
+	{
 			return getSingleString( "/oai11_ListIdentifiers:ListIdentifiers/oai11_ListIdentifiers:resumptionToken" );
 		}
 		else
-		{
+	{
 			throw new NoSuchFieldException( getSchemaLocation() );
 		}
 	}
@@ -95,20 +95,20 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @return a String containing the query portion of the http request
 	 */
 	private static String getRequestURL( String baseURL, String from, String until, String set, String metadataPrefix )
-	{
+{
 
 		StringBuilder requestURL = new StringBuilder( baseURL );
 		requestURL.append( "?verb=ListIdentifiers" );
 		if ( from != null )
-		{
+	{
 			requestURL.append( "&from=" ).append( from );
 		}
 		if ( until != null )
-		{
+	{
 			requestURL.append( "&until=" ).append( until );
 		}
 		if ( set != null && !set.equals( "all" ) )
-		{
+	{
 			requestURL.append( "&set=" ).append( set );
 		}
 		requestURL.append( "&metadataPrefix=" ).append( metadataPrefix );
@@ -123,13 +123,13 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @return
 	 */
 	private static String getRequestURL( String baseURL, String resumptionToken )
-	{
+{
 		try
-		{
+	{
 			return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode( resumptionToken, "UTF-8" );
 		}
 		catch ( UnsupportedEncodingException e )
-		{
+	{
 			throw new IllegalStateException(e);
 		}
 	}

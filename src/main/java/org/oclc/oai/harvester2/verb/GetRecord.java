@@ -15,64 +15,81 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import org.xml.sax.SAXException;
-
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 
+import javax.xml.transform.TransformerException;
+
+import org.xml.sax.SAXException;
+
 /**
- * This class represents an GetRecord response on either the server or
- * on the client
+ * This class represents an GetRecord response on either the server or on the client
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class GetRecord extends HarvesterVerb {
-    /**
-     * Mock object constructor (for unit testing purposes)
-     */
-    public GetRecord() {
-        super();
-    }
+public class GetRecord extends HarvesterVerb
+{
+	/**
+	 * Mock object constructor (for unit testing purposes)
+	 */
+	public GetRecord()
+	{
+		super();
+	}
 
-    /**
-     * Client-side GetRecord verb constructor
-     *
-     * @param baseURL the baseURL of the server to be queried
-     * @throws MalformedURLException the baseURL is bad
-     * @throws SAXException          the xml response is bad
-     * @throws IOException           an I/O error occurred
-     */
-    public GetRecord( String baseURL, String identifier, String metadataPrefix, Integer timeout )
-            throws IOException, SAXException, TransformerException
-    {
-        super( getRequestURL( baseURL, identifier, metadataPrefix ), timeout );
-    }
-    
-    /**
-     * Get the oai:identifier fromthe oai:header
-     * @return the oai:identifier as a String
-     * @throws TransformerException a
-     * @throws NoSuchFieldException b
-     * @return identifier
-     */
-    public String getIdentifier()
-    throws TransformerException, NoSuchFieldException {
-        if (SCHEMA_LOCATION_V2_0.equals(getSchemaLocation())) {
-            return getSingleString("/oai20:OAI-PMH/oai20:GetRecord/oai20:record/oai20:header/oai20:identifier");
-        } else if (SCHEMA_LOCATION_V1_1_GET_RECORD.equals(getSchemaLocation())) {
-            return getSingleString("/oai11_GetRecord:GetRecord/oai11_GetRecord:record/oai11_GetRecord:header/oai11_GetRecord:identifier");
-        } else {
-            throw new NoSuchFieldException(getSchemaLocation());
-        }
-    }
-    
-    /**
-     * Construct the query portion of the http request
-     *
-     * @return a String containing the query portion of the http request
-     */
-    private static String getRequestURL(String baseURL, String identifier, String metadataPrefix) {
-        return baseURL + "?verb=GetRecord" + "&identifier=" + identifier + "&metadataPrefix=" + metadataPrefix;
-    }
+	/**
+	 * Client-side GetRecord verb constructor
+	 *
+	 * @param baseURL
+	 *            the baseURL of the server to be queried
+	 * @throws MalformedURLException
+	 *             the baseURL is bad
+	 * @throws SAXException
+	 *             the xml response is bad
+	 * @throws IOException
+	 *             an I/O error occurred
+	 */
+	public GetRecord( String baseURL, String identifier, String metadataPrefix, Integer timeout )
+			throws IOException, SAXException, TransformerException
+	{
+		super( getRequestURL( baseURL, identifier, metadataPrefix ), timeout );
+	}
+
+	/**
+	 * Get the oai:identifier fromthe oai:header
+	 * 
+	 * @return the oai:identifier as a String
+	 * @throws TransformerException
+	 *             a
+	 * @throws NoSuchFieldException
+	 *             b
+	 * @return identifier
+	 */
+	public String getIdentifier()
+			throws TransformerException, NoSuchFieldException
+	{
+		if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
+		{
+			return getSingleString( "/oai20:OAI-PMH/oai20:GetRecord/oai20:record/oai20:header/oai20:identifier" );
+		}
+		else if ( SCHEMA_LOCATION_V1_1_GET_RECORD.equals( getSchemaLocation() ) )
+		{
+			return getSingleString(
+					"/oai11_GetRecord:GetRecord/oai11_GetRecord:record/oai11_GetRecord:header/oai11_GetRecord:identifier" );
+		}
+		else
+		{
+			throw new NoSuchFieldException( getSchemaLocation() );
+		}
+	}
+
+	/**
+	 * Construct the query portion of the http request
+	 *
+	 * @return a String containing the query portion of the http request
+	 */
+	private static String getRequestURL( String baseURL, String identifier, String metadataPrefix )
+	{
+		return baseURL + "?verb=GetRecord" + "&identifier=" + identifier + "&metadataPrefix=" + metadataPrefix;
+	}
 }
