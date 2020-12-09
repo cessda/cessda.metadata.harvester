@@ -151,7 +151,7 @@ public class Server extends SpringBootServletInitializer
     @Async
     @ManagedOperation(
             description = "Run initial harvesting. Set from date with key harvester.cron.initial. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. Don't forget to reset the environment and update application.yml for persistent configuration" )
-    @Scheduled( initialDelay = 10000L, fixedDelay = 315360000000L )
+    @Scheduled( initialDelayString = "${harvester.cron.initialDelay:1000}", fixedDelay = 315360000000L )
     public String initialHarvesting()
     {
 
@@ -430,13 +430,12 @@ public class Server extends SpringBootServletInitializer
         log.trace( "Records to fetch : {}", records.size() );
     }
 
-    protected void notifyOnError( String subject, String msg )
+    public void notifyOnError( String subject, String msg )
     {
 
         hlog.error( "{}\n{}", subject, msg );
         if ( harvesterConfiguration.getRecipient().compareTo( "" ) == 0 )
         {
-            log.warn( "no recipient for notifications given in config." );
             return;
         }
         try
@@ -446,9 +445,6 @@ public class Server extends SpringBootServletInitializer
             Email noti = new Email();
             String fromEmail = "system.wts@gesis.org";
             noti.from( fromEmail );
-            log.debug( fromEmail );
-            if ( log.isDebugEnabled() )
-                log.debug( harvesterConfiguration.getRecipient() );
             noti.to( harvesterConfiguration.getRecipient().split( "," ) );
             noti.setSubject( localMachine.getHostName() + " : " + subject );
 
@@ -456,12 +452,8 @@ public class Server extends SpringBootServletInitializer
                     + InetAddress.getLoopbackAddress().getHostName();
             noti.addText( msg );
             SmtpSslServer smtpServer = SmtpSslServer.create( this.mailHost );
-            log.warn( "smtp port {}", smtpServer.getPort() );
             SendMailSession session = smtpServer.createSession();
             session.open();
-            if ( log.isErrorEnabled() )
-                log.error( session.sendMail( noti ) );
-            log.debug( "mail sent to {}", harvesterConfiguration.getRecipient() );
             session.close();
         }
         catch (MailException | UnknownHostException e)
@@ -474,14 +466,11 @@ public class Server extends SpringBootServletInitializer
     protected void writeToLocalFileSystem( Collection<String> records, String oaiUrl, String specId, String path )
     {
 
-        log.info( "{}\t{}\t{}", oaiUrl, specId, path );
         String indexName = shortened( oaiUrl ) + "-" + specId;
         Path dest = Paths.get( path, indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ) );
         try
         {
             Files.createDirectories( dest );
-
-            log.trace( "{}  {}", dest.toAbsolutePath(), Files.exists( dest ) );
 
             records.stream().map( String::trim ).forEach( currentRecord ->
             {
@@ -494,8 +483,6 @@ public class Server extends SpringBootServletInitializer
                 {
                     GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
                             harvesterConfiguration.getTimeout() );
-                    log.trace( pmhRecord.toString() );
-
                     Path fdest = Paths.get( path,
                             indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
                     if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).getLength() > 0 )
@@ -522,31 +509,19 @@ public class Server extends SpringBootServletInitializer
                         {
                             factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
                         }
-
-                        log.trace( "Stored : {}", fdest.toAbsolutePath() );
                     }
                     else
                     {
                         NodeList errorList = pmhRecord.getDocument().getElementsByTagName( "error" );
                         if ( errorList.getLength() == 0 )
                         {
-                            log.debug( " no error provided\n" + fdest.toString() + "\n" +
-                                    oaiUrl + "\n" + currentRecord + "\n" );
                             NodeList header = pmhRecord.getDocument().getElementsByTagName( "header" );
                             Node status = header.item( 0 ).getAttributes().getNamedItem( "status" );
-                            log.warn( "Status: {}", status.getTextContent() );
                         }
-                        else
-                        {
-                            log.error( " error provided:\n{}", errorList.item( 0 ).getTextContent() );
-                        }
+                        
                     }
                 }
-                catch ( NoSuchElementException e1 )
-                {
-                    log.warn( "Error processing {}. Skip and continue: {}", fname, e1.getMessage() );
-                }
-                catch ( IOException | SAXException | TransformerException e1 )
+                catch ( Exception e1 )
                 {
                     log.error( "Failed to harvest record {}: {}", currentRecord, e1.getMessage() );
                 }
@@ -595,7 +570,7 @@ public class Server extends SpringBootServletInitializer
         return unfoldedSets;
     }
 
-    private void getSetStrings( String url, Set<String> unfoldedSets )
+    public void getSetStrings( String url, Set<String> unfoldedSets )
             throws IOException, SAXException, TransformerException
     {
         try
