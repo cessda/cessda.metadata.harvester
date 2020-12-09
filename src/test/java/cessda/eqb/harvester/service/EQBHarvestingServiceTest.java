@@ -27,6 +27,7 @@ import cessda.eqb.Server;
 				"harvester.removeOAIEnvelope=false",
 				"harvester.recipient=tech@dessda.org",
 				"harvester.timeout=6",
+				"harvester.dir=data",
 				"harvester.from.single='2020-12-08'",
 				"harvester.from.initial='2020-12-08'",
 				"harvester.from.full='2020-12-08'",
