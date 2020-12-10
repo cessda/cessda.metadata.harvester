@@ -1,6 +1,5 @@
 pipeline {
     options {
-        ansiColor('xterm')
         buildDiscarder logRotator(artifactNumToKeepStr: '5', numToKeepStr: '10')
     }
 
@@ -10,7 +9,9 @@ pipeline {
         image_tag = "${docker_repo}/${product_name}-${module_name}:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
 
-    agent any
+    agent {
+        label 'jnlp-himem'
+    }
 
     stages {
         // Building on master
@@ -70,15 +71,13 @@ pipeline {
                 withMaven {
                     sh "./mvnw docker:build docker:push -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose -Dimage_tag=${IMAGE_TAG}"
                 }
-                sh("gcloud container images add-tag ${IMAGE_TAG} ${docker_repo}/${product_name}-${module_name}:${env.BRANCH_NAME}-latest")
+                sh "gcloud container images add-tag ${IMAGE_TAG} ${docker_repo}/${product_name}-${module_name}:${env.BRANCH_NAME}-latest"
             }
             when { branch 'master' }
         }
         stage('Check Requirements and Deployments') {
             steps {
-                dir('./infrastructure/gcp/') {
-                    build job: 'cessda.eqb.deploy/master', parameters: [string(name: 'harvester_image_tag', value: "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"), string(name: 'module', value: 'harvester')], wait: false
-                }
+                build job: 'cessda.eqb.deploy/master', parameters: [string(name: 'harvester_image_tag', value: "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"), string(name: 'module', value: 'harvester')], wait: false
             }
             when { branch 'master' }
         }
