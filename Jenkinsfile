@@ -26,7 +26,7 @@ pipeline {
                 stage('Build Project') {
                     steps {
                         withMaven {
-                            sh "./mvnw clean install -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose"
+                            sh './mvnw clean install -Pdocker-compose'
                         }
                     }
                     when { branch 'master' }
@@ -49,7 +49,7 @@ pipeline {
                     steps {
                         withSonarQubeEnv('cessda-sonar') {
                             withMaven {
-                                sh "./mvnw sonar:sonar -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose"
+                                sh './mvnw sonar:sonar -Pdocker-compose'
                             }
                         }
                     }
@@ -69,7 +69,7 @@ pipeline {
             steps {
                 sh 'gcloud auth configure-docker'
                 withMaven {
-                    sh "./mvnw docker:build docker:push -DbuildNumber=${env.BUILD_NUMBER} -Pdocker-compose -Dimage_tag=${IMAGE_TAG}"
+                    sh "./mvnw docker:build docker:push -Pdocker-compose -Dimage_tag=${IMAGE_TAG}"
                 }
                 sh "gcloud container images add-tag ${IMAGE_TAG} ${docker_repo}/${product_name}-${module_name}:${env.BRANCH_NAME}-latest"
             }
