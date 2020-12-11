@@ -21,7 +21,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<revision>1.0.0-${buildNumber}</revision>
+		<revision>1.0.1</revision>
 		<buildNumber>SNAPSHOT</buildNumber>
 		<java.version>1.8</java.version>
 		<gesis.repository.visibility>public</gesis.repository.visibility>

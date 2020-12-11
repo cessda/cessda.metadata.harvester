@@ -1,12 +1,15 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.0.1]
 ### Added
 * License header in Java source files
+* Added tests
 
 ## [1.0.0]
 ### Added
-* configuration option 'removeOAIEnvelope' to store records with or without OAI envelope
+* Configuration option 'removeOAIEnvelope' to store records with or without OAI envelope
 
 ### Fixed
 * Fixed the timeout settings not applying when listing record identifiers with a resumption token, fixed not getting all sets.
