@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>eu.cessda.eqb</groupId>
 	<artifactId>oaiharvester</artifactId>
-	<version>${revision}</version>
+	<version>1.0.1</version>
 	<name>CESSDA Euro Question Bank: Metadata Harvester</name>
 	<description>
 		A microservice for harvesting metadata made available by third parties by using the Open Archives
@@ -21,17 +21,14 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<revision>1.0.1</revision>
-		<buildNumber>SNAPSHOT</buildNumber>
 		<java.version>1.8</java.version>
 		<gesis.repository.visibility>public</gesis.repository.visibility>
 		<image_tag>cessda/${project.artifactId}:${project.version}</image_tag>
-		<code-generation-comment>This file is generated, all changes will be
-			overriden</code-generation-comment>
+		<code-generation-comment>This file is generated, all changes will be overriden</code-generation-comment>
 		<logging.file>target/application.log</logging.file>
 		<logging.level.org.springframework>INFO</logging.level.org.springframework>
 		<server.port>8083</server.port>
-		<server.servlet.context-path />
+		<server.servlet.context-path/>
 		<documents>data</documents>
 		<sonar.sources>src/main/</sonar.sources>
 		<sonar.tests>src/test/</sonar.tests>
