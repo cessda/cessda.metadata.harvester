@@ -1,11 +1,12 @@
+management:
+  endpoints.shutdown.enabled: true
 server:
   port: 8084
-security:
-  user:
-    name: gesis
-    password: g3s1s
-endpoints.shutdown.enabled: true
 spring:
+  security:
+    user:
+      name: gesis
+      password: g3s1s
   mail:
     host: smtprelay.gesis.intra
   output:
