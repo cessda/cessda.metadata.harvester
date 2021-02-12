@@ -34,37 +34,30 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.time.Instant;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.InflaterInputStream;
-import java.util.zip.ZipInputStream;
-
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Result;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-
 import org.apache.xpath.XPathAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
+import java.util.zip.ZipInputStream;
 
 /**
  * HarvesterVerb is the parent class for each of the OAI verbs.
@@ -225,14 +218,34 @@ public abstract class HarvesterVerb
 					{
 						Thread.sleep( retrySeconds * 1000 );
 					}
-					catch (InterruptedException ex)
+					catch ( InterruptedException ex )
 					{
 						Thread.currentThread().interrupt();
 						return new ByteArrayInputStream( new byte[0] );
 					}
 				}
 			}
-		} while (responseCode == HttpURLConnection.HTTP_UNAVAILABLE && retries++ < 3);
+		}
+		while ( responseCode == HttpURLConnection.HTTP_UNAVAILABLE && retries++ < 3 );
+
+		if ( responseCode >= 400 )
+		{
+			IOException exception;
+			try ( BufferedReader reader = new BufferedReader( new InputStreamReader( decodeHttpInputStream( con ), StandardCharsets.UTF_8 ) ) )
+			{
+				exception = new IOException( String.format( "Server returned %d, body: %s",
+						responseCode,
+						reader.lines().collect( Collectors.joining( System.lineSeparator() ) )
+				) );
+			}
+			catch ( IOException e )
+			{
+				// Make sure the response code is not lost if an IO error occurs
+				exception = new IOException( String.format( "Server returned %d", responseCode ), e );
+			}
+			throw exception;
+		}
+
 		return decodeHttpInputStream( con );
 	}
 
@@ -289,23 +302,33 @@ public abstract class HarvesterVerb
 		String contentEncoding = con.getHeaderField( "Content-Encoding" );
 		log.trace( "contentEncoding={}", contentEncoding );
 
-		if ( contentEncoding == null )
+		final InputStream inputStream;
+		if ( con.getResponseCode() < 400 )
 		{
-			contentEncoding = "";
+			inputStream = con.getInputStream();
+		}
+		else
+		{
+			inputStream = con.getErrorStream();
 		}
 
-		switch (contentEncoding)
+		if ( contentEncoding == null )
 		{
-		case "compress":
-			ZipInputStream zis = new ZipInputStream( con.getInputStream() );
-			zis.getNextEntry();
-			return zis;
-		case "gzip":
-			return new GZIPInputStream( con.getInputStream() );
-		case "deflate":
-			return new InflaterInputStream( con.getInputStream() );
-		default:
-			return con.getInputStream();
+			return inputStream;
+		}
+
+		switch ( contentEncoding )
+		{
+			case "compress":
+				ZipInputStream zis = new ZipInputStream( inputStream );
+				zis.getNextEntry();
+				return zis;
+			case "gzip":
+				return new GZIPInputStream( inputStream );
+			case "deflate":
+				return new InflaterInputStream( inputStream );
+			default:
+				return inputStream;
 		}
 	}
 
@@ -318,12 +341,7 @@ public abstract class HarvesterVerb
 	 */
 	public String getSingleString( String xpath ) throws TransformerException
 	{
-		return getSingleString( getDocument(), xpath );
-	}
-
-	public String getSingleString( Node node, String xpath ) throws TransformerException
-	{
-		return XPathAPI.eval( node, xpath, namespaceElement ).str();
+		return XPathAPI.eval( getDocument(), xpath, namespaceElement ).str();
 	}
 
 	/**

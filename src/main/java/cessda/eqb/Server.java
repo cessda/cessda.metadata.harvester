@@ -34,8 +34,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
+import org.springframework.jmx.support.RegistrationPolicy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -50,7 +52,10 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
-import java.net.*;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -59,6 +64,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@EnableMBeanExport( registration = RegistrationPolicy.REPLACE_EXISTING )
 @EnableScheduling
 @SpringBootApplication
 @ManagedResource
@@ -67,6 +73,7 @@ public class Server extends SpringBootServletInitializer
 
     private static final Logger log = LoggerFactory.getLogger( Server.class );
     private static final Logger hlog = LoggerFactory.getLogger( Server.class );
+    public static final String METADATA = "metadata";
 
     private final HarvesterConfiguration harvesterConfiguration;
     private final String mailHost;
@@ -111,11 +118,6 @@ public class Server extends SpringBootServletInitializer
 
     private static String oaiBase( String u )
     {
-
-        if ( u.endsWith( "/" ) )
-        {
-            return u;
-        }
         if ( u.contains( "?" ) )
         {
             u = u.substring( 0, u.indexOf( '?' ) );
@@ -362,8 +364,7 @@ public class Server extends SpringBootServletInitializer
         log.info( "Fetching records for repo {} and pmh set {}. Be patient, this can take hours.", repoBase, setspec );
 
         final ArrayList<String> currentlyRetrievedSet = new ArrayList<>();
-        getIdentifiersForSet( repoBase, setspec, null, currentlyRetrievedSet, mdFormat,
-                fromDate );
+        getIdentifiersForSet( repoBase, setspec, null, currentlyRetrievedSet, mdFormat, fromDate );
         writeToLocalFileSystem( currentlyRetrievedSet, repoBase, setspec, f.getAbsolutePath() );
 
         log.info( "retrieved files: {}", currentlyRetrievedSet.size() );
@@ -385,12 +386,7 @@ public class Server extends SpringBootServletInitializer
         {
             log.trace( "recurse:\turl {} set {} token {}", url, set, resumptionToken );
             ListIdentifiers li;
-            if ( resumptionToken != null )
-            {
-                log.trace( url );
-                li = new ListIdentifiers( oaiBaseUrl, resumptionToken, harvesterConfiguration.getTimeout() );
-            }
-            else
+            if ( resumptionToken == null )
             {
                 // TODO Due to changes by setting set not to all in an exception I need to check for empty set.
                 // set must be null or set = "all", if in configuration set is not set....
@@ -402,14 +398,24 @@ public class Server extends SpringBootServletInitializer
                 li = new ListIdentifiers( oaiBaseUrl, fromDate, to, set,
                         Optional.ofNullable( overwrite ).orElse( mdFormat ), harvesterConfiguration.getTimeout() );
             }
+            else
+            {
+                log.trace( url );
+                li = new ListIdentifiers( oaiBaseUrl, resumptionToken, harvesterConfiguration.getTimeout() );
+            }
             log.trace( li.getRequestURL() );
             Document identifiers = li.getDocument();
 
             // add to list of records to fetch
             NodeList identifiersIDs = identifiers.getElementsByTagName( "identifier" );
-            IntStream.range( 0, identifiersIDs.getLength() ).mapToObj( identifiersIDs::item )
-                    .map( Node::getTextContent ).filter( Objects::nonNull )
-                    .forEach( records::add );
+            for ( int i = 0; i < identifiersIDs.getLength(); i++ )
+            {
+                String textContent = identifiersIDs.item( i ).getTextContent();
+                if ( textContent != null )
+                {
+                    records.add( textContent );
+                }
+            }
 
             // need to recurse?
             NodeList resumptionTokenReq = identifiers.getElementsByTagName( "resumptionToken" );
@@ -426,7 +432,7 @@ public class Server extends SpringBootServletInitializer
                 {
                     long itemsInCurrentSet = Long.parseLong(
                             resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" )
-                    .getTextContent() );
+                                    .getTextContent() );
                     log.info( "Items in current set: {}", itemsInCurrentSet );
                 }
             }
@@ -486,155 +492,138 @@ public class Server extends SpringBootServletInitializer
     {
 
         String indexName = shortened( oaiUrl ) + "-" + specId;
-        Path dest = Paths.get( path, indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ) );
+        Path repositoryDirectory = Paths.get( path,
+                indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" )
+        );
+
         try
         {
-            Files.createDirectories( dest );
+            Files.createDirectories( repositoryDirectory );
+        }
+        catch ( IOException e )
+        {
+            // FIXME: Replace with a domain specific exception (i.e. HarvesterFailedException)
+            throw new UncheckedIOException( e );
+        }
 
-            records.stream().map( String::trim ).forEach( currentRecord ->
+        for ( String currentRecord : records )
+        {
+            String fileName = ( indexName + "__" + currentRecord.trim() + "_" + harvesterConfiguration.getDialectDefinitionName() + ".xml" )
+                    .replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" );
+
+            try
             {
+                GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord.trim(), mdFormat, harvesterConfiguration.getTimeout() );
+                Path fdest = repositoryDirectory.resolve( fileName );
 
-                String fname = (indexName + "__" + currentRecord + "_"
-                        + harvesterConfiguration.getDialectDefinitionName()
-                        + ".xml").replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" );
-
-                try
+                final NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( METADATA );
+                if ( metadataElements.getLength() > 0 )
                 {
-                    GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
-                            harvesterConfiguration.getTimeout() );
-                    Path fdest = Paths.get( path,
-                            indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
-                    if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).getLength() > 0 )
+                    final DOMSource source;
+
+                    // remove envelope?
+                    if ( harvesterConfiguration.isRemoveOAIEnvelope() )
                     {
-                        final DOMSource source;
-
-                        // remove envelope?
-                        if ( harvesterConfiguration.isRemoveOAIEnvelope() )
-                        {
-                            NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
-                                        .getChildNodes();
-                                source = IntStream.range( 0, metadataElements.getLength() ).mapToObj( metadataElements::item )
-                                        .filter( Element.class::isInstance )
-                                        .map( DOMSource::new )
-                                    .findAny().orElseThrow( () -> new NoSuchElementException(
-                                                "No elements with the tag name 'metadata' were found" ) );
-                        }
-                        else
-                        {
-                            source = new DOMSource( pmhRecord.getDocument() );
-                        }
-
-                        try ( OutputStream fOutputStream = Files.newOutputStream( fdest ) )
-                        {
-                            factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
-                        }
+                        NodeList metadataChildNodes = metadataElements.item( 0 )
+                                .getChildNodes();
+                        source = IntStream.range( 0, metadataChildNodes.getLength() ).mapToObj( metadataChildNodes::item )
+                                .filter( Element.class::isInstance )
+                                .map( DOMSource::new )
+                                .findAny().orElseThrow( () ->
+                                        new NoSuchElementException( "No elements with the tag name '" + METADATA + "' were found" )
+                                );
                     }
                     else
                     {
-                        NodeList errorList = pmhRecord.getDocument().getElementsByTagName( "error" );
-                        if ( errorList.getLength() == 0 )
-                        {
-                            NodeList header = pmhRecord.getDocument().getElementsByTagName( "header" );
-                            Node status = header.item( 0 ).getAttributes().getNamedItem( "status" );
-                        }
-                        
+                        source = new DOMSource( pmhRecord.getDocument() );
+                    }
+
+                    try ( OutputStream fOutputStream = Files.newOutputStream( fdest ) )
+                    {
+                        factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
                     }
                 }
-                catch ( Exception e1 )
-                {
-                    log.error( "Failed to harvest record {}: {}", currentRecord, e1.getMessage() );
-                }
-            } );
-        }
-        catch (IOException e)
-        {
-            log.error( "{}", oaiUrl, e );
-        }
-    }
-
-    private static void addSet( String url, Set<String> unfoldedSets )
-    {
-        if ( unfoldedSets.add( url ) )
-        {
-            log.info( "Set: {}", url );
+            }
+            catch ( TransformerConfigurationException e )
+            {
+                // This is not recoverable
+                throw new IllegalStateException( e );
+            }
+            catch ( IOException | SAXException | TransformerException e1 )
+            {
+                log.error( "Failed to harvest record {}: {}", currentRecord.trim(), e1.getMessage() );
+            }
         }
     }
 
-    Set<String> getSpecs( String url )
+    private Set<String> getSpecs( String url )
     {
+        final Set<String> unfoldedSets;
 
-        HashSet<String> unfoldedSets = new HashSet<>();
         // skip if set is explicitly referenced
-        if ( url.isEmpty() )
-        {
-            return unfoldedSets;
-        }
         if ( url.contains( "set=" ) )
         {
-            unfoldedSets.add( url.substring( url.indexOf( "set=" ) + 4 ) );
-            return unfoldedSets;
+            unfoldedSets = Collections.singleton( url.substring( url.indexOf( "set=" ) + 4 ) );
         }
-        try
+        else
         {
-            getSetStrings( url, unfoldedSets );
+            try
+            {
+                unfoldedSets = getSetStrings( url );
+            }
+            catch ( IOException | TransformerException | SAXException e )
+            {
+                log.warn( "Repository has no sets defined / no response: set set=all", e );
+                // set set=all in case of no sets found
+                return Collections.singleton( "all" );
+            }
         }
-        catch (IOException | TransformerException | SAXException e)
-        {
-            log.error( "Repository has no sets defined / no response: set set=all", e );
-            // set set=all in case of no sets found
-            addSet( "all", unfoldedSets );
-            return unfoldedSets;
-        }
+
         log.info( "No. of sets: {}", unfoldedSets.size() );
         return unfoldedSets;
     }
 
-    public void getSetStrings( String url, Set<String> unfoldedSets )
+    /**
+     * Retrieves the sets from the OAI-PMH repository using the ListSets verb.
+     *
+     * @param url the URL of the repository.
+     * @return a {@link Set} containing all of the sets in the remote repository.
+     */
+    public Set<String> getSetStrings( final String url )
             throws IOException, SAXException, TransformerException
     {
-        try
+        String urlToSend = url;
+        String resumptionToken;
+
+        HashSet<String> unfoldedSets = new HashSet<>();
+        do
         {
-            StringBuilder urlBuilder = new StringBuilder( url );
-            ListSets ls;
-            do
+            ListSets ls = new ListSets( urlToSend, harvesterConfiguration.getTimeout() );
+
+            Document document = ls.getDocument();
+
+            NodeList nl = document.getElementsByTagName( "setSpec" );
+
+            for ( int i = 0; i < nl.getLength(); i++ )
             {
-                if ( log.isWarnEnabled() )
-                {
-                    log.warn( urlBuilder.toString() );
-                }
-                ls = new ListSets( urlBuilder.toString().trim(), harvesterConfiguration.getTimeout() );
+                unfoldedSets.add( nl.item( i ).getTextContent() );
+            }
 
-                Document document = ls.getDocument();
+            if ( ls.toString().contains( "error" ) )
+            {
+                log.error( "Invalid request {}", ls );
+            }
 
-                NodeList nl = document.getElementsByTagName( "setSpec" );
-
-                for ( int i = 0; i <= nl.getLength() - 1; i++ )
-                {
-                    String setSpec = nl.item( i ).getTextContent();
-                    addSet( setSpec, unfoldedSets );
-                }
-                if ( ls.toString().contains( "error" ) )
-                {
-                    log.error( "Invalid request {}", ls );
-
-                }
-                if ( !ls.getResumptionToken().isEmpty() )
-                {
-                    log.info( ls.getResumptionToken() );
-                    urlBuilder.append( "?verb=ListSets&resumptionToken=" ).append( ls.getResumptionToken() );
-                    if ( log.isInfoEnabled() )
-                    {
-                        log.info( urlBuilder.toString() );
-                    }
-                }
-            } while (unfoldedSets.size() % 50 == 0 && !ls.getResumptionToken().isEmpty()
-                    && !urlBuilder.toString().trim().isEmpty());
+            resumptionToken = ls.getResumptionToken();
+            if ( !resumptionToken.isEmpty() )
+            {
+                log.info( resumptionToken );
+                urlToSend = url + "?verb=ListSets&resumptionToken=" + resumptionToken;
+            }
         }
+        while ( !resumptionToken.isEmpty() );
 
-        catch (SocketTimeoutException ste)
-        {
-            log.error( "Request to oai endpoint timed out {}", harvesterConfiguration.getTimeout() );
-        }
+        return unfoldedSets;
     }
 
     @PreDestroy

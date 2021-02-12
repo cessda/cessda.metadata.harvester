@@ -148,23 +148,6 @@ public class ListRecordsTest {
     }
 
     @Test
-    public void test14() throws Throwable {
-        if (debug)
-            System.out.format("%n%s%n", "RegressionTest0.test14");
-        org.oclc.oai.harvester2.verb.ListRecords listRecords0 = new org.oclc.oai.harvester2.verb.ListRecords();
-        java.lang.String str1 = listRecords0.getSchemaLocation();
-        org.w3c.dom.Node node2 = null;
-        // The following exception was thrown during execution in test generation
-        try {
-            java.lang.String str4 = listRecords0.getSingleString(node2, "");
-            org.junit.Assert.fail("Expected exception of type javax.xml.transform.TransformerException; message: Leerer Ausdruck!");
-        } catch (javax.xml.transform.TransformerException e) {
-        // Expected exception.
-        }
-        org.junit.Assert.assertNull(str1);
-    }
-
-    @Test
     public void test15() throws Throwable {
         if (debug)
             System.out.format("%n%s%n", "RegressionTest0.test15");
@@ -173,51 +156,6 @@ public class ListRecordsTest {
         java.lang.Class<?> wildcardClass2 = listRecords0.getClass();
         org.junit.Assert.assertNull(str1);
         org.junit.Assert.assertNotNull(wildcardClass2);
-    }
-
-    @Test
-    public void test16() throws Throwable {
-        if (debug)
-            System.out.format("%n%s%n", "RegressionTest0.test16");
-        org.oclc.oai.harvester2.verb.ListRecords listRecords0 = new org.oclc.oai.harvester2.verb.ListRecords();
-        org.w3c.dom.Node node1 = null;
-        // The following exception was thrown during execution in test generation
-        try {
-            java.lang.String str3 = listRecords0.getSingleString(node1, "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
-            org.junit.Assert.fail("Expected exception of type org.apache.xpath.domapi.XPathStylesheetDOM3Exception; message: Das Pra?fix muss in einen Namensbereich aufgelo?st werden: http");
-        } catch (org.apache.xpath.domapi.XPathStylesheetDOM3Exception e) {
-        // Expected exception.
-        }
-    }
-
-    @Test
-    public void test17() throws Throwable {
-        if (debug)
-            System.out.format("%n%s%n", "RegressionTest0.test17");
-        // The following exception was thrown during execution in test generation
-        try {
-            org.oclc.oai.harvester2.verb.ListRecords listRecords2 = new org.oclc.oai.harvester2.verb.ListRecords("", "http://www.openarchives.org/OAI/1.1/OAI_Identify http://www.openarchives.org/OAI/1.1/OAI_Identify.xsd");
-            org.junit.Assert.fail("Expected exception of type java.net.MalformedURLException; message: no protocol: ?verb=ListRecords&resumptionToken=http%3A%2F%2Fwww.openarchives.org%2FOAI%2F1.1%2FOAI_Identify+http%3A%2F%2Fwww.openarchives.org%2FOAI%2F1.1%2FOAI_Identify.xsd");
-        } catch (java.net.MalformedURLException e) {
-        // Expected exception.
-        }
-    }
-
-    @Test
-    public void test18() throws Throwable {
-        if (debug)
-            System.out.format("%n%s%n", "RegressionTest0.test18");
-        org.oclc.oai.harvester2.verb.ListRecords listRecords0 = new org.oclc.oai.harvester2.verb.ListRecords();
-        org.w3c.dom.NodeList nodeList1 = listRecords0.getErrors();
-        org.w3c.dom.Node node2 = null;
-        // The following exception was thrown during execution in test generation
-        try {
-            java.lang.String str4 = listRecords0.getSingleString(node2, "http://www.openarchives.org/OAI/1.1/OAI_ListIdentifiers http://www.openarchives.org/OAI/1.1/OAI_ListIdentifiers.xsd");
-            org.junit.Assert.fail("Expected exception of type org.apache.xpath.domapi.XPathStylesheetDOM3Exception; message: Das Pra?fix muss in einen Namensbereich aufgelo?st werden: http");
-        } catch (org.apache.xpath.domapi.XPathStylesheetDOM3Exception e) {
-        // Expected exception.
-        }
-        org.junit.Assert.assertNull(nodeList1);
     }
 
     @Test
@@ -240,19 +178,6 @@ public class ListRecordsTest {
         org.oclc.oai.harvester2.verb.ListRecords listRecords0 = new org.oclc.oai.harvester2.verb.ListRecords();
         java.lang.String str1 = listRecords0.getRequestURL();
         org.junit.Assert.assertNull(str1);
-    }
-
-    @Test
-    public void test21() throws Throwable {
-        if (debug)
-            System.out.format("%n%s%n", "RegressionTest0.test21");
-        org.oclc.oai.harvester2.verb.ListRecords listRecords0 = new org.oclc.oai.harvester2.verb.ListRecords();
-        java.lang.String str1 = listRecords0.getSchemaLocation();
-        java.lang.String str2 = listRecords0.getSchemaLocation();
-        java.lang.Class<?> wildcardClass3 = listRecords0.getClass();
-        org.junit.Assert.assertNull(str1);
-        org.junit.Assert.assertNull(str2);
-        org.junit.Assert.assertNotNull(wildcardClass3);
     }
 
     @Test

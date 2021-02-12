@@ -34,12 +34,12 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
+import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
-
-import org.xml.sax.SAXException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.NoSuchElementException;
 
 /**
  * This class represents an GetRecord response on either the server or on the client
@@ -75,17 +75,12 @@ public class GetRecord extends HarvesterVerb
 	}
 
 	/**
-	 * Get the oai:identifier fromthe oai:header
-	 * 
-	 * @return the oai:identifier as a String
-	 * @throws TransformerException
-	 *             a
-	 * @throws NoSuchFieldException
-	 *             b
+	 * Get the oai:identifier from the oai:header
+	 *
 	 * @return identifier
+	 * @throws TransformerException a
 	 */
-	public String getIdentifier()
-			throws TransformerException, NoSuchFieldException
+	public String getIdentifier() throws TransformerException
 	{
 		if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
 		{
@@ -93,12 +88,11 @@ public class GetRecord extends HarvesterVerb
 		}
 		else if ( SCHEMA_LOCATION_V1_1_GET_RECORD.equals( getSchemaLocation() ) )
 		{
-			return getSingleString(
-					"/oai11_GetRecord:GetRecord/oai11_GetRecord:record/oai11_GetRecord:header/oai11_GetRecord:identifier" );
+			return getSingleString( "/oai11_GetRecord:GetRecord/oai11_GetRecord:record/oai11_GetRecord:header/oai11_GetRecord:identifier" );
 		}
 		else
 		{
-			throw new NoSuchFieldException( getSchemaLocation() );
+			throw new NoSuchElementException( getSchemaLocation() );
 		}
 	}
 

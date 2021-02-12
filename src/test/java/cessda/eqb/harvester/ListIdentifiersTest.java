@@ -114,23 +114,6 @@ public class ListIdentifiersTest {
     }
 
     @Test
-    public void test12() throws Throwable {
-        if (debug)
-            System.out.format("%n%s%n", "RegressionTest0.test12");
-        org.oclc.oai.harvester2.verb.ListIdentifiers listIdentifiers0 = new org.oclc.oai.harvester2.verb.ListIdentifiers();
-        java.lang.String str1 = listIdentifiers0.getSchemaLocation();
-        org.w3c.dom.Node node2 = null;
-        // The following exception was thrown during execution in test generation
-        try {
-            java.lang.String str4 = listIdentifiers0.getSingleString(node2, "");
-            org.junit.Assert.fail("Expected exception of type javax.xml.transform.TransformerException; message: Leerer Ausdruck!");
-        } catch (javax.xml.transform.TransformerException e) {
-        // Expected exception.
-        }
-        org.junit.Assert.assertNull(str1);
-    }
-
-    @Test
     public void test13() throws Throwable {
         if (debug)
             System.out.format("%n%s%n", "RegressionTest0.test13");
@@ -140,40 +123,12 @@ public class ListIdentifiersTest {
     }
 
     @Test
-    public void test14() throws Throwable {
-        if (debug)
-            System.out.format("%n%s%n", "RegressionTest0.test14");
-        org.oclc.oai.harvester2.verb.ListIdentifiers listIdentifiers0 = new org.oclc.oai.harvester2.verb.ListIdentifiers();
-        org.w3c.dom.Node node1 = null;
-        // The following exception was thrown during execution in test generation
-        try {
-            java.lang.String str3 = listIdentifiers0.getSingleString(node1, "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd");
-            org.junit.Assert.fail("Expected exception of type org.apache.xpath.domapi.XPathStylesheetDOM3Exception; message: Das Pra?fix muss in einen Namensbereich aufgelo?st werden: http");
-        } catch (org.apache.xpath.domapi.XPathStylesheetDOM3Exception e) {
-        // Expected exception.
-        }
-    }
-
-    @Test
     public void test15() throws Throwable {
         if (debug)
             System.out.format("%n%s%n", "RegressionTest0.test15");
         org.oclc.oai.harvester2.verb.ListIdentifiers listIdentifiers0 = new org.oclc.oai.harvester2.verb.ListIdentifiers();
         java.lang.String str1 = listIdentifiers0.toString();
         org.junit.Assert.assertEquals("'" + str1 + "' != '" + "" + "'", str1, "");
-    }
-
-    @Test
-    public void test16() throws Throwable {
-        if (debug)
-            System.out.format("%n%s%n", "RegressionTest0.test16");
-        // The following exception was thrown during execution in test generation
-        try {
-            org.oclc.oai.harvester2.verb.ListIdentifiers listIdentifiers3 = new org.oclc.oai.harvester2.verb.ListIdentifiers("", "http://www.openarchives.org/OAI/1.1/OAI_Identify http://www.openarchives.org/OAI/1.1/OAI_Identify.xsd", (int) '4');
-            org.junit.Assert.fail("Expected exception of type java.net.MalformedURLException; message: no protocol: ?verb=ListIdentifiers&resumptionToken=http%3A%2F%2Fwww.openarchives.org%2FOAI%2F1.1%2FOAI_Identify+http%3A%2F%2Fwww.openarchives.org%2FOAI%2F1.1%2FOAI_Identify.xsd");
-        } catch (java.net.MalformedURLException e) {
-        // Expected exception.
-        }
     }
 
     @Test
