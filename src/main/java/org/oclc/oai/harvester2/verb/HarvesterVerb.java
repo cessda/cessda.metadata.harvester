@@ -184,7 +184,7 @@ public abstract class HarvesterVerb
 		{
 			con = (HttpURLConnection) requestURL.openConnection();
 			con.setRequestProperty( "User-Agent", "OAIHarvester/2.0" );
-			con.setRequestProperty( "Accept-Encoding", "compress, gzip, identify" );
+			con.setRequestProperty( "Accept-Encoding", "compress, gzip, identity" );
 
 			// TK added default timeout for dataverses taking too long to respond / stall
 			log.trace( "Timeout : {} seconds", timeout );
