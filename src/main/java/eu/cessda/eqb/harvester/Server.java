@@ -19,25 +19,17 @@
  */
 package eu.cessda.eqb.harvester;
 
-import jodd.mail.Email;
-import jodd.mail.MailException;
-import jodd.mail.SendMailSession;
-import jodd.mail.SmtpSslServer;
 import org.oclc.oai.harvester2.verb.GetRecord;
 import org.oclc.oai.harvester2.verb.ListIdentifiers;
 import org.oclc.oai.harvester2.verb.ListSets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedOperation;
-import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -49,8 +41,12 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.*;
-import java.net.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -59,29 +55,24 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@EnableScheduling
+@EnableConfigurationProperties
 @SpringBootApplication
-@ManagedResource
-public class Server extends SpringBootServletInitializer
+public class Server implements CommandLineRunner
 {
 
     private static final Logger log = LoggerFactory.getLogger( Server.class );
     private static final Logger hlog = LoggerFactory.getLogger( Server.class );
 
     private final HarvesterConfiguration harvesterConfiguration;
-    private final String mailHost;
     private final TransformerFactory factory;
     private boolean fullIsRunning = false;
     private boolean incrementalIsRunning = false;
-    private String to = "";
-    private String mdFormat = "oai_ddi";
 
     @Autowired
-    public Server( HarvesterConfiguration harvesterConfiguration, @Value( "${spring.mail.host}" ) String mailHost )
+    public Server( HarvesterConfiguration harvesterConfiguration )
             throws TransformerConfigurationException
     {
         this.harvesterConfiguration = harvesterConfiguration;
-        this.mailHost = mailHost;
         factory = TransformerFactory.newInstance();
         factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
     }
@@ -92,7 +83,12 @@ public class Server extends SpringBootServletInitializer
         log.info( "Harvester running. " );
     }
 
-    @Async
+    @Override
+    public void run( String... args )
+    {
+        fullHarvesting();
+    }
+
     @ManagedOperation(
             description = "Run harvesting on several repo starting from 'harvester.from.single'. " +
                     "Separate more than one repo with comma. Can be used to harvest an new repository, " +
@@ -137,7 +133,6 @@ public class Server extends SpringBootServletInitializer
         }
     }
 
-    @Async
     @ManagedOperation(
             description = "Run harvesting on one single repo starting from 'harvester.from.single'. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. The position corresponds to the number given in the list of repos in the configuration view, starting from 0. See environments tab and search for 'harvester.repos'" )
     public String singleHarvesting( Integer positionInRepoList )
@@ -164,17 +159,12 @@ public class Server extends SpringBootServletInitializer
 
     /**
      * runs right after service startup takes place
-     *
-     * @return status
      */
-    @Async
     @ManagedOperation(
             description = "Run initial harvesting. Set from date with key harvester.cron.initial. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. Don't forget to reset the environment and update application.yml for persistent configuration" )
     @Scheduled( initialDelayString = "${harvester.cron.initialDelay:1000}", fixedDelay = 315360000000L )
-    public String initialHarvesting()
+    public void initialHarvesting()
     {
-
-        log.info( harvesterConfiguration.getMetadataFormat() );
         LocalDate date = LocalDate.now().minusDays( 2 );
         String newInitial = date.toString();
         // set initial value dynamically
@@ -186,7 +176,7 @@ public class Server extends SpringBootServletInitializer
 
         if ( incrementalIsRunning )
         {
-            return "Not started. An incremental harvesting progress is already running";
+            return;
         }
         hlog.info( "Full harvest schedule: {}", harvesterConfiguration.getCron().getFull() );
         hlog.info( "Incremental harvest schedule: {}", harvesterConfiguration.getCron().getIncremental() );
@@ -203,29 +193,18 @@ public class Server extends SpringBootServletInitializer
             incrementalIsRunning = false;
         }
         hlog.info( "Initial harvesting finished from {}", harvesterConfiguration.getFrom().getInitial() );
-        return "Initial harvesting finished from " + harvesterConfiguration.getFrom().getInitial();
-    }
-
-    @Override
-    protected SpringApplicationBuilder configure( SpringApplicationBuilder application )
-    {
-        return application.sources( Server.class );
     }
 
     /**
      * runs once in a year, no incremental harvesting takes place
      *
-     * @return status
      */
-    @Async
-    @ManagedOperation( description = "Run full harvesting. Set from date with key harvester.cron.full" )
-    @Scheduled( cron = "${harvester.cron.full:0 30 1 15 * ?}" )
-    public String fullHarvesting()
+    public void fullHarvesting()
     {
 
         if ( fullIsRunning )
         {
-            return "Not started. A full harvesting progress is already running";
+            return;
         }
         hlog.info( "Full harvesting started from {}", harvesterConfiguration.getFrom().getFull() );
         fullIsRunning = true;
@@ -233,18 +212,13 @@ public class Server extends SpringBootServletInitializer
         hlog.info( "Full harvesting finished" );
         fullIsRunning = false;
         hlog.info( "Full harvesting finished from {}", harvesterConfiguration.getFrom().getFull() );
-        return "Full harvesting finished from " + harvesterConfiguration.getFrom().getFull();
     }
 
     /**
      * runs always.
      *
-     * @return status
      */
-    @Async
-    @ManagedOperation( description = "Run incremental harvesting. Set from date with key harvester.cron.incremental" )
-    @Scheduled( cron = "${harvester.cron.incremental:0 0 4 * * *}" )
-    public String incrementalHarvesting()
+    public void incrementalHarvesting()
     {
 
         LocalDate date = LocalDate.now().minusDays( 2 );
@@ -274,26 +248,35 @@ public class Server extends SpringBootServletInitializer
         else
         {
             hlog.info( "No incremental harvesting, as full harvesting is in progress." );
-            return "No incremental harvesting, as full harvesting is in progress.";
+            return;
         }
 
         incrementalIsRunning = false;
 
-        return msg;
     }
 
-    @Async
     public void runSingleHarvest( String fromDate, Integer position )
     {
 
         hlog.info( "Harvesting started from {} for repo {}", fromDate, position );
         try
         {
-            mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat()
-                    : "oai_dc";
-            to = LocalDate.now().toString();
+            var to = LocalDate.now().toString();
 
-            String baseUrl = harvesterConfiguration.getRepoBaseUrls().get( position );
+            var repo = harvesterConfiguration.getRepos().get( position );
+
+            final String mdFormat;
+            if ( repo.getMetadataFormat() != null )
+            {
+                mdFormat = repo.getMetadataFormat();
+            }
+            else
+            {
+                throw new IllegalArgumentException(
+                        "Repository " + repo.getUrl() + " has no metadata format configured." );
+            }
+
+            String baseUrl = repo.getUrl();
             hlog.info( "Single harvesting {} from {}", baseUrl, fromDate );
             if ( !baseUrl.trim().isEmpty() )
             {
@@ -305,7 +288,7 @@ public class Server extends SpringBootServletInitializer
                 for ( String set : getSpecs( baseUrl ) )
                 {
                     hlog.info( "Start to get  records for {} / {} from {}", baseUrl, set, fromDate );
-                    fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
+                    fetchDCRecords( oaiBase( baseUrl ), set, fromDate, to, mdFormat );
                 }
             }
         }
@@ -321,10 +304,9 @@ public class Server extends SpringBootServletInitializer
 
         hlog.info( "Harvesting started from {}", fromDate );
 
-        mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat() : "oai_dc";
-        to = LocalDate.now().toString();
+        var to = LocalDate.now().toString();
 
-        for ( HarvesterConfiguration.Repo repo : harvesterConfiguration.getRepos() )
+        for ( Repo repo : harvesterConfiguration.getRepos() )
         {
             String baseUrl = repo.getUrl();
             if ( !baseUrl.trim().isEmpty() )
@@ -344,27 +326,35 @@ public class Server extends SpringBootServletInitializer
                     sets = getSpecs( baseUrl );
                 }
 
+                final String mdFormat;
+                if ( repo.getMetadataFormat() != null )
+                {
+                    mdFormat = repo.getMetadataFormat();
+                }
+                else
+                {
+                    throw new IllegalArgumentException(
+                            "Repository \"" + repo.getUrl() + "\" has no metadata format configured.\n" );
+                }
+
                 for ( String set : sets )
                 {
                     hlog.info( "Start to get records for {} / {} from {}", baseUrl, set, fromDate );
-                    fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
+                    fetchDCRecords( oaiBase( baseUrl ), set, fromDate, to, mdFormat );
                 }
             }
         }
     }
 
-    private void fetchDCRecords( String repoBase, String setspec, String fromDate )
+    private void fetchDCRecords( String repoBase, String setspec, String fromDate, String to, String mdFormat )
     {
-
-        log.info( harvesterConfiguration.getDir() );
         File f = new File( harvesterConfiguration.getDir() );
 
         log.info( "Fetching records for repo {} and pmh set {}. Be patient, this can take hours.", repoBase, setspec );
 
-        final ArrayList<String> currentlyRetrievedSet = new ArrayList<>();
-        getIdentifiersForSet( repoBase, setspec, null, currentlyRetrievedSet, mdFormat,
-                fromDate );
-        writeToLocalFileSystem( currentlyRetrievedSet, repoBase, setspec, f.getAbsolutePath() );
+        var currentlyRetrievedSet = new ArrayList<String>();
+        getIdentifiersForSet( repoBase, setspec, null, currentlyRetrievedSet, mdFormat, fromDate, to, mdFormat );
+        writeToLocalFileSystem( currentlyRetrievedSet, repoBase, setspec, f.getPath(), mdFormat );
 
         log.info( "retrieved files: {}", currentlyRetrievedSet.size() );
         log.info( "\tSET\t{}\tsize:\t{}\tURL\t{}", setspec, currentlyRetrievedSet.size(), repoBase );
@@ -376,7 +366,10 @@ public class Server extends SpringBootServletInitializer
             String resumptionToken,
             List<String> records,
             String overwrite,
-            String fromDate )
+            String fromDate,
+            String to,
+            String mdFormat
+    )
     {
 
         final String oaiBaseUrl = oaiBase( url );
@@ -408,7 +401,8 @@ public class Server extends SpringBootServletInitializer
             // add to list of records to fetch
             NodeList identifiersIDs = identifiers.getElementsByTagName( "identifier" );
             IntStream.range( 0, identifiersIDs.getLength() ).mapToObj( identifiersIDs::item )
-                    .map( Node::getTextContent ).filter( Objects::nonNull )
+                    .map( Node::getTextContent )
+                    .filter( Objects::nonNull )
                     .forEach( records::add );
 
             // need to recurse?
@@ -419,70 +413,26 @@ public class Server extends SpringBootServletInitializer
                 if ( !resumptionTokenNode.getTextContent().isEmpty() )
                 {
                     String rTok = resumptionTokenNode.getTextContent();
-                    getIdentifiersForSet( url, set, rTok, records, null, fromDate );
+                    getIdentifiersForSet( url, set, rTok, records, null, fromDate, to, mdFormat );
                     // need to interrupt recursion?
                 }
                 if ( resumptionTokenNode.hasAttributes() && resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" ) != null )
                 {
                     long itemsInCurrentSet = Long.parseLong(
-                            resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" )
-                    .getTextContent() );
+                            resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" ).getTextContent()
+                    );
                     log.info( "Items in current set: {}", itemsInCurrentSet );
                 }
             }
         }
         catch (IOException | SAXException | DOMException | TransformerException | NumberFormatException e)
         {
-            try (StringWriter stackTraceWriter = new StringWriter())
-            {
-                e.printStackTrace( new PrintWriter( stackTraceWriter ) );
-                this.notifyOnError(
-                        "Harvesting failed for " + oaiBaseUrl + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix="
-                                + mdFormat + "&from=" + fromDate + "&resumptionToken=" + resumptionToken,
-                        stackTraceWriter.toString() );
-            }
-            catch (IOException ioException)
-            {
-                log.error( "Error occurred when printing stacktrace: {}", ioException.toString() );
-            }
+            log.error( "Fetching identifiers failed: {}", e.toString() );
         }
         log.trace( "Records to fetch : {}", records.size() );
     }
 
-    public void notifyOnError( String subject, String msg )
-    {
-
-        hlog.error( "{}\n{}", subject, msg );
-        if ( harvesterConfiguration.getRecipient().compareTo( "" ) == 0 )
-        {
-            return;
-        }
-        try
-        {
-            java.net.InetAddress localMachine = java.net.InetAddress.getLocalHost();
-
-            Email noti = new Email();
-            String fromEmail = "system.wts@gesis.org";
-            noti.from( fromEmail );
-            noti.to( harvesterConfiguration.getRecipient().split( "," ) );
-            noti.setSubject( localMachine.getHostName() + " : " + subject );
-
-            msg += "\n" + InetAddress.getLoopbackAddress().getHostAddress() + "\n"
-                    + InetAddress.getLoopbackAddress().getHostName();
-            noti.addText( msg );
-            SmtpSslServer smtpServer = SmtpSslServer.create( this.mailHost );
-            SendMailSession session = smtpServer.createSession();
-            session.open();
-            session.close();
-        }
-        catch (MailException | UnknownHostException e)
-        {
-            log.error( "Failed to send notification: {}", e.toString() );
-        }
-
-    }
-
-    protected void writeToLocalFileSystem( Collection<String> records, String oaiUrl, String specId, String path )
+    protected void writeToLocalFileSystem( Collection<String> records, String oaiUrl, String specId, String path, String mdFormat )
     {
 
         String indexName = shortened( oaiUrl ) + "-" + specId;
@@ -500,8 +450,8 @@ public class Server extends SpringBootServletInitializer
 
                 try
                 {
-                    GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat,
-                            harvesterConfiguration.getTimeout() );
+                    GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration
+                            .getTimeout() );
                     Path fdest = Paths.get( path,
                             indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
                     if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).getLength() > 0 )
@@ -511,13 +461,15 @@ public class Server extends SpringBootServletInitializer
                         // remove envelope?
                         if ( harvesterConfiguration.isRemoveOAIEnvelope() )
                         {
-                            NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( "metadata" ).item( 0 )
-                                        .getChildNodes();
-                                source = IntStream.range( 0, metadataElements.getLength() ).mapToObj( metadataElements::item )
-                                        .filter( Element.class::isInstance )
-                                        .map( DOMSource::new )
+                            NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( "metadata" )
+                                    .item( 0 )
+                                    .getChildNodes();
+                            source = IntStream.range( 0, metadataElements.getLength() )
+                                    .mapToObj( metadataElements::item )
+                                    .filter( Element.class::isInstance )
+                                    .map( DOMSource::new )
                                     .findAny().orElseThrow( () -> new NoSuchElementException(
-                                                "No elements with the tag name 'metadata' were found" ) );
+                                            "No elements with the tag name 'metadata' were found" ) );
                         }
                         else
                         {
@@ -537,10 +489,10 @@ public class Server extends SpringBootServletInitializer
                             NodeList header = pmhRecord.getDocument().getElementsByTagName( "header" );
                             Node status = header.item( 0 ).getAttributes().getNamedItem( "status" );
                         }
-                        
+
                     }
                 }
-                catch ( Exception e1 )
+                catch ( IOException | NoSuchElementException | SAXException | TransformerException e1 )
                 {
                     log.error( "Failed to harvest record {}: {}", currentRecord, e1.getMessage() );
                 }

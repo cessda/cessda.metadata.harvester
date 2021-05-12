@@ -8,54 +8,6 @@ logging:
       springframework: '@logging.level.org.springframework@'
     springfox.documentation.spring.web.readers.operation: WARN
     de.codecentric.boot.admin.client.registration: WARN
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"  
-  endpoint:
-    health:
-      show-details: ALWAYS
-  info:
-    git:
-      mode: full
-server:
-  port: '@server.port@'
-  servlet:
-    context-path: '@server.servlet.context-path@'
-  tomcat:
-    accesslog:
-      enabled: true
-spring:
-  security:
-    user:
-      name: admin
-      password: admin
-  devtools:
-    add-properties: false
-  http:
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
-  main:
-    banner-mode: 'off'
-  mail:
-    host: smtprelay.gesis.intra
-  boot:
-    admin:
-      url: "http://docker:1111"
-      client:
-        url: "http://docker:1111" 
-        instance:
-          name: harvester
-        username: ${SPRING_BOOT_ADMIN_USER_NAME:admin}
-        password: ${SPRING_BOOT_ADMIN_USER_PASSWORD:admin}
-      routes:
-        endpoints: env,metrics,log,trace,dump,jolokia,info,configprops,trace,logfile,refresh,flyway,liquibase,heapdump,hystrix.stream,hystrix
-      auto-deregistration: true
-      auto-registration: true
-      period: 5000
 harvester:
   removeOAIEnvelope: true
   metadataFormat: oai_ddi32
