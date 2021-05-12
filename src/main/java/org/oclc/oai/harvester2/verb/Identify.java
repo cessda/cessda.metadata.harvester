@@ -34,12 +34,11 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
+import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
-
-import org.xml.sax.SAXException;
+import java.io.IOException;
+import java.net.MalformedURLException;
 
 /**
  * This class represents an Identify response on either the server or on the client
@@ -48,14 +47,6 @@ import org.xml.sax.SAXException;
  */
 public class Identify extends HarvesterVerb
 {
-	/**
-	 * Mock object constructor (for unit testing purposes)
-	 */
-	public Identify()
-	{
-		super();
-	}
-
 	/**
 	 * Client-side Identify verb constructor
 	 *

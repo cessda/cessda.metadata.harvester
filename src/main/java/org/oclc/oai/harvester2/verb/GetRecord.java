@@ -34,12 +34,11 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
+import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
-
-import org.xml.sax.SAXException;
+import java.io.IOException;
+import java.net.MalformedURLException;
 
 /**
  * This class represents an GetRecord response on either the server or on the client
@@ -48,14 +47,6 @@ import org.xml.sax.SAXException;
  */
 public class GetRecord extends HarvesterVerb
 {
-	/**
-	 * Mock object constructor (for unit testing purposes)
-	 */
-	public GetRecord()
-	{
-		super();
-	}
-
 	/**
 	 * Client-side GetRecord verb constructor
 	 *

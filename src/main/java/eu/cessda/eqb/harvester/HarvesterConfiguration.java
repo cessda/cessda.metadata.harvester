@@ -17,19 +17,19 @@
  * limitations under the License.
  * #L%
  */
-package cessda.eqb;
-
-import java.util.ArrayList;
-import java.util.List;
+package eu.cessda.eqb.harvester;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableMBeanExport;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Loads the repositories from application.yml into list of Repo Objects
- * 
+ *
  * <pre>
  * harvester:
  *  repos:

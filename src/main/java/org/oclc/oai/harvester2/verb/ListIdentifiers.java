@@ -48,15 +48,6 @@ import java.net.URLEncoder;
  */
 public class ListIdentifiers extends HarvesterVerb
 {
-
-	/**
-	 * Mock object constructor (for unit testing purposes)
-	 */
-	public ListIdentifiers()
-{
-		super();
-	}
-
 	/**
 	 * Client-side ListIdentifiers verb constructor
 	 *

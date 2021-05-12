@@ -34,14 +34,13 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-
-import javax.xml.transform.TransformerException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
+
+import javax.xml.transform.TransformerException;
+import java.io.IOException;
+import java.net.MalformedURLException;
 
 /**
  * This class represents an ListSets response on either the server or on the client
@@ -52,14 +51,6 @@ public class ListSets extends HarvesterVerb
 {
 
 	private static final Logger log = LoggerFactory.getLogger( ListSets.class );
-
-	/**
-	 * Mock object constructor (for unit testing purposes)
-	 */
-	public ListSets()
-	{
-		super();
-	}
 
 	/**
 	 * Client-side ListSets verb constructor

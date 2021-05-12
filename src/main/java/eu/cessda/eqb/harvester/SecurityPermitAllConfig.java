@@ -17,7 +17,7 @@
  * limitations under the License.
  * #L%
  */
-package cessda.eqb;
+package eu.cessda.eqb.harvester;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

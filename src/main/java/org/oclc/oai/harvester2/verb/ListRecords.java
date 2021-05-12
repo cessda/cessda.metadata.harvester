@@ -34,14 +34,13 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import org.xml.sax.SAXException;
+
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
-
-import javax.xml.transform.TransformerException;
-
-import org.xml.sax.SAXException;
 
 /**
  * This class represents an ListRecords response on either the server or on the client
@@ -50,14 +49,6 @@ import org.xml.sax.SAXException;
  */
 public class ListRecords extends HarvesterVerb
 {
-	/**
-	 * Mock object constructor (for unit testing purposes)
-	 */
-	public ListRecords()
-	{
-		super();
-	}
-
 	/**
 	 * Client-side ListRecords verb constructor
 	 *
