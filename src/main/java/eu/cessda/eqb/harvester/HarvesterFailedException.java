@@ -1,4 +1,4 @@
-package cessda.eqb;
+package eu.cessda.eqb.harvester;
 
 /**
  * Base exception thrown when the harvester fails to harvest a repository.

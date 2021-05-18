@@ -1,4 +1,4 @@
-package cessda.eqb;
+package eu.cessda.eqb.harvester;
 
 import java.nio.file.Path;
 
@@ -8,6 +8,7 @@ import java.nio.file.Path;
 class DirectoryCreationFailedException extends HarvesterFailedException
 {
     private static final long serialVersionUID = 1L;
+
     private final Path directory;
 
     /**
@@ -18,7 +19,7 @@ class DirectoryCreationFailedException extends HarvesterFailedException
      */
     DirectoryCreationFailedException( Path directory, Throwable cause )
     {
-        super( String.format( "Creating %s failed", directory.toAbsolutePath().toString() ), cause );
+        super( "Creating " + directory + " failed", cause );
         this.directory = directory;
     }
 

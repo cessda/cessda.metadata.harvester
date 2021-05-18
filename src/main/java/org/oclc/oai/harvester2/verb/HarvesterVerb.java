@@ -46,26 +46,15 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import org.apache.xpath.XPathAPI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.*;
-import org.xml.sax.SAXException;
-
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipInputStream;
@@ -236,12 +225,12 @@ public abstract class HarvesterVerb
 					log.debug( "Server response: Retry-After={}", con.getHeaderField( RETRY_AFTER ) );
 					try
 					{
-						TimeUnit.SECONDS.sleep( 1 );
+						TimeUnit.SECONDS.sleep( retrySeconds );
 					}
 					catch ( InterruptedException ex )
 					{
 						Thread.currentThread().interrupt();
-						return new ByteArrayInputStream( new byte[0] );
+						return InputStream.nullInputStream();
 					}
 				}
 			}
@@ -262,11 +251,11 @@ public abstract class HarvesterVerb
 	private static IOException handleHTTPResponseErrors( HttpURLConnection con, int responseCode )
 	{
 		IOException exception;
-		try ( BufferedReader reader = new BufferedReader( new InputStreamReader( decodeHttpInputStream( con ), StandardCharsets.UTF_8 ) ) )
+		try ( var stream = decodeHttpInputStream( con ) )
 		{
 			exception = new IOException( String.format( "Server returned %d, body: %s",
 					responseCode,
-					reader.lines().collect( Collectors.joining( System.lineSeparator() ) )
+					new String( stream.readAllBytes(), StandardCharsets.UTF_8 )
 			) );
 		}
 		catch ( IOException e )

@@ -1,21 +1,23 @@
 package eu.cessda.eqb.harvester;
 
+import java.net.URI;
 import java.util.Objects;
 
 public class Repo
 {
-    private String url;
+    private URI url;
     private String setName;
     private String dataProvider;
     private String metaDataProvider;
     private String metadataFormat;
+    private boolean discoverSets;
 
-    public String getUrl()
+    public URI getUrl()
     {
         return url;
     }
 
-    public void setUrl( String url )
+    public void setUrl( URI url )
     {
         this.url = url;
     }
@@ -60,33 +62,41 @@ public class Repo
         this.metadataFormat = metadataFormat;
     }
 
+    public boolean discoverSets()
+    {
+        return discoverSets;
+    }
+
+    public void setDiscoverSets( boolean discoverSets )
+    {
+        this.discoverSets = discoverSets;
+    }
+
     @Override
     public boolean equals( Object o )
     {
         if ( this == o ) return true;
         if ( o == null || getClass() != o.getClass() ) return false;
         Repo repo = (Repo) o;
-        return Objects.equals( url, repo.url ) && Objects.equals( setName, repo.setName ) &&
-                Objects.equals( dataProvider, repo.dataProvider ) &&
-                Objects.equals( metaDataProvider, repo.metaDataProvider ) &&
-                Objects.equals( metadataFormat, repo.metadataFormat );
+        return discoverSets == repo.discoverSets && Objects.equals( url, repo.url ) && Objects.equals( setName, repo.setName ) && Objects.equals( dataProvider, repo.dataProvider ) && Objects.equals( metaDataProvider, repo.metaDataProvider ) && Objects.equals( metadataFormat, repo.metadataFormat );
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash( url, setName, dataProvider, metaDataProvider, metadataFormat );
+        return Objects.hash( url, setName, dataProvider, metaDataProvider, metadataFormat, discoverSets );
     }
 
     @Override
     public String toString()
     {
         return "Repo{" +
-                "url='" + url + '\'' +
+                "url=" + url +
                 ", setName='" + setName + '\'' +
                 ", dataProvider='" + dataProvider + '\'' +
                 ", metaDataProvider='" + metaDataProvider + '\'' +
                 ", metadataFormat='" + metadataFormat + '\'' +
+                ", discoverSets=" + discoverSets +
                 '}';
     }
 }
