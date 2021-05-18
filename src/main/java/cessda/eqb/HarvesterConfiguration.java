@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,17 +19,19 @@
  */
 package cessda.eqb;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableMBeanExport;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
 /**
  * Loads the repositories from application.yml into list of Repo Objects
- * 
+ *
  * <pre>
  * harvester:
  *  repos:
@@ -37,9 +39,8 @@ import org.springframework.context.annotation.EnableMBeanExport;
  *    setName: 'da|ra: ICPSR – Interuniversity Consortium for Political and Social Research'
  *    dataProvider: da|ra (Registration agency for social science and economic data)
  * </pre>
- * 
- * @author kraemets
  *
+ * @author kraemets
  */
 @Configuration
 @EnableMBeanExport
@@ -47,318 +48,319 @@ import org.springframework.context.annotation.EnableMBeanExport;
 @ConfigurationProperties( prefix = "harvester" )
 public class HarvesterConfiguration
 {
-	private String dir = "/tmp";
-	private String recipient = null;
-	private String dialectDefinitionName = null;
+    private String dir = "/tmp";
+    private String recipient = null;
+    private String dialectDefinitionName = null;
+    private String metadataFormat = null;
+    private boolean removeOAIEnvelope = false;
+    private List<Repo> repos = new ArrayList<>();
+    private Cron cron;
+    private From from;
+    private int timeout;
 
-	public String getDialectDefinitionName()
-{
-		return dialectDefinitionName;
-	}
+    public String getDialectDefinitionName()
+    {
+        return dialectDefinitionName;
+    }
 
-	public void setDialectDefinitionName( String dialectDefinitionName )
-{
-		this.dialectDefinitionName = dialectDefinitionName;
-	}
+    public void setDialectDefinitionName( String dialectDefinitionName )
+    {
+        this.dialectDefinitionName = dialectDefinitionName;
+    }
 
-	private String metadataFormat = null;
-	private boolean removeOAIEnvelope = false;
+    public boolean isRemoveOAIEnvelope()
+    {
+        return removeOAIEnvelope;
+    }
 
-	public boolean isRemoveOAIEnvelope()
-{
-		return removeOAIEnvelope;
-	}
+    public void setRemoveOAIEnvelope( boolean removeOAIEnvelope )
+    {
+        this.removeOAIEnvelope = removeOAIEnvelope;
+    }
 
-	public void setRemoveOAIEnvelope( boolean removeOAIEnvelope )
-{
-		this.removeOAIEnvelope = removeOAIEnvelope;
-	}
+    public String getRecipient()
+    {
 
-	private List<Repo> repos = new ArrayList<>();
+        return recipient;
+    }
 
-	private Cron cron;
+    public void setRecipient( String recipient )
+    {
 
-	private From from;
+        this.recipient = recipient;
+    }
 
-	private Integer timeout;
+    public String getDir()
+    {
 
-	public String getRecipient()
-{
+        return dir;
+    }
 
-		return recipient;
-	}
+    public void setDir( String dir )
+    {
 
-	public void setRecipient( String recipient )
-{
+        this.dir = dir;
+    }
 
-		this.recipient = recipient;
-	}
+    public List<Repo> getRepos()
+    {
 
-	public String getDir()
-{
+        return repos;
+    }
 
-		return dir;
-	}
+    public void setRepos( List<Repo> repos )
+    {
 
-	public void setDir( String dir )
-{
+        this.repos = repos;
+    }
 
-		this.dir = dir;
-	}
+    @Override
+    public String toString()
+    {
 
-	public List<Repo> getRepos()
-{
+        return "HarvesterConfiguration [dir=" + dir + ", recipient=" + recipient + ", repos=" + repos + ", cron=" + cron
+                + ", from=" + from + "]";
+    }
 
-		return repos;
-	}
+    public Cron getCron()
+    {
 
-	public void setRepos( List<Repo> repos )
-{
+        return cron;
+    }
 
-		this.repos = repos;
-	}
+    public void setCron( Cron cron )
+    {
 
-	@Override
-	public String toString()
-{
+        this.cron = cron;
+    }
 
-		return "HarvesterConfiguration [dir=" + dir + ", recipient=" + recipient + ", repos=" + repos + ", cron=" + cron
-				+ ", from=" + from + "]";
-	}
+    public From getFrom()
+    {
 
-	public List<String> getRepoBaseUrls()
-{
+        return from;
+    }
 
-		List<String> res = new ArrayList<>();
-		for ( Repo repo : repos )
-	{
+    public void setFrom( From from )
+    {
 
-			res.add( repo.url );
-		}
-		return res;
-	}
+        this.from = from;
+    }
 
-	public static class From
-{
+    public int getTimeout()
+    {
 
-		private String incremental;
+        return timeout;
+    }
 
-		private String initial;
+    public void setTimeout( int timeout )
+    {
 
-		private String full;
+        this.timeout = timeout;
+    }
 
-		private String single;
+    public String getMetadataFormat()
+    {
 
-		public String getIncremental()
-	{
+        return metadataFormat;
+    }
 
-			return incremental;
-		}
+    public void setMetadataFormat( String metadataFormat )
+    {
 
-		public void setIncremental( String incremental )
-	{
+        this.metadataFormat = metadataFormat;
+    }
 
-			this.incremental = incremental;
-		}
+    public static class From
+    {
 
-		public String getInitial()
-	{
+        private String incremental;
 
-			return initial;
-		}
+        private String initial;
 
-		public void setInitial( String initial )
-	{
+        private String full;
 
-			this.initial = initial;
-		}
+        private String single;
 
-		public String getFull()
-	{
+        public String getIncremental()
+        {
 
-			return full;
-		}
+            return incremental;
+        }
 
-		public void setFull( String full )
-	{
+        public void setIncremental( String incremental )
+        {
 
-			this.full = full;
-		}
+            this.incremental = incremental;
+        }
 
-		@Override
-		public String toString()
-	{
+        public String getInitial()
+        {
 
-			return "From [incremental=" + incremental + ", initial=" + initial + ", full=" + full + ", single=" + single
-					+ "]";
-		}
+            return initial;
+        }
 
-		public String getSingle()
-	{
+        public void setInitial( String initial )
+        {
 
-			return single;
-		}
+            this.initial = initial;
+        }
 
-		public void setSingle( String single )
-	{
+        public String getFull()
+        {
 
-			this.single = single;
-		}
-	}
+            return full;
+        }
 
-	public static class Cron
-{
+        public void setFull( String full )
+        {
 
-		private String incremental;
+            this.full = full;
+        }
 
-		private String full;
+        @Override
+        public String toString()
+        {
 
-		public String getIncremental()
-	{
+            return "From [incremental=" + incremental + ", initial=" + initial + ", full=" + full + ", single=" + single
+                    + "]";
+        }
 
-			return incremental;
-		}
+        public String getSingle()
+        {
 
-		public void setIncremental( String incremental )
-	{
+            return single;
+        }
 
-			this.incremental = incremental;
-		}
+        public void setSingle( String single )
+        {
 
-		public String getFull()
-	{
+            this.single = single;
+        }
+    }
 
-			return full;
-		}
+    public static class Cron
+    {
 
-		public void setFull( String full )
-	{
+        private String incremental;
 
-			this.full = full;
-		}
+        private String full;
 
-		@Override
-		public String toString()
-	{
+        public String getIncremental()
+        {
 
-			return "Cron [incremental=" + incremental + ", full=" + full + "]";
-		}
-	}
+            return incremental;
+        }
 
-	public static class Repo
-{
+        public void setIncremental( String incremental )
+        {
 
-		private String url;
+            this.incremental = incremental;
+        }
 
-		private String setName;
+        public String getFull()
+        {
 
-		private String dataProvider;
+            return full;
+        }
 
-		private String metaDataProvider;
+        public void setFull( String full )
+        {
 
-		public String getUrl()
-	{
+            this.full = full;
+        }
 
-			return url;
-		}
+        @Override
+        public String toString()
+        {
 
-		public void setUrl( String url )
-	{
+            return "Cron [incremental=" + incremental + ", full=" + full + "]";
+        }
+    }
 
-			this.url = url;
-		}
+    public static class Repo
+    {
 
-		public String getSetName()
-	{
+        private URI url;
 
-			return setName;
-		}
+        private String setName;
 
-		public void setSetName( String setName )
-	{
+        private String metaDataProvider;
 
-			this.setName = setName;
-		}
+        private boolean discoverSets;
 
-		public String getDataProvider()
-	{
+        public URI getUrl()
+        {
 
-			return dataProvider;
-		}
+            return url;
+        }
 
-		public void setDataProvider( String dataProvider )
-	{
+        public void setUrl( URI url )
+        {
+            Objects.requireNonNull( url );
+            this.url = url;
+        }
 
-			this.dataProvider = dataProvider;
-		}
+        public String getSetName()
+        {
 
-		public String getMetaDataProvider()
-	{
+            return setName;
+        }
 
-			return metaDataProvider;
-		}
+        public void setSetName( String setName )
+        {
 
-		public void setMetaDataProvider( String metaDataProvider )
-	{
+            this.setName = setName;
+        }
 
-			this.metaDataProvider = metaDataProvider;
-		}
+        public String getMetaDataProvider()
+        {
 
-		@Override
-		public String toString()
-	{
+            return metaDataProvider;
+        }
 
-			return "\n- url: " + url + "\n  setName: '" + setName + "' \n  dataProvider: '" + dataProvider
-					+ "' \n  metaDataProvider: '" + metaDataProvider + "'\n";
-		}
-	}
+        public void setMetaDataProvider( String metaDataProvider )
+        {
 
-	public Cron getCron()
-{
+            this.metaDataProvider = metaDataProvider;
+        }
 
-		return cron;
-	}
+        public boolean discoverSets()
+        {
+            return discoverSets;
+        }
 
-	public void setCron( Cron cron )
-{
+        public void setDiscoverSets( boolean discoverSets )
+        {
+            this.discoverSets = discoverSets;
+        }
 
-		this.cron = cron;
-	}
+        @Override
+        public boolean equals( Object o )
+        {
+            if ( this == o ) return true;
+            if ( o == null || getClass() != o.getClass() ) return false;
+            Repo repo = (Repo) o;
+            return discoverSets == repo.discoverSets && url.equals( repo.url )
+                    && Objects.equals( setName, repo.setName )
+                    && Objects.equals( metaDataProvider, repo.metaDataProvider );
+        }
 
-	public From getFrom()
-{
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash( url, setName, metaDataProvider, discoverSets );
+        }
 
-		return from;
-	}
-
-	public void setFrom( From from )
-{
-
-		this.from = from;
-	}
-
-	public Integer getTimeout()
-{
-
-		return timeout;
-	}
-
-	public void setTimeout( Integer timeout )
-{
-
-		this.timeout = timeout;
-	}
-
-	public String getMetadataFormat()
-{
-
-		return metadataFormat;
-	}
-
-	public void setMetadataFormat( String metadataFormat )
-{
-
-		this.metadataFormat = metadataFormat;
-	}
+        @Override
+        public String toString()
+        {
+            return "Repo{" +
+                    "url=" + url +
+                    ", setName='" + setName + '\'' +
+                    ", metaDataProvider='" + metaDataProvider + '\'' +
+                    ", discoverSets=" + discoverSets +
+                    '}';
+        }
+    }
 
 }

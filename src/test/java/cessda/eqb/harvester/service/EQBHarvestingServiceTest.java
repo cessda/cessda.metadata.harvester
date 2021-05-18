@@ -16,6 +16,7 @@ import org.xml.sax.SAXException;
 import javax.xml.transform.TransformerException;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 
@@ -71,7 +72,7 @@ public class EQBHarvestingServiceTest
 		server.notifyOnError( "foo", "bar" );
 		server.incrementalHarvesting();
 		server.bundleHarvesting( "0,1" );
-		server.getSetStrings( url2 );
+		server.getSetStrings( URI.create( url2 ) );
 		server.singleHarvesting( 0 );
 		server.initialHarvesting();
 		server.fullHarvesting();

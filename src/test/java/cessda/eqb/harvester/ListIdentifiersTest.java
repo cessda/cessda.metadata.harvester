@@ -132,20 +132,6 @@ public class ListIdentifiersTest {
     }
 
     @Test
-    public void test17() throws Throwable {
-        if (debug)
-            System.out.format("%n%s%n", "RegressionTest0.test17");
-        org.oclc.oai.harvester2.verb.ListIdentifiers listIdentifiers0 = new org.oclc.oai.harvester2.verb.ListIdentifiers();
-        // The following exception was thrown during execution in test generation
-        try {
-            org.w3c.dom.NodeList nodeList2 = listIdentifiers0.getNodeList("http://www.openarchives.org/OAI/1.1/OAI_ListRecords http://www.openarchives.org/OAI/1.1/OAI_ListRecords.xsd");
-            org.junit.Assert.fail("Expected exception of type org.apache.xpath.domapi.XPathStylesheetDOM3Exception; message: Das Pra?fix muss in einen Namensbereich aufgelo?st werden: http");
-        } catch (org.apache.xpath.domapi.XPathStylesheetDOM3Exception e) {
-        // Expected exception.
-        }
-    }
-
-    @Test
     public void test18() throws Throwable {
         if (debug)
             System.out.format("%n%s%n", "RegressionTest0.test18");
@@ -166,33 +152,6 @@ public class ListIdentifiersTest {
     }
 
     @Test
-    public void test20() throws Throwable {
-        if (debug)
-            System.out.format("%n%s%n", "RegressionTest0.test20");
-        org.oclc.oai.harvester2.verb.ListIdentifiers listIdentifiers0 = new org.oclc.oai.harvester2.verb.ListIdentifiers();
-        // The following exception was thrown during execution in test generation
-        try {
-            org.w3c.dom.NodeList nodeList2 = listIdentifiers0.getNodeList("hi!");
-            org.junit.Assert.fail("Expected exception of type javax.xml.transform.TransformerException; message: Zusa?tzliche nicht zula?ssige Token: '!'");
-        } catch (javax.xml.transform.TransformerException e) {
-        // Expected exception.
-        }
-    }
-
-    @Test
-    public void test21() throws Throwable {
-        if (debug)
-            System.out.format("%n%s%n", "RegressionTest0.test21");
-        // The following exception was thrown during execution in test generation
-        try {
-            org.oclc.oai.harvester2.verb.ListIdentifiers listIdentifiers6 = new org.oclc.oai.harvester2.verb.ListIdentifiers("http://www.openarchives.org/OAI/1.1/OAI_Identify http://www.openarchives.org/OAI/1.1/OAI_Identify.xsd", "", "http://www.openarchives.org/OAI/1.1/OAI_Identify http://www.openarchives.org/OAI/1.1/OAI_Identify.xsd", "http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats.xsd", "", (java.lang.Integer) 0);
-            org.junit.Assert.fail("Expected exception of type java.io.IOException; message: Server returned HTTP response code: 400 for URL: http://www.openarchives.org/OAI/1.1/OAI_Identify http://www.openarchives.org/OAI/1.1/OAI_Identify.xsd?verb=ListIdentifiers&from=&until=http://www.openarchives.org/OAI/1.1/OAI_Identify http://www.openarchives.org/OAI/1.1/OAI_Identify.xsd&set=http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats.xsd&metadataPrefix=");
-        } catch (java.io.IOException e) {
-        // Expected exception.
-        }
-    }
-
-    @Test
     public void test22() throws Throwable {
         if (debug)
             System.out.format("%n%s%n", "RegressionTest0.test22");
@@ -201,12 +160,7 @@ public class ListIdentifiersTest {
         java.lang.String str2 = listIdentifiers0.getSchemaLocation();
         org.w3c.dom.Document document3 = listIdentifiers0.getDocument();
         // The following exception was thrown during execution in test generation
-        try {
-            java.lang.String str4 = listIdentifiers0.getResumptionToken();
-            org.junit.Assert.fail("Expected exception of type java.lang.NoSuchFieldException; message: null");
-        } catch (java.lang.NoSuchFieldException e) {
-        // Expected exception.
-        }
+        String str4 = listIdentifiers0.getResumptionToken();
         org.junit.Assert.assertNull(str1);
         org.junit.Assert.assertNull(str2);
         org.junit.Assert.assertNull(document3);
@@ -246,12 +200,7 @@ public class ListIdentifiersTest {
             System.out.format("%n%s%n", "RegressionTest0.test25");
         org.oclc.oai.harvester2.verb.ListIdentifiers listIdentifiers0 = new org.oclc.oai.harvester2.verb.ListIdentifiers();
         // The following exception was thrown during execution in test generation
-        try {
-            java.lang.String str1 = listIdentifiers0.getResumptionToken();
-            org.junit.Assert.fail("Expected exception of type java.lang.NoSuchFieldException; message: null");
-        } catch (java.lang.NoSuchFieldException e) {
-        // Expected exception.
-        }
+        String str1 = listIdentifiers0.getResumptionToken();
     }
 
     @Test

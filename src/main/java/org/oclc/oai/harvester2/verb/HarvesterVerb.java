@@ -37,10 +37,7 @@ package org.oclc.oai.harvester2.verb;
 import org.apache.xpath.XPathAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.DOMImplementation;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -51,13 +48,17 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 import java.util.zip.ZipInputStream;
+
+import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
 
 /**
  * HarvesterVerb is the parent class for each of the OAI verbs.
@@ -69,7 +70,6 @@ public abstract class HarvesterVerb
 
 	// Constants used by the HTTP client
 	private static final String RETRY_AFTER = "Retry-After";
-	private static final String LOCATION = "Location";
 
 	// Logger
 	private static final Logger log = LoggerFactory.getLogger( HarvesterVerb.class );
@@ -86,6 +86,24 @@ public abstract class HarvesterVerb
 	private static final Element namespaceElement;
 	private static final DocumentBuilderFactory factory;
 	private static final TransformerFactory xformFactory = TransformerFactory.newInstance();
+
+	/**
+	 * A node list that is always empty.
+	 */
+	public static final NodeList EMPTY_NODE_LIST = new NodeList()
+	{
+		@Override
+		public Node item( int index )
+		{
+			return null;
+		}
+
+		@Override
+		public int getLength()
+		{
+			return 0;
+		}
+	};
 
 	static
 	{
@@ -117,7 +135,7 @@ public abstract class HarvesterVerb
 			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_ListSets",
 					"http://www.openarchives.org/OAI/1.1/OAI_ListSets" );
 		}
-		catch (ParserConfigurationException e)
+		catch ( ParserConfigurationException e )
 		{
 			throw new IllegalStateException( e );
 		}
@@ -126,12 +144,12 @@ public abstract class HarvesterVerb
 	// Instance variables
 	private final Document doc;
 	private final String schemaLocation;
-	private final String requestURL;
+	private final URI requestURL;
 
 	/**
 	 * Mock object creator (for unit testing purposes)
 	 */
-	public HarvesterVerb()
+	protected HarvesterVerb()
 	{
 		doc = null;
 		requestURL = null;
@@ -139,16 +157,15 @@ public abstract class HarvesterVerb
 	}
 
 	/**
-	 * Performs the OAI request
+	 * Performs the OAI request with the default timeout of 10 seconds.
 	 *
-	 * @param requestURL
+	 * @param requestURL the URL to request
 	 * @throws IOException
 	 * @throws SAXException
-	 * @throws TransformerException
 	 */
-	public HarvesterVerb( String requestURL ) throws IOException, SAXException, TransformerException
+	protected HarvesterVerb( String requestURL ) throws IOException, SAXException
 	{
-		this( requestURL, 2 );
+		this( requestURL, 10 );
 	}
 
 	/**
@@ -157,30 +174,39 @@ public abstract class HarvesterVerb
 	 * @param requestURL
 	 * @throws IOException
 	 * @throws SAXException
-	 * @throws TransformerException
 	 */
-	public HarvesterVerb( String requestURL, Integer timeout ) throws IOException, SAXException, TransformerException
+	protected HarvesterVerb( String requestURL, int timeout ) throws IOException, SAXException
 	{
-		this.requestURL = requestURL;
+		this.requestURL = URI.create( requestURL );
 
-		try ( InputStream in = getHttpResponse( new URL( requestURL ), timeout ) )
+		try ( InputStream in = getHttpResponse( this.requestURL.toURL(), timeout ) )
 		{
 			doc = factory.newDocumentBuilder().parse( in );
 		}
-		catch (ParserConfigurationException e)
+		catch ( ParserConfigurationException e )
 		{
 			throw new IllegalStateException( e );
 		}
 
-		this.schemaLocation = getSingleString( "/*/@xsi:schemaLocation" );
+		String schemaLocationTemp;
+		try
+		{
+			schemaLocationTemp = getSingleString( "/*/@xsi:schemaLocation" );
+		}
+		catch ( TransformerException e )
+		{
+			schemaLocationTemp = "";
+		}
+		this.schemaLocation = schemaLocationTemp;
 	}
 
-	private static InputStream getHttpResponse( URL requestURL, Integer timeout ) throws IOException
+	private static InputStream getHttpResponse( URL requestURL, int timeout ) throws IOException
 	{
 		HttpURLConnection con;
 		int responseCode;
 		int retries = 0;
-		do
+
+		while ( true )
 		{
 			con = (HttpURLConnection) requestURL.openConnection();
 			con.setRequestProperty( "User-Agent", "OAIHarvester/2.0" );
@@ -194,15 +220,7 @@ public abstract class HarvesterVerb
 			responseCode = con.getResponseCode();
 			log.trace( "responseCode={}", responseCode );
 
-			if ( responseCode == 302 )
-			{
-				if ( log.isInfoEnabled() )
-					log.info( con.getHeaderFields().toString() );
-				con.getHeaderFields().get( LOCATION ).forEach( log::info );
-				return getHttpResponse( new URL( con.getHeaderFields().get( LOCATION ).get( 0 ) ), timeout );
-			}
-
-			if ( responseCode == HttpURLConnection.HTTP_UNAVAILABLE )
+			if ( responseCode == HTTP_UNAVAILABLE && retries++ < 3 )
 			{
 				long retrySeconds = con.getHeaderFieldInt( RETRY_AFTER, -1 );
 				if ( retrySeconds == -1 )
@@ -213,10 +231,10 @@ public abstract class HarvesterVerb
 				}
 				if ( retrySeconds > 0 )
 				{
-					log.debug( "Server response: Retry-After={}", retrySeconds );
+					log.debug( "Server response: Retry-After={}", con.getHeaderField( RETRY_AFTER ) );
 					try
 					{
-						Thread.sleep( retrySeconds * 1000 );
+						TimeUnit.SECONDS.sleep( 1 );
 					}
 					catch ( InterruptedException ex )
 					{
@@ -225,28 +243,36 @@ public abstract class HarvesterVerb
 					}
 				}
 			}
+			else
+			{
+				break;
+			}
 		}
-		while ( responseCode == HttpURLConnection.HTTP_UNAVAILABLE && retries++ < 3 );
 
 		if ( responseCode >= 400 )
 		{
-			IOException exception;
-			try ( BufferedReader reader = new BufferedReader( new InputStreamReader( decodeHttpInputStream( con ), StandardCharsets.UTF_8 ) ) )
-			{
-				exception = new IOException( String.format( "Server returned %d, body: %s",
-						responseCode,
-						reader.lines().collect( Collectors.joining( System.lineSeparator() ) )
-				) );
-			}
-			catch ( IOException e )
-			{
-				// Make sure the response code is not lost if an IO error occurs
-				exception = new IOException( String.format( "Server returned %d", responseCode ), e );
-			}
-			throw exception;
+			throw handleHTTPResponseErrors( con, responseCode );
 		}
 
 		return decodeHttpInputStream( con );
+	}
+
+	private static IOException handleHTTPResponseErrors( HttpURLConnection con, int responseCode )
+	{
+		IOException exception;
+		try ( BufferedReader reader = new BufferedReader( new InputStreamReader( decodeHttpInputStream( con ), StandardCharsets.UTF_8 ) ) )
+		{
+			exception = new IOException( String.format( "Server returned %d, body: %s",
+					responseCode,
+					reader.lines().collect( Collectors.joining( System.lineSeparator() ) )
+			) );
+		}
+		catch ( IOException e )
+		{
+			// Make sure the response code is not lost if an IO error occurs
+			exception = new IOException( String.format( "Server returned %d", responseCode ), e );
+		}
+		return exception;
 	}
 
 	/**
@@ -271,19 +297,25 @@ public abstract class HarvesterVerb
 
 	/**
 	 * Get the OAI errors
-	 * 
+	 *
 	 * @return a NodeList of /oai:OAI-PMH/oai:error elements
-	 * @throws TransformerException
 	 */
-	public NodeList getErrors() throws TransformerException
+	public NodeList getErrors()
 	{
-		if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
+		try
 		{
-			return getNodeList( "/oai20:OAI-PMH/oai20:error" );
+			if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
+			{
+				return XPathAPI.selectNodeList( getDocument(), "/oai20:OAI-PMH/oai20:error", namespaceElement );
+			}
+			else
+			{
+				return EMPTY_NODE_LIST;
+			}
 		}
-		else
+		catch ( TransformerException e )
 		{
-			return null;
+			throw new IllegalStateException( e );
 		}
 	}
 
@@ -292,7 +324,7 @@ public abstract class HarvesterVerb
 	 *
 	 * @return the OAI request URL as a String
 	 */
-	public String getRequestURL()
+	public URI getRequestURL()
 	{
 		return requestURL;
 	}
@@ -335,25 +367,13 @@ public abstract class HarvesterVerb
 	/**
 	 * Get the String value for the given XPath location in the response DOM
 	 *
-	 * @param xpath
+	 * @param xpath the XPath to evaluate.
 	 * @return a String containing the value of the XPath location.
-	 * @throws TransformerException
+	 * @throws TransformerException if an error occurs getting the XPath location
 	 */
 	public String getSingleString( String xpath ) throws TransformerException
 	{
 		return XPathAPI.eval( getDocument(), xpath, namespaceElement ).str();
-	}
-
-	/**
-	 * Get a NodeList containing the nodes in the response DOM for the specified xpath
-	 *
-	 * @param xpath
-	 * @return the NodeList for the xpath into the response DOM
-	 * @throws TransformerException
-	 */
-	public NodeList getNodeList( String xpath ) throws TransformerException
-	{
-		return XPathAPI.selectNodeList( getDocument(), xpath, namespaceElement );
 	}
 
 	public String toString()

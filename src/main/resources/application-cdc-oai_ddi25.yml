@@ -4,6 +4,7 @@ logging:
     console: '%d{yyyy-dd-MM HH:mm:ss.SSS} %highlight(%-5level) %30.30((%M\)) %40.40((%file:%line\)) - %message%n'
     file: '%d{yyyy-dd-MM HH:mm:ss.SSS}  %-5level  %30.30((%M\)) %40.40((%file:%line\)) - %message%n'  
   level:
+    cessda.eqb: DEBUG
     org:
       springframework: '@logging.level.org.springframework@'
     de.codecentric.boot.admin: DEBUG
@@ -59,16 +60,17 @@ harvester:
   timeout: 100
   from:
     single: '1800-01-01'
-    initial: '0001-01-01'
+    initial:
     incremental: '2017-02-28'
     full: '1901-01-01'
   cron:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: https://kuha.sa.dk/v0/oai
-  - url: http://194.117.18.18:6003/v0/oai
-  - url: http://services.fsd.uta.fi/v0/oai
-  - url: https://dbkapps.gesis.org/dbkoai3
-  - url: http://147.213.4.44:6003/v0/oai
-  - url: https://snd.gu.se/en/oai-pmh?set=discipline:social-science
+    #  - url: https://kuha.sa.dk/v0/oai
+    #  - url: http://194.117.18.18:6003/v0/oai
+    - url: http://services.fsd.uta.fi/v0/oai
+      setName: all
+#  - url: https://dbkapps.gesis.org/dbkoai3
+#  - url: http://147.213.4.44:6003/v0/oai
+#  - url: https://snd.gu.se/en/oai-pmh?set=discipline:social-science

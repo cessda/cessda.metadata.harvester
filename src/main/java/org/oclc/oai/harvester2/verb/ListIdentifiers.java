@@ -40,6 +40,7 @@ import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.NoSuchElementException;
 
 /**
  * This class represents an ListIdentifiers response on either the server or on the client
@@ -65,8 +66,8 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @throws IOException  an I/O error occurred
 	 */
 	public ListIdentifiers( String baseURL, String from, String until, String set, String metadataPrefix, Integer timeout )
-			throws IOException, SAXException, TransformerException
-{
+			throws IOException, SAXException
+	{
 		super( getRequestURL( baseURL, from, until, set, metadataPrefix ), timeout );
 	}
 
@@ -77,35 +78,10 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @param resumptionToken
 	 * @throws IOException
 	 * @throws SAXException
-	 * @throws TransformerException
 	 */
-	public ListIdentifiers( String baseURL, String resumptionToken, int timeout ) throws IOException, SAXException, TransformerException
-{
+	public ListIdentifiers( String baseURL, String resumptionToken, int timeout ) throws IOException, SAXException
+	{
 		super( getRequestURL( baseURL, resumptionToken ), timeout );
-	}
-
-	/**
-	 * Get the oai:resumptionToken from the response
-	 * 
-	 * @return the oai:resumptionToken value
-	 * @throws TransformerException
-	 * @throws NoSuchFieldException
-	 */
-	public String getResumptionToken() throws TransformerException, NoSuchFieldException
-{
-
-		if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
-	{
-			return getSingleString( "/oai20:OAI-PMH/oai20:ListIdentifiers/oai20:resumptionToken" );
-		}
-		else if ( SCHEMA_LOCATION_V1_1_LIST_IDENTIFIERS.equals( getSchemaLocation() ) )
-	{
-			return getSingleString( "/oai11_ListIdentifiers:ListIdentifiers/oai11_ListIdentifiers:resumptionToken" );
-		}
-		else
-	{
-			throw new NoSuchFieldException( getSchemaLocation() );
-		}
 	}
 
 	/**
@@ -114,20 +90,20 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @return a String containing the query portion of the http request
 	 */
 	private static String getRequestURL( String baseURL, String from, String until, String set, String metadataPrefix )
-{
+	{
 
 		StringBuilder requestURL = new StringBuilder( baseURL );
 		requestURL.append( "?verb=ListIdentifiers" );
 		if ( from != null )
-	{
+		{
 			requestURL.append( "&from=" ).append( from );
 		}
 		if ( until != null )
-	{
+		{
 			requestURL.append( "&until=" ).append( until );
 		}
-		if ( set != null && !set.equals( "all" ) )
-	{
+		if ( set != null )
+		{
 			requestURL.append( "&set=" ).append( set );
 		}
 		requestURL.append( "&metadataPrefix=" ).append( metadataPrefix );
@@ -135,8 +111,37 @@ public class ListIdentifiers extends HarvesterVerb
 	}
 
 	/**
+	 * Get the oai:resumptionToken from the response
+	 *
+	 * @return the oai:resumptionToken value
+	 * @throws NoSuchElementException if the schema of the document does not support resumption tokens.
+	 */
+	public String getResumptionToken()
+	{
+		try
+		{
+			if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
+			{
+				return getSingleString( "/oai20:OAI-PMH/oai20:ListIdentifiers/oai20:resumptionToken" );
+			}
+			else if ( SCHEMA_LOCATION_V1_1_LIST_IDENTIFIERS.equals( getSchemaLocation() ) )
+			{
+				return getSingleString( "/oai11_ListIdentifiers:ListIdentifiers/oai11_ListIdentifiers:resumptionToken" );
+			}
+			else
+			{
+				throw new NoSuchElementException( getSchemaLocation() );
+			}
+		}
+		catch ( TransformerException e )
+		{
+			throw new IllegalStateException( e );
+		}
+	}
+
+	/**
 	 * Construct the query portion of the http request (resumptionToken version)
-	 * 
+	 *
 	 * @param baseURL
 	 * @param resumptionToken
 	 * @return

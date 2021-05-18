@@ -97,22 +97,6 @@ public class ListRecordsTest {
     }
 
     @Test
-    public void test10() throws Throwable {
-        if (debug)
-            System.out.format("%n%s%n", "RegressionTest0.test10");
-        org.oclc.oai.harvester2.verb.ListRecords listRecords0 = new org.oclc.oai.harvester2.verb.ListRecords();
-        org.w3c.dom.NodeList nodeList1 = listRecords0.getErrors();
-        // The following exception was thrown during execution in test generation
-        try {
-            org.w3c.dom.NodeList nodeList3 = listRecords0.getNodeList("");
-            org.junit.Assert.fail("Expected exception of type javax.xml.transform.TransformerException; message: Leerer Ausdruck!");
-        } catch (javax.xml.transform.TransformerException e) {
-        // Expected exception.
-        }
-        org.junit.Assert.assertNull(nodeList1);
-    }
-
-    @Test
     public void test11() throws Throwable {
         if (debug)
             System.out.format("%n%s%n", "RegressionTest0.test11");
@@ -176,7 +160,7 @@ public class ListRecordsTest {
         if (debug)
             System.out.format("%n%s%n", "RegressionTest0.test20");
         org.oclc.oai.harvester2.verb.ListRecords listRecords0 = new org.oclc.oai.harvester2.verb.ListRecords();
-        java.lang.String str1 = listRecords0.getRequestURL();
+        java.lang.String str1 = listRecords0.getRequestURL().toString();
         org.junit.Assert.assertNull(str1);
     }
 
@@ -213,7 +197,7 @@ public class ListRecordsTest {
         org.oclc.oai.harvester2.verb.ListRecords listRecords0 = new org.oclc.oai.harvester2.verb.ListRecords();
         org.w3c.dom.NodeList nodeList1 = listRecords0.getErrors();
         java.lang.String str2 = listRecords0.toString();
-        java.lang.String str3 = listRecords0.getRequestURL();
+        java.lang.String str3 = listRecords0.getRequestURL().toString();
         org.junit.Assert.assertNull(nodeList1);
         org.junit.Assert.assertEquals("'" + str2 + "' != '" + "" + "'", str2, "");
         org.junit.Assert.assertNull(str3);

@@ -34,14 +34,14 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import org.xml.sax.SAXException;
+
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
-
-import javax.xml.transform.TransformerException;
-
-import org.xml.sax.SAXException;
+import java.util.NoSuchElementException;
 
 /**
  * This class represents an ListRecords response on either the server or on the client
@@ -70,8 +70,7 @@ public class ListRecords extends HarvesterVerb
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	public ListRecords( String baseURL, String from, String until,
-			String set, String metadataPrefix ) throws IOException, SAXException, TransformerException
+	public ListRecords( String baseURL, String from, String until, String set, String metadataPrefix ) throws IOException, SAXException
 	{
 		super( getRequestURL( baseURL, from, until, set, metadataPrefix ) );
 	}
@@ -83,36 +82,38 @@ public class ListRecords extends HarvesterVerb
 	 * @param resumptionToken
 	 * @throws IOException
 	 * @throws SAXException
-	 * @throws TransformerException
 	 */
-	public ListRecords( String baseURL, String resumptionToken ) throws IOException, SAXException,
-			TransformerException
+	public ListRecords( String baseURL, String resumptionToken ) throws IOException, SAXException
 	{
 		super( getRequestURL( baseURL, resumptionToken ) );
 	}
 
 	/**
 	 * Get the oai:resumptionToken from the response
-	 * 
+	 *
 	 * @return the oai:resumptionToken value
-	 * @throws TransformerException
-	 * @throws NoSuchFieldException
 	 */
 	public String getResumptionToken()
-			throws TransformerException, NoSuchFieldException
 	{
-		String schemaLocation = getSchemaLocation();
-		if ( schemaLocation.contains( SCHEMA_LOCATION_V2_0 ) )
+		try
 		{
-			return getSingleString( "/oai20:OAI-PMH/oai20:ListRecords/oai20:resumptionToken" );
+			String schemaLocation = getSchemaLocation();
+			if ( schemaLocation.contains( SCHEMA_LOCATION_V2_0 ) )
+			{
+				return getSingleString( "/oai20:OAI-PMH/oai20:ListRecords/oai20:resumptionToken" );
+			}
+			else if ( schemaLocation.contains( SCHEMA_LOCATION_V1_1_LIST_RECORDS ) )
+			{
+				return getSingleString( "/oai11_ListRecords:ListRecords/oai11_ListRecords:resumptionToken" );
+			}
+			else
+			{
+				throw new NoSuchElementException( schemaLocation );
+			}
 		}
-		else if ( schemaLocation.contains( SCHEMA_LOCATION_V1_1_LIST_RECORDS ) )
+		catch ( TransformerException e )
 		{
-			return getSingleString( "/oai11_ListRecords:ListRecords/oai11_ListRecords:resumptionToken" );
-		}
-		else
-		{
-			throw new NoSuchFieldException( schemaLocation );
+			throw new IllegalStateException(e);
 		}
 	}
 

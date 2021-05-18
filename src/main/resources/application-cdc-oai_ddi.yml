@@ -4,6 +4,7 @@ logging:
     console: '%d{yyyy-dd-MM HH:mm:ss.SSS} %highlight(%-5level) %30.30((%M\)) %40.40((%file:%line\)) - %message%n'
     file: '%d{yyyy-dd-MM HH:mm:ss.SSS}  %-5level  %30.30((%M\)) %40.40((%file:%line\)) - %message%n'  
   level:
+    cessda.eqb: DEBUG
     org:
       springframework: '@logging.level.org.springframework@'
     de.codecentric.boot.admin: DEBUG
@@ -66,10 +67,10 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-    - url: https://data2.aussda.at/oai
+    #    - url: https://data2.aussda.at/oai
     - url: https://nesstar2.adp.fdv.uni-lj.si/oai-pmh/
-    - url: https://oai-pmh.nsd.no/oai-pmh/
+    #    - url: https://oai-pmh.nsd.no/oai-pmh/
     - url: http://nesstar.sciences-po.fr/oai-pmh/
-    - url: http://harvester.sodanet.gr:8080/oai/request?set=CESSDA
+    #    - url: http://harvester.sodanet.gr:8080/oai/request?set=CESSDA
     - url: http://nesstar.unidata.unimib.it/oai-pmh/
     - url: http://nesstar.soc.cas.cz/oai-pmh/

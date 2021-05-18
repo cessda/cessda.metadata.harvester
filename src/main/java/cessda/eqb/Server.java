@@ -41,7 +41,9 @@ import org.springframework.jmx.support.RegistrationPolicy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.annotation.PreDestroy;
@@ -51,11 +53,11 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.*;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.UnknownHostException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -72,7 +74,6 @@ public class Server extends SpringBootServletInitializer
 {
 
     private static final Logger log = LoggerFactory.getLogger( Server.class );
-    private static final Logger hlog = LoggerFactory.getLogger( Server.class );
     public static final String METADATA = "metadata";
 
     private final HarvesterConfiguration harvesterConfiguration;
@@ -80,7 +81,6 @@ public class Server extends SpringBootServletInitializer
     private final TransformerFactory factory;
     private boolean fullIsRunning = false;
     private boolean incrementalIsRunning = false;
-    private String to = "";
     private String mdFormat = "oai_ddi";
 
     @Autowired
@@ -118,24 +118,42 @@ public class Server extends SpringBootServletInitializer
 
     private static String oaiBase( String u )
     {
-        if ( u.contains( "?" ) )
+        final int endIndex = u.indexOf( '?' );
+        if ( endIndex != -1 )
         {
-            u = u.substring( 0, u.indexOf( '?' ) );
+            return u.substring( 0, endIndex );
         }
-        return u;
+        else
+        {
+            return u;
+        }
     }
 
-    private static String shortened( String oaiUrl )
+    /**
+     * Returns the host portion of the URL string provided.
+     * The resulting string is encoded using {@link StandardCharsets#UTF_8}.
+     *
+     * @param oaiUrl the URL string.
+     * @return the {@link StandardCharsets#UTF_8} encoded host.
+     * @throws IllegalArgumentException if the given string is not a valid {@link URI}.
+     */
+    private static String shortened( String oaiUrl, String setspec )
     {
         try
         {
-            log.trace( oaiUrl );
-            return new URI( oaiUrl ).getHost().replace( ".", "_" ).replace( ":", "-" ).toLowerCase();
+            String indexName = new URI( oaiUrl ).getHost();
+            if ( setspec != null )
+            {
+                return URLEncoder.encode( indexName + "-" + setspec, StandardCharsets.UTF_8.name() );
+            }
+            else
+            {
+                return URLEncoder.encode( indexName, StandardCharsets.UTF_8.name() );
+            }
         }
-        catch (URISyntaxException e)
+        catch ( URISyntaxException | UnsupportedEncodingException e )
         {
-            log.error( e.getMessage(), e );
-            return "";
+            throw new IllegalArgumentException( e );
         }
     }
 
@@ -151,7 +169,7 @@ public class Server extends SpringBootServletInitializer
         }
 
         incrementalIsRunning = true;
-        hlog.info( "Single harvesting starting from {}", harvesterConfiguration.getFrom().getSingle() );
+        log.info( "Single harvesting starting from {}", harvesterConfiguration.getFrom().getSingle() );
         try
         {
             runSingleHarvest( harvesterConfiguration.getFrom().getSingle(), positionInRepoList );
@@ -160,7 +178,7 @@ public class Server extends SpringBootServletInitializer
         {
             incrementalIsRunning = false;
         }
-        hlog.info( "Single harvesting finished from {}", harvesterConfiguration.getFrom().getSingle() );
+        log.info( "Single harvesting finished from {}", harvesterConfiguration.getFrom().getSingle() );
         return "Single harvesting for " + positionInRepoList + "th repository started. See log section for details";
     }
 
@@ -177,24 +195,17 @@ public class Server extends SpringBootServletInitializer
     {
 
         log.info( harvesterConfiguration.getMetadataFormat() );
-        LocalDate date = LocalDate.now().minusDays( 2 );
-        String newInitial = date.toString();
-        // set initial value dynamically
-        if ( harvesterConfiguration.getFrom().getInitial() == null )
-        {
-            harvesterConfiguration.getFrom().setInitial( newInitial );
-        }
         log.info( harvesterConfiguration.getFrom().getInitial() );
 
         if ( incrementalIsRunning )
         {
             return "Not started. An incremental harvesting progress is already running";
         }
-        hlog.info( "Full harvest schedule: {}", harvesterConfiguration.getCron().getFull() );
-        hlog.info( "Incremental harvest schedule: {}", harvesterConfiguration.getCron().getIncremental() );
+        log.info( "Full harvest schedule: {}", harvesterConfiguration.getCron().getFull() );
+        log.info( "Incremental harvest schedule: {}", harvesterConfiguration.getCron().getIncremental() );
 
-        hlog.info( "Initial harvesting starting from {}", harvesterConfiguration.getFrom().getInitial() );
-        hlog.info( "Incremental harvesting will start with cron schedule {} from {}",
+        log.info( "Initial harvesting starting from {}", harvesterConfiguration.getFrom().getInitial() );
+        log.info( "Incremental harvesting will start with cron schedule {} from {}",
                 harvesterConfiguration.getCron().getIncremental(), harvesterConfiguration.getFrom().getIncremental() );
         try
         {
@@ -204,7 +215,7 @@ public class Server extends SpringBootServletInitializer
         {
             incrementalIsRunning = false;
         }
-        hlog.info( "Initial harvesting finished from {}", harvesterConfiguration.getFrom().getInitial() );
+        log.info( "Initial harvesting finished from {}", harvesterConfiguration.getFrom().getInitial() );
         return "Initial harvesting finished from " + harvesterConfiguration.getFrom().getInitial();
     }
 
@@ -229,12 +240,12 @@ public class Server extends SpringBootServletInitializer
         {
             return "Not started. A full harvesting progress is already running";
         }
-        hlog.info( "Full harvesting started from {}", harvesterConfiguration.getFrom().getFull() );
+        log.info( "Full harvesting started from {}", harvesterConfiguration.getFrom().getFull() );
         fullIsRunning = true;
         runHarvest( harvesterConfiguration.getFrom().getFull() );
-        hlog.info( "Full harvesting finished" );
+        log.info( "Full harvesting finished" );
         fullIsRunning = false;
-        hlog.info( "Full harvesting finished from {}", harvesterConfiguration.getFrom().getFull() );
+        log.info( "Full harvesting finished from {}", harvesterConfiguration.getFrom().getFull() );
         return "Full harvesting finished from " + harvesterConfiguration.getFrom().getFull();
     }
 
@@ -257,25 +268,25 @@ public class Server extends SpringBootServletInitializer
             if ( !incrementalIsRunning )
             {
                 incrementalIsRunning = true;
-                hlog.info( "Incremental harvesting started from {}",
+                log.info( "Incremental harvesting started from {}",
                         harvesterConfiguration.getFrom().getIncremental() );
                 runHarvest( harvesterConfiguration.getFrom().getIncremental() );
-                hlog.info( "Incremental harvesting finished" );
+                log.info( "Incremental harvesting finished" );
 
                 msg = "Incremental harvesting finished from " + harvesterConfiguration.getFrom().getIncremental();
 
                 harvesterConfiguration.getFrom().setIncremental( newIncFrom );
-                hlog.info( "Next incremental harvest will start from {}", newIncFrom );
+                log.info( "Next incremental harvest will start from {}", newIncFrom );
             }
             else
             {
                 msg = "Incremental harvesting already running.";
             }
-            hlog.info( msg );
+            log.info( msg );
         }
         else
         {
-            hlog.info( "No incremental harvesting, as full harvesting is in progress." );
+            log.info( "No incremental harvesting, as full harvesting is in progress." );
             return "No incremental harvesting, as full harvesting is in progress.";
         }
 
@@ -288,32 +299,21 @@ public class Server extends SpringBootServletInitializer
     public void runSingleHarvest( String fromDate, Integer position )
     {
 
-        hlog.info( "Harvesting started from {} for repo {}", fromDate, position );
+        log.info( "Harvesting started from {} for repo {}", fromDate, position );
         try
         {
-            mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat()
-                    : "oai_dc";
-            to = LocalDate.now().toString();
+            mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat() : "oai_dc";
 
-            String baseUrl = harvesterConfiguration.getRepoBaseUrls().get( position );
-            hlog.info( "Single harvesting {} from {}", baseUrl, fromDate );
-            if ( !baseUrl.trim().isEmpty() )
+            URI baseUrl = harvesterConfiguration.getRepos().get( position ).getUrl();
+            log.info( "Single harvesting {} from {}", baseUrl, fromDate );
+
+            for ( String set : getSpecs( baseUrl ) )
             {
-                if ( baseUrl.contains( "#" ) )
-                {
-                    baseUrl = baseUrl.substring( 0, baseUrl.indexOf( '#' ) );
-                }
-                log.trace( "{} {}", baseUrl, fromDate );
-                for ( String set : getSpecs( baseUrl ) )
-                {
-                    hlog.info( "Start to get  records for {} / {} from {}", baseUrl, set, fromDate );
-                    fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
-                }
+                harvestSet( baseUrl.toString(), set, fromDate );
             }
         }
-        catch (SecurityException | IllegalArgumentException e)
+        finally
         {
-            log.error( e.getMessage(), e );
             incrementalIsRunning = false;
         }
     }
@@ -321,144 +321,150 @@ public class Server extends SpringBootServletInitializer
     private void runHarvest( String fromDate )
     {
 
-        hlog.info( "Harvesting started from {}", fromDate );
+        log.info( "Harvesting started from {}", fromDate );
 
         mdFormat = harvesterConfiguration.getMetadataFormat() != null ? harvesterConfiguration.getMetadataFormat() : "oai_dc";
-        to = LocalDate.now().toString();
+
+        if ( fromDate.isEmpty() )
+        {
+            fromDate = null;
+        }
 
         for ( HarvesterConfiguration.Repo repo : harvesterConfiguration.getRepos() )
         {
-            String baseUrl = repo.getUrl();
-            if ( !baseUrl.trim().isEmpty() )
-            {
-                if ( baseUrl.contains( "#" ) )
-                {
-                    baseUrl = baseUrl.substring( 0, baseUrl.indexOf( '#' ) );
-                }
+            URI baseUrl = repo.getUrl();
 
-                Set<String> sets;
-                if ( repo.getSetName() != null )
+            Set<String> sets;
+            if ( repo.getSetName() != null && !repo.getSetName().isEmpty() )
+            {
+                sets = Collections.singleton( repo.getSetName() );
+            }
+            else if ( repo.discoverSets() )
+            {
+                sets = getSpecs( baseUrl );
+            }
+            else
+            {
+                // detect if the set is explicitly referenced
+                if ( baseUrl.getQuery().contains( "set=" ) )
                 {
-                    sets = Collections.singleton( repo.getSetName() );
+                    sets = Collections.singleton( baseUrl.getQuery().substring( baseUrl.getQuery().indexOf( "set=" ) + 4 ) );
                 }
                 else
                 {
-                    sets = getSpecs( baseUrl );
+                    sets = Collections.singleton( null );
                 }
+            }
 
-                for ( String set : sets )
-                {
-                    hlog.info( "Start to get records for {} / {} from {}", baseUrl, set, fromDate );
-                    fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
-                }
+            for ( String set : sets )
+            {
+                harvestSet( baseUrl.toString(), set, fromDate );
             }
         }
     }
 
-    private void fetchDCRecords( String repoBase, String setspec, String fromDate )
+    private void harvestSet( String baseUrl, String set, String fromDate )
+    {
+        log.info( "Start to get records for {} / {} from {}", baseUrl, set, fromDate );
+        try
+        {
+            fetchDCRecords( oaiBase( baseUrl ), set, fromDate );
+        }
+        catch ( HarvesterFailedException e )
+        {
+            log.error( "Could not harvest {} / {}, {}", baseUrl, set, e.toString() );
+        }
+    }
+
+    private void fetchDCRecords( String repoBase, String setspec, String fromDate ) throws HarvesterFailedException
     {
 
         log.info( harvesterConfiguration.getDir() );
-        File f = new File( harvesterConfiguration.getDir() );
+        Path path = Paths.get( harvesterConfiguration.getDir() );
+
+        String indexName = shortened( repoBase, setspec );
+
+        final Path repositoryDirectory = path.resolve( indexName );
+        try
+        {
+            Files.createDirectories( repositoryDirectory );
+        }
+        catch ( IOException e )
+        {
+            throw new DirectoryCreationFailedException( repositoryDirectory, e );
+        }
 
         log.info( "Fetching records for repo {} and pmh set {}. Be patient, this can take hours.", repoBase, setspec );
 
-        final ArrayList<String> currentlyRetrievedSet = new ArrayList<>();
-        getIdentifiersForSet( repoBase, setspec, null, currentlyRetrievedSet, mdFormat, fromDate );
-        writeToLocalFileSystem( currentlyRetrievedSet, repoBase, setspec, f.getAbsolutePath() );
+        final List<String> currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, mdFormat, fromDate );
+
+        writeToLocalFileSystem( currentlyRetrievedSet, repoBase, repositoryDirectory );
 
         log.info( "retrieved files: {}", currentlyRetrievedSet.size() );
         log.info( "\tSET\t{}\tsize:\t{}\tURL\t{}", setspec, currentlyRetrievedSet.size(), repoBase );
     }
 
-    private void getIdentifiersForSet(
-            String url,
-            String set,
-            String resumptionToken,
-            List<String> records,
-            String overwrite,
-            String fromDate )
+    private List<String> getIdentifiersForSet( String url, String set, String overwrite, String fromDate ) throws HarvesterFailedException
     {
 
         final String oaiBaseUrl = oaiBase( url );
-        log.info( "URL: {}, set: {}, list size: {}, restoken {}", url, set, records.size(), resumptionToken );
         try
         {
-            log.trace( "recurse:\turl {} set {} token {}", url, set, resumptionToken );
-            ListIdentifiers li;
-            if ( resumptionToken == null )
-            {
-                // TODO Due to changes by setting set not to all in an exception I need to check for empty set.
-                // set must be null or set = "all", if in configuration set is not set....
-                if ( set.compareTo( url ) == 0 || set.isEmpty() )
-                {
-                    set = null;
-                }
-                log.debug( "From {}, until {}, {}, {}, {}", fromDate, to, oaiBaseUrl, set, mdFormat );
-                li = new ListIdentifiers( oaiBaseUrl, fromDate, to, set,
-                        Optional.ofNullable( overwrite ).orElse( mdFormat ), harvesterConfiguration.getTimeout() );
-            }
-            else
-            {
-                log.trace( url );
-                li = new ListIdentifiers( oaiBaseUrl, resumptionToken, harvesterConfiguration.getTimeout() );
-            }
-            log.trace( li.getRequestURL() );
-            Document identifiers = li.getDocument();
+            String resumptionToken = null;
+            final ArrayList<String> records = new ArrayList<>();
 
-            // add to list of records to fetch
-            NodeList identifiersIDs = identifiers.getElementsByTagName( "identifier" );
-            for ( int i = 0; i < identifiersIDs.getLength(); i++ )
+            do
             {
-                String textContent = identifiersIDs.item( i ).getTextContent();
-                if ( textContent != null )
-                {
-                    records.add( textContent );
-                }
-            }
+                log.debug( "URL: {}, set: {}, list size: {}", url, set, records.size() );
 
-            // need to recurse?
-            NodeList resumptionTokenReq = identifiers.getElementsByTagName( "resumptionToken" );
-            if ( resumptionTokenReq.getLength() > 0 )
-            {
-                Node resumptionTokenNode = resumptionTokenReq.item( 0 );
-                if ( !resumptionTokenNode.getTextContent().isEmpty() )
+                ListIdentifiers li;
+                if ( resumptionToken == null )
                 {
-                    String rTok = resumptionTokenNode.getTextContent();
-                    getIdentifiersForSet( url, set, rTok, records, null, fromDate );
-                    // need to interrupt recursion?
+                    li = new ListIdentifiers( oaiBaseUrl, fromDate, null, set,
+                            Optional.ofNullable( overwrite ).orElse( mdFormat ), harvesterConfiguration.getTimeout() );
                 }
-                if ( resumptionTokenNode.hasAttributes() && resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" ) != null )
+                else
                 {
-                    long itemsInCurrentSet = Long.parseLong(
-                            resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" )
-                                    .getTextContent() );
-                    log.info( "Items in current set: {}", itemsInCurrentSet );
+                    log.trace( "recurse: url {}\tset {}\ttoken {}", url, set, resumptionToken );
+                    li = new ListIdentifiers( oaiBaseUrl, resumptionToken, harvesterConfiguration.getTimeout() );
+                }
+
+                Document identifiers = li.getDocument();
+
+                // add to list of records to fetch
+                NodeList identifiersIDs = identifiers.getElementsByTagName( "identifier" );
+                for ( int i = 0; i < identifiersIDs.getLength(); i++ )
+                {
+                    String identifier = identifiersIDs.item( i ).getTextContent();
+                    records.add( identifier );
+                }
+
+                // need to continue looping?
+                NodeList resumptionTokenReq = identifiers.getElementsByTagName( "resumptionToken" );
+                if ( resumptionTokenReq.getLength() > 0 && !resumptionTokenReq.item( 0 ).getTextContent().isEmpty() )
+                {
+                    resumptionToken = resumptionTokenReq.item( 0 ).getTextContent();
+                }
+                else
+                {
+                    resumptionToken = null;
                 }
             }
+            while ( resumptionToken != null );
+
+            return records;
         }
-        catch (IOException | SAXException | DOMException | TransformerException | NumberFormatException e)
+        catch ( IOException | SAXException e )
         {
-            try (StringWriter stackTraceWriter = new StringWriter())
-            {
-                e.printStackTrace( new PrintWriter( stackTraceWriter ) );
-                this.notifyOnError(
-                        "Harvesting failed for " + oaiBaseUrl + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix="
-                                + mdFormat + "&from=" + fromDate + "&resumptionToken=" + resumptionToken,
-                        stackTraceWriter.toString() );
-            }
-            catch (IOException ioException)
-            {
-                log.error( "Error occurred when printing stacktrace: {}", ioException.toString() );
-            }
+            throw new HarvesterFailedException( "Harvesting failed for " + oaiBaseUrl + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix="
+                    + mdFormat + "&from=" + fromDate + ": " + e.toString(), e );
         }
-        log.trace( "Records to fetch : {}", records.size() );
     }
 
     public void notifyOnError( String subject, String msg )
     {
 
-        hlog.error( "{}\n{}", subject, msg );
+        log.error( "{}\n{}", subject, msg );
         if ( harvesterConfiguration.getRecipient().compareTo( "" ) == 0 )
         {
             return;
@@ -481,40 +487,23 @@ public class Server extends SpringBootServletInitializer
             session.open();
             session.close();
         }
-        catch (MailException | UnknownHostException e)
+        catch ( MailException | UnknownHostException e )
         {
             log.error( "Failed to send notification: {}", e.toString() );
         }
 
     }
 
-    protected void writeToLocalFileSystem( Collection<String> records, String oaiUrl, String specId, String path )
+    private void writeToLocalFileSystem( Collection<String> records, String oaiUrl, Path repositoryDirectory )
     {
-
-        String indexName = shortened( oaiUrl ) + "-" + specId;
-        Path repositoryDirectory = Paths.get( path,
-                indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" )
-        );
-
-        try
-        {
-            Files.createDirectories( repositoryDirectory );
-        }
-        catch ( IOException e )
-        {
-            // FIXME: Replace with a domain specific exception (i.e. HarvesterFailedException)
-            throw new UncheckedIOException( e );
-        }
-
         for ( String currentRecord : records )
         {
-            String fileName = ( indexName + "__" + currentRecord.trim() + "_" + harvesterConfiguration.getDialectDefinitionName() + ".xml" )
-                    .replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" );
+            String fileName = currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName() + ".xml";
 
             try
             {
-                GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord.trim(), mdFormat, harvesterConfiguration.getTimeout() );
-                Path fdest = repositoryDirectory.resolve( fileName );
+                log.debug( "Harvesting {} from {}", currentRecord, oaiUrl );
+                GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout() );
 
                 final NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( METADATA );
                 if ( metadataElements.getLength() > 0 )
@@ -524,8 +513,7 @@ public class Server extends SpringBootServletInitializer
                     // remove envelope?
                     if ( harvesterConfiguration.isRemoveOAIEnvelope() )
                     {
-                        NodeList metadataChildNodes = metadataElements.item( 0 )
-                                .getChildNodes();
+                        NodeList metadataChildNodes = metadataElements.item( 0 ).getChildNodes();
                         source = IntStream.range( 0, metadataChildNodes.getLength() ).mapToObj( metadataChildNodes::item )
                                 .filter( Element.class::isInstance )
                                 .map( DOMSource::new )
@@ -538,8 +526,10 @@ public class Server extends SpringBootServletInitializer
                         source = new DOMSource( pmhRecord.getDocument() );
                     }
 
+                    Path fdest = repositoryDirectory.resolve( URLEncoder.encode( fileName, StandardCharsets.UTF_8.name() ) );
                     try ( OutputStream fOutputStream = Files.newOutputStream( fdest ) )
                     {
+                        log.trace( "Writing to {}", fdest );
                         factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
                     }
                 }
@@ -551,36 +541,25 @@ public class Server extends SpringBootServletInitializer
             }
             catch ( IOException | SAXException | TransformerException e1 )
             {
-                log.error( "Failed to harvest record {}: {}", currentRecord.trim(), e1.getMessage() );
+                log.error( "Failed to harvest record {}: {}", currentRecord.trim(), e1.toString() );
             }
         }
     }
 
-    private Set<String> getSpecs( String url )
+    private Set<String> getSpecs( URI url )
     {
-        final Set<String> unfoldedSets;
-
-        // skip if set is explicitly referenced
-        if ( url.contains( "set=" ) )
+        try
         {
-            unfoldedSets = Collections.singleton( url.substring( url.indexOf( "set=" ) + 4 ) );
+            final Set<String> unfoldedSets = getSetStrings( url );
+            log.info( "No. of sets: {}", unfoldedSets.size() );
+            return unfoldedSets;
         }
-        else
+        catch ( IOException | TransformerException | SAXException e )
         {
-            try
-            {
-                unfoldedSets = getSetStrings( url );
-            }
-            catch ( IOException | TransformerException | SAXException e )
-            {
-                log.warn( "Repository has no sets defined / no response: set set=all", e );
-                // set set=all in case of no sets found
-                return Collections.singleton( "all" );
-            }
+            log.warn( "Repository has no sets defined / no response: set set=all", e );
+            // set set=all in case of no sets found
+            return Collections.singleton( null );
         }
-
-        log.info( "No. of sets: {}", unfoldedSets.size() );
-        return unfoldedSets;
     }
 
     /**
@@ -589,16 +568,16 @@ public class Server extends SpringBootServletInitializer
      * @param url the URL of the repository.
      * @return a {@link Set} containing all of the sets in the remote repository.
      */
-    public Set<String> getSetStrings( final String url )
+    public Set<String> getSetStrings( final URI url )
             throws IOException, SAXException, TransformerException
     {
-        String urlToSend = url;
-        String resumptionToken;
-
         HashSet<String> unfoldedSets = new HashSet<>();
+
+        URI urlToSend = url;
+        String resumptionToken;
         do
         {
-            ListSets ls = new ListSets( urlToSend, harvesterConfiguration.getTimeout() );
+            ListSets ls = new ListSets( urlToSend.toString(), harvesterConfiguration.getTimeout() );
 
             Document document = ls.getDocument();
 
@@ -618,7 +597,7 @@ public class Server extends SpringBootServletInitializer
             if ( !resumptionToken.isEmpty() )
             {
                 log.info( resumptionToken );
-                urlToSend = url + "?verb=ListSets&resumptionToken=" + resumptionToken;
+                urlToSend = URI.create( url + "?verb=ListSets&resumptionToken=" + resumptionToken);
             }
         }
         while ( !resumptionToken.isEmpty() );
@@ -630,6 +609,8 @@ public class Server extends SpringBootServletInitializer
     void printConfig()
     {
         if ( log.isInfoEnabled() )
-            hlog.info( harvesterConfiguration.toString() );
+        {
+            log.info( harvesterConfiguration.toString() );
+        }
     }
 }
