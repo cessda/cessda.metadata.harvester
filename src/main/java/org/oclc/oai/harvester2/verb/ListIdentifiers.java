@@ -38,8 +38,9 @@ import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.NoSuchElementException;
 
 /**
@@ -56,7 +57,7 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @throws SAXException the xml response is bad
 	 * @throws IOException  an I/O error occurred
 	 */
-	public ListIdentifiers( String baseURL, String from, String until, String set, String metadataPrefix, Integer timeout )
+	public ListIdentifiers( String baseURL, String from, String until, String set, String metadataPrefix, Duration timeout )
 			throws IOException, SAXException
 	{
 		super( getRequestURL( baseURL, from, until, set, metadataPrefix ), timeout );
@@ -70,7 +71,7 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @throws IOException
 	 * @throws SAXException
 	 */
-	public ListIdentifiers( String baseURL, String resumptionToken, int timeout ) throws IOException, SAXException
+	public ListIdentifiers( String baseURL, String resumptionToken, Duration timeout ) throws IOException, SAXException
 	{
 		super( getRequestURL( baseURL, resumptionToken ), timeout );
 	}
@@ -138,14 +139,7 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @return
 	 */
 	private static String getRequestURL( String baseURL, String resumptionToken )
-{
-		try
 	{
-			return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode( resumptionToken, "UTF-8" );
-		}
-		catch ( UnsupportedEncodingException e )
-	{
-			throw new IllegalStateException(e);
-		}
+		return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 );
 	}
 }

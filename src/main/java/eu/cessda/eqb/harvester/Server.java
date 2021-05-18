@@ -83,7 +83,6 @@ public class Server implements CommandLineRunner
     public static void main( String[] args )
     {
         SpringApplication.run( Server.class, args );
-        log.info( "Harvester running. " );
     }
 
     @Override
@@ -349,7 +348,7 @@ public class Server implements CommandLineRunner
      */
     private Set<String> discoverSets( Repo repo )
     {
-        if ( repo.getSetName() != null && !repo.getSetName().isEmpty() )
+        if ( repo.getSetName() != null )
         {
             return Collections.singleton( repo.getSetName() );
         }
@@ -357,7 +356,7 @@ public class Server implements CommandLineRunner
         {
             try
             {
-                final Set<String> unfoldedSets = getSetStrings( repo.getUrl() );
+                var unfoldedSets = getSetStrings( repo.getUrl() );
                 log.info( "No. of sets: {}", unfoldedSets.size() );
                 return unfoldedSets;
             }
@@ -478,8 +477,7 @@ public class Server implements CommandLineRunner
             try
             {
                 log.debug( "Harvesting {} from {}", currentRecord, oaiUrl );
-                GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration
-                        .getTimeout() );
+                var pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout() );
 
                 final NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( METADATA );
                 if ( metadataElements.getLength() > 0 )
@@ -536,10 +534,10 @@ public class Server implements CommandLineRunner
         HashSet<String> unfoldedSets = new HashSet<>();
 
         URI urlToSend = url;
-        String resumptionToken;
+        Optional<String> resumptionToken;
         do
         {
-            ListSets ls = new ListSets( urlToSend.toString(), harvesterConfiguration.getTimeout() );
+            var ls = new ListSets( urlToSend.toString(), harvesterConfiguration.getTimeout() );
 
             Document document = ls.getDocument();
 
@@ -556,13 +554,12 @@ public class Server implements CommandLineRunner
             }
 
             resumptionToken = ls.getResumptionToken();
-            if ( !resumptionToken.isEmpty() )
+            if ( resumptionToken.isPresent() )
             {
-                log.info( resumptionToken );
-                urlToSend = URI.create( url + "?verb=ListSets&resumptionToken=" + resumptionToken);
+                urlToSend = URI.create( url + "?verb=ListSets&resumptionToken=" + resumptionToken.orElseThrow() );
             }
         }
-        while ( !resumptionToken.isEmpty() );
+        while ( resumptionToken.isPresent() );
 
         return unfoldedSets;
     }

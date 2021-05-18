@@ -39,6 +39,7 @@ import org.xml.sax.SAXException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.time.Duration;
 import java.util.NoSuchElementException;
 
 /**
@@ -60,7 +61,7 @@ public class GetRecord extends HarvesterVerb
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	public GetRecord( String baseURL, String identifier, String metadataPrefix, Integer timeout )
+	public GetRecord( String baseURL, String identifier, String metadataPrefix, Duration timeout )
 			throws IOException, SAXException
 	{
 		super( getRequestURL( baseURL, identifier, metadataPrefix ), timeout );

@@ -53,6 +53,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
@@ -156,7 +157,7 @@ public abstract class HarvesterVerb
 	 */
 	protected HarvesterVerb( String requestURL ) throws IOException, SAXException
 	{
-		this( requestURL, 10 );
+		this( requestURL, Duration.ofSeconds( 10 ) );
 	}
 
 	/**
@@ -166,7 +167,7 @@ public abstract class HarvesterVerb
 	 * @throws IOException
 	 * @throws SAXException
 	 */
-	protected HarvesterVerb( String requestURL, int timeout ) throws IOException, SAXException
+	protected HarvesterVerb( String requestURL, Duration timeout ) throws IOException, SAXException
 	{
 		this.requestURL = URI.create( requestURL );
 
@@ -191,7 +192,7 @@ public abstract class HarvesterVerb
 		this.schemaLocation = schemaLocationTemp;
 	}
 
-	private static InputStream getHttpResponse( URL requestURL, int timeout ) throws IOException
+	private static InputStream getHttpResponse( URL requestURL, Duration timeout ) throws IOException
 	{
 		HttpURLConnection con;
 		int responseCode;
@@ -204,9 +205,9 @@ public abstract class HarvesterVerb
 			con.setRequestProperty( "Accept-Encoding", "compress, gzip, identity" );
 
 			// TK added default timeout for dataverses taking too long to respond / stall
-			log.trace( "Timeout : {} seconds", timeout );
-			con.setConnectTimeout( timeout * 1000 );
-			con.setReadTimeout( timeout * 1000 );
+			log.trace( "Timeout : {}", timeout );
+			con.setConnectTimeout( (int) timeout.toMillis() );
+			con.setReadTimeout( (int) timeout.toMillis() );
 
 			responseCode = con.getResponseCode();
 			log.trace( "responseCode={}", responseCode );
