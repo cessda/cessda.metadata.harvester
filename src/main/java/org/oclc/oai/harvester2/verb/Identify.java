@@ -34,12 +34,13 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import org.xml.sax.SAXException;
+
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 
-import javax.xml.transform.TransformerException;
-
-import org.xml.sax.SAXException;
+import java.util.NoSuchElementException;
 
 /**
  * This class represents an Identify response on either the server or on the client
@@ -49,48 +50,42 @@ import org.xml.sax.SAXException;
 public class Identify extends HarvesterVerb
 {
 	/**
-	 * Mock object constructor (for unit testing purposes)
-	 */
-	public Identify()
-	{
-		super();
-	}
-
-	/**
 	 * Client-side Identify verb constructor
 	 *
-	 * @param baseURL
-	 *            the baseURL of the server to be queried
-	 * @throws MalformedURLException
-	 *             the baseURL is bad
-	 * @throws IOException
-	 *             an I/O error occurred
+	 * @param baseURL the baseURL of the server to be queried
+	 * @throws MalformedURLException the baseURL is bad
+	 * @throws IOException           an I/O error occurred
 	 */
-	public Identify( String baseURL ) throws IOException, SAXException, TransformerException
+	public Identify( String baseURL ) throws IOException, SAXException
 	{
 		super( getRequestURL( baseURL ) );
 	}
 
 	/**
 	 * Get the oai:protocolVersion value from the Identify response
-	 * 
+	 *
 	 * @return the oai:protocolVersion value
-	 * @throws TransformerException
-	 * @throws NoSuchFieldException
 	 */
-	public String getProtocolVersion() throws TransformerException, NoSuchFieldException
+	public String getProtocolVersion()
 	{
-		if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
+		try
 		{
-			return getSingleString( "/oai20:OAI-PMH/oai20:Identify/oai20:protocolVersion" );
+			if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
+			{
+				return getSingleString( "/oai20:OAI-PMH/oai20:Identify/oai20:protocolVersion" );
+			}
+			else if ( SCHEMA_LOCATION_V1_1_IDENTIFY.equals( getSchemaLocation() ) )
+			{
+				return getSingleString( "/oai11_Identify:Identify/oai11_Identify:protocolVersion" );
+			}
+			else
+			{
+				throw new NoSuchElementException( getSchemaLocation() );
+			}
 		}
-		else if ( SCHEMA_LOCATION_V1_1_IDENTIFY.equals( getSchemaLocation() ) )
+		catch ( TransformerException e )
 		{
-			return getSingleString( "/oai11_Identify:Identify/oai11_Identify:protocolVersion" );
-		}
-		else
-		{
-			throw new NoSuchFieldException( getSchemaLocation() );
+			throw new IllegalStateException( e );
 		}
 	}
 

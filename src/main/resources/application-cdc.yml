@@ -8,51 +8,8 @@ logging:
       springframework: '@logging.level.org.springframework@'
     de.codecentric.boot.admin: DEBUG
     springfox.documentation.spring.web.readers.operation: WARN
-management:
-  endpoints:
-    web:
-      exposure:
-        include: "*"  
-  endpoint:
-    health:
-      show-details: ALWAYS
-  info:
-    git:
-      mode: full
-server:
-  port: '@server.port@'
-  servlet:
-    context-path: '@server.servlet.context-path@'
-  tomcat:
-    accesslog:
-      enabled: true
-spring:
-  security:
-    user:
-      name: admin
-      password: admin
-  devtools:
-    add-properties: false
-  http:
-    encoding:
-      charset: UTF-8
-      enabled: true
-      force: true
-  main:
-    banner-mode: 'off'
-  mail:
-    host: smtprelay.gesis.intra
-  boot:
-    admin:
-      client:
-        url: "http://localhost:1111" 
-        username: ${SPRING_BOOT_ADMIN_USER_NAME:admin}
-        password: ${SPRING_BOOT_ADMIN_USER_PASSWORD:admin}
-      auto-deregistration: true
-      auto-registration: true
-      period: 5000
 harvester:
-  metadataFormat: oai_ddi
+  metadataFormat: ddi
   dialectDefinitionName: gesisCMM-ddi122
   dir: '@documents@'
   recipient: john.shepherdson@essex.ac.uk,toni.sissala@tuni.fi
@@ -66,10 +23,35 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
+    - url: https://oai.ukdataservice.ac.uk:8443/oai/provider
+      metadataFormat: ddi
+    - url: https://kuha.sa.dk/v0/oai
+      metadataFormat: oai_ddi25
+    - url: http://194.117.18.18:6003/v0/oai
+      metadataFormat: oai_ddi25
+    - url: http://services.fsd.uta.fi/v0/oai
+      metadataFormat: oai_ddi25
+    - url: https://dbkapps.gesis.org/dbkoai3
+      metadataFormat: oai_ddi25
+    - url: http://147.213.4.44:6003/v0/oai
+      metadataFormat: oai_ddi25
+    - url: https://snd.gu.se/en/oai-pmh?set=discipline:social-science
+      metadataFormat: oai_ddi25
+    - url: https://easy.dans.knaw.nl/oai/
+      metadataFormat: oai_ddi25_en
+    - url: https://easy.dans.knaw.nl/oai/
+      metadataFormat: oai_ddi25_nl
     - url: https://data2.aussda.at/oai
+      metadataFormat: oai_ddi
     - url: https://nesstar2.adp.fdv.uni-lj.si/oai-pmh/
+      metadataFormat: oai_ddi
     - url: https://oai-pmh.nsd.no/oai-pmh/
+      metadataFormat: oai_ddi
     - url: http://nesstar.sciences-po.fr/oai-pmh/
+      metadataFormat: oai_ddi
     - url: http://harvester.sodanet.gr:8080/oai/request?set=CESSDA
+      metadataFormat: oai_ddi
     - url: http://nesstar.unidata.unimib.it/oai-pmh/
+      metadataFormat: oai_ddi
     - url: http://nesstar.soc.cas.cz/oai-pmh/
+      metadataFormat: oai_ddi
