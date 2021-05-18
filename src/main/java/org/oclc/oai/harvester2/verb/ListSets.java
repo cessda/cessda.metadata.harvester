@@ -55,16 +55,13 @@ public class ListSets extends HarvesterVerb
 	/**
 	 * Client-side ListSets verb constructor
 	 *
-	 * @param baseURL
-	 *            the baseURL of the server to be queried
-	 * @throws MalformedURLException
-	 *             the baseURL is bad
-	 * @throws IOException
-	 *             an I/O error occurred
+	 * @param baseURL the baseURL of the server to be queried
+	 * @throws MalformedURLException the baseURL is bad
+	 * @throws IOException           an I/O error occurred
 	 */
-	public ListSets( String baseURL, Integer timout ) throws IOException, SAXException, TransformerException
+	public ListSets( String baseURL, Integer timeout ) throws IOException, SAXException
 	{
-		super( getRequestURL( baseURL ), timout );
+		super( getRequestURL( baseURL ), timeout );
 	}
 
 	/**
@@ -96,18 +93,25 @@ public class ListSets extends HarvesterVerb
 	 */
 	public String getResumptionToken() throws TransformerException
 	{
-		if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
+		final String schemaLocation = getSchemaLocation();
+
+		if ( schemaLocation == null )
 		{
-			return getSingleString( "/oai20:OAI-PMH/oai20:ListSets/oai20:resumptionToken" );
-		}
-		else if ( SCHEMA_LOCATION_V1_1_LIST_SETS.equals( getSchemaLocation() ) )
-		{
-			return getSingleString( "/oai11_ListSets:ListSets/oai11_ListSets:resumptionToken" );
-		}
-		else
-		{
-			log.error( "{}-", getSchemaLocation() );
+			log.warn( "Could not get resumptionToken: Schema location unset" );
 			return "";
+		}
+
+		switch ( schemaLocation )
+		{
+			case SCHEMA_LOCATION_V2_0:
+				return getSingleString( "/oai20:OAI-PMH/oai20:ListSets/oai20:resumptionToken" );
+
+			case SCHEMA_LOCATION_V1_1_LIST_SETS:
+				return getSingleString( "/oai11_ListSets:ListSets/oai11_ListSets:resumptionToken" );
+
+			default:
+				log.warn( "Could not get resumptionToken: Schema {} didn't match: {}, {}", schemaLocation, SCHEMA_LOCATION_V2_0, SCHEMA_LOCATION_V1_1_LIST_SETS );
+				return "";
 		}
 	}
 }

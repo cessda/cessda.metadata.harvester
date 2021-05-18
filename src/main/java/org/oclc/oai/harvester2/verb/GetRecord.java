@@ -39,6 +39,7 @@ import org.xml.sax.SAXException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.NoSuchElementException;
 
 /**
  * This class represents an GetRecord response on either the server or on the client
@@ -60,36 +61,36 @@ public class GetRecord extends HarvesterVerb
 	 *             an I/O error occurred
 	 */
 	public GetRecord( String baseURL, String identifier, String metadataPrefix, Integer timeout )
-			throws IOException, SAXException, TransformerException
+			throws IOException, SAXException
 	{
 		super( getRequestURL( baseURL, identifier, metadataPrefix ), timeout );
 	}
 
 	/**
-	 * Get the oai:identifier fromthe oai:header
-	 * 
-	 * @return the oai:identifier as a String
-	 * @throws TransformerException
-	 *             a
-	 * @throws NoSuchFieldException
-	 *             b
+	 * Get the oai:identifier from the oai:header
+	 *
 	 * @return identifier
 	 */
 	public String getIdentifier()
-			throws TransformerException, NoSuchFieldException
 	{
-		if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
+		try
 		{
-			return getSingleString( "/oai20:OAI-PMH/oai20:GetRecord/oai20:record/oai20:header/oai20:identifier" );
+			if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
+			{
+				return getSingleString( "/oai20:OAI-PMH/oai20:GetRecord/oai20:record/oai20:header/oai20:identifier" );
+			}
+			else if ( SCHEMA_LOCATION_V1_1_GET_RECORD.equals( getSchemaLocation() ) )
+			{
+				return getSingleString( "/oai11_GetRecord:GetRecord/oai11_GetRecord:record/oai11_GetRecord:header/oai11_GetRecord:identifier" );
+			}
+			else
+			{
+				throw new NoSuchElementException( getSchemaLocation() );
+			}
 		}
-		else if ( SCHEMA_LOCATION_V1_1_GET_RECORD.equals( getSchemaLocation() ) )
+		catch ( TransformerException e )
 		{
-			return getSingleString(
-					"/oai11_GetRecord:GetRecord/oai11_GetRecord:record/oai11_GetRecord:header/oai11_GetRecord:identifier" );
-		}
-		else
-		{
-			throw new NoSuchFieldException( getSchemaLocation() );
+			throw new IllegalStateException( e );
 		}
 	}
 

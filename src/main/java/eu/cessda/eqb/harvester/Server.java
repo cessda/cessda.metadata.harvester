@@ -29,9 +29,12 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.annotation.PreDestroy;
@@ -61,7 +64,7 @@ public class Server implements CommandLineRunner
 {
 
     private static final Logger log = LoggerFactory.getLogger( Server.class );
-    private static final Logger hlog = LoggerFactory.getLogger( Server.class );
+    public static final String METADATA = "metadata";
 
     private final HarvesterConfiguration harvesterConfiguration;
     private final TransformerFactory factory;
@@ -107,29 +110,42 @@ public class Server implements CommandLineRunner
 
     private static String oaiBase( String u )
     {
-
-        if ( u.endsWith( "/" ) )
+        final int endIndex = u.indexOf( '?' );
+        if ( endIndex != -1 )
+        {
+            return u.substring( 0, endIndex );
+        }
+        else
         {
             return u;
         }
-        if ( u.contains( "?" ) )
-        {
-            u = u.substring( 0, u.indexOf( '?' ) );
-        }
-        return u;
     }
 
-    private static String shortened( String oaiUrl )
+    /**
+     * Returns the host portion of the URL string provided.
+     * The resulting string is encoded using {@link StandardCharsets#UTF_8}.
+     *
+     * @param oaiUrl the URL string.
+     * @return the {@link StandardCharsets#UTF_8} encoded host.
+     * @throws IllegalArgumentException if the given string is not a valid {@link URI}.
+     */
+    private static String shortened( String oaiUrl, String setspec )
     {
         try
         {
-            log.trace( oaiUrl );
-            return new URI( oaiUrl ).getHost().replace( ".", "_" ).replace( ":", "-" ).toLowerCase();
+            String indexName = new URI( oaiUrl ).getHost();
+            if ( setspec != null )
+            {
+                return URLEncoder.encode( indexName + "-" + setspec, StandardCharsets.UTF_8.name() );
+            }
+            else
+            {
+                return URLEncoder.encode( indexName, StandardCharsets.UTF_8.name() );
+            }
         }
-        catch (URISyntaxException e)
+        catch ( URISyntaxException | UnsupportedEncodingException e )
         {
-            log.error( e.getMessage(), e );
-            return "";
+            throw new IllegalArgumentException( e );
         }
     }
 
@@ -144,7 +160,7 @@ public class Server implements CommandLineRunner
         }
 
         incrementalIsRunning = true;
-        hlog.info( "Single harvesting starting from {}", harvesterConfiguration.getFrom().getSingle() );
+        log.info( "Single harvesting starting from {}", harvesterConfiguration.getFrom().getSingle() );
         try
         {
             runSingleHarvest( harvesterConfiguration.getFrom().getSingle(), positionInRepoList );
@@ -153,7 +169,7 @@ public class Server implements CommandLineRunner
         {
             incrementalIsRunning = false;
         }
-        hlog.info( "Single harvesting finished from {}", harvesterConfiguration.getFrom().getSingle() );
+        log.info( "Single harvesting finished from {}", harvesterConfiguration.getFrom().getSingle() );
         return "Single harvesting for " + positionInRepoList + "th repository started. See log section for details";
     }
 
@@ -178,11 +194,11 @@ public class Server implements CommandLineRunner
         {
             return;
         }
-        hlog.info( "Full harvest schedule: {}", harvesterConfiguration.getCron().getFull() );
-        hlog.info( "Incremental harvest schedule: {}", harvesterConfiguration.getCron().getIncremental() );
+        log.info( "Full harvest schedule: {}", harvesterConfiguration.getCron().getFull() );
+        log.info( "Incremental harvest schedule: {}", harvesterConfiguration.getCron().getIncremental() );
 
-        hlog.info( "Initial harvesting starting from {}", harvesterConfiguration.getFrom().getInitial() );
-        hlog.info( "Incremental harvesting will start with cron schedule {} from {}",
+        log.info( "Initial harvesting starting from {}", harvesterConfiguration.getFrom().getInitial() );
+        log.info( "Incremental harvesting will start with cron schedule {} from {}",
                 harvesterConfiguration.getCron().getIncremental(), harvesterConfiguration.getFrom().getIncremental() );
         try
         {
@@ -192,7 +208,7 @@ public class Server implements CommandLineRunner
         {
             incrementalIsRunning = false;
         }
-        hlog.info( "Initial harvesting finished from {}", harvesterConfiguration.getFrom().getInitial() );
+        log.info( "Initial harvesting finished from {}", harvesterConfiguration.getFrom().getInitial() );
     }
 
     /**
@@ -206,12 +222,12 @@ public class Server implements CommandLineRunner
         {
             return;
         }
-        hlog.info( "Full harvesting started from {}", harvesterConfiguration.getFrom().getFull() );
+        log.info( "Full harvesting started from {}", harvesterConfiguration.getFrom().getFull() );
         fullIsRunning = true;
         runHarvest( harvesterConfiguration.getFrom().getFull() );
-        hlog.info( "Full harvesting finished" );
+        log.info( "Full harvesting finished" );
         fullIsRunning = false;
-        hlog.info( "Full harvesting finished from {}", harvesterConfiguration.getFrom().getFull() );
+        log.info( "Full harvesting finished from {}", harvesterConfiguration.getFrom().getFull() );
     }
 
     /**
@@ -229,25 +245,25 @@ public class Server implements CommandLineRunner
             if ( !incrementalIsRunning )
             {
                 incrementalIsRunning = true;
-                hlog.info( "Incremental harvesting started from {}",
+                log.info( "Incremental harvesting started from {}",
                         harvesterConfiguration.getFrom().getIncremental() );
                 runHarvest( harvesterConfiguration.getFrom().getIncremental() );
-                hlog.info( "Incremental harvesting finished" );
+                log.info( "Incremental harvesting finished" );
 
                 msg = "Incremental harvesting finished from " + harvesterConfiguration.getFrom().getIncremental();
 
                 harvesterConfiguration.getFrom().setIncremental( newIncFrom );
-                hlog.info( "Next incremental harvest will start from {}", newIncFrom );
+                log.info( "Next incremental harvest will start from {}", newIncFrom );
             }
             else
             {
                 msg = "Incremental harvesting already running.";
             }
-            hlog.info( msg );
+            log.info( msg );
         }
         else
         {
-            hlog.info( "No incremental harvesting, as full harvesting is in progress." );
+            log.info( "No incremental harvesting, as full harvesting is in progress." );
             return;
         }
 
@@ -258,7 +274,7 @@ public class Server implements CommandLineRunner
     public void runSingleHarvest( String fromDate, Integer position )
     {
 
-        hlog.info( "Harvesting started from {} for repo {}", fromDate, position );
+        log.info( "Harvesting started from {} for repo {}", fromDate, position );
         try
         {
             var to = LocalDate.now().toString();
@@ -285,16 +301,13 @@ public class Server implements CommandLineRunner
                     baseUrl = baseUrl.substring( 0, baseUrl.indexOf( '#' ) );
                 }
                 log.trace( "{} {}", baseUrl, fromDate );
-                for ( String set : getSpecs( baseUrl ) )
-                {
-                    hlog.info( "Start to get  records for {} / {} from {}", baseUrl, set, fromDate );
-                    fetchDCRecords( oaiBase( baseUrl ), set, fromDate, to, mdFormat );
-                }
+            for ( String set : getSpecs( baseUrl ) )
+            {
+                harvestSet( baseUrl.toString(), set, fromDate, to, mdFormat );
             }
         }
-        catch (SecurityException | IllegalArgumentException e)
+        finally
         {
-            log.error( e.getMessage(), e );
             incrementalIsRunning = false;
         }
     }
@@ -302,29 +315,35 @@ public class Server implements CommandLineRunner
     private void runHarvest( String fromDate )
     {
 
-        hlog.info( "Harvesting started from {}", fromDate );
+        log.info( "Harvesting started from {}", fromDate );
 
         var to = LocalDate.now().toString();
 
         for ( Repo repo : harvesterConfiguration.getRepos() )
         {
-            String baseUrl = repo.getUrl();
-            if ( !baseUrl.trim().isEmpty() )
-            {
-                if ( baseUrl.contains( "#" ) )
-                {
-                    baseUrl = baseUrl.substring( 0, baseUrl.indexOf( '#' ) );
-                }
+            URI baseUrl = repo.getUrl();
 
-                Set<String> sets;
-                if ( repo.getSetName() != null )
+            Set<String> sets;
+            if ( repo.getSetName() != null && !repo.getSetName().isEmpty() )
+            {
+                sets = Collections.singleton( repo.getSetName() );
+            }
+            else if ( repo.discoverSets() )
+            {
+                sets = getSpecs( baseUrl );
+            }
+            else
+            {
+                // detect if the set is explicitly referenced
+                if ( baseUrl.getQuery().contains( "set=" ) )
                 {
-                    sets = Collections.singleton( repo.getSetName() );
+                    sets = Collections.singleton( baseUrl.getQuery().substring( baseUrl.getQuery().indexOf( "set=" ) + 4 ) );
                 }
                 else
                 {
-                    sets = getSpecs( baseUrl );
+                    sets = Collections.singleton( null );
                 }
+            }
 
                 final String mdFormat;
                 if ( repo.getMetadataFormat() != null )
@@ -337,262 +356,236 @@ public class Server implements CommandLineRunner
                             "Repository \"" + repo.getUrl() + "\" has no metadata format configured.\n" );
                 }
 
-                for ( String set : sets )
-                {
-                    hlog.info( "Start to get records for {} / {} from {}", baseUrl, set, fromDate );
-                    fetchDCRecords( oaiBase( baseUrl ), set, fromDate, to, mdFormat );
-                }
+            for ( String set : sets )
+            {
+                harvestSet( baseUrl.toString(), set, fromDate );
             }
         }
     }
 
-    private void fetchDCRecords( String repoBase, String setspec, String fromDate, String to, String mdFormat )
+    private void harvestSet( String baseUrl, String set, String fromDate )
     {
-        File f = new File( harvesterConfiguration.getDir() );
+        log.info( "Start to get records for {} / {} from {}", baseUrl, set, fromDate );
+        try
+        {
+            fetchDCRecords( oaiBase( baseUrl ), set, fromDate, to, mdFormat );
+        }
+        catch ( HarvesterFailedException e )
+        {
+            log.error( "Could not harvest {} / {}, {}", baseUrl, set, e.toString() );
+        }
+    }
+
+    private void fetchDCRecords( String repoBase, String setspec, String fromDate, String to, String mdFormat ) throws HarvesterFailedException
+    {
+
+        log.info( harvesterConfiguration.getDir() );
+        Path path = Paths.get( harvesterConfiguration.getDir() );
+
+        String indexName = shortened( repoBase, setspec );
+
+        final Path repositoryDirectory = path.resolve( indexName );
+        try
+        {
+            Files.createDirectories( repositoryDirectory );
+        }
+        catch ( IOException e )
+        {
+            throw new DirectoryCreationFailedException( repositoryDirectory, e );
+        }
 
         log.info( "Fetching records for repo {} and pmh set {}. Be patient, this can take hours.", repoBase, setspec );
 
-        var currentlyRetrievedSet = new ArrayList<String>();
-        getIdentifiersForSet( repoBase, setspec, null, currentlyRetrievedSet, mdFormat, fromDate, to, mdFormat );
-        writeToLocalFileSystem( currentlyRetrievedSet, repoBase, setspec, f.getPath(), mdFormat );
+        final List<String> currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, mdFormat, fromDate );
+
+        writeToLocalFileSystem( currentlyRetrievedSet, repoBase, repositoryDirectory );
 
         log.info( "retrieved files: {}", currentlyRetrievedSet.size() );
         log.info( "\tSET\t{}\tsize:\t{}\tURL\t{}", setspec, currentlyRetrievedSet.size(), repoBase );
     }
 
-    private void getIdentifiersForSet(
-            String url,
-            String set,
-            String resumptionToken,
-            List<String> records,
-            String overwrite,
-            String fromDate,
+    private List<String> getIdentifiersForSet( String url, String set, String overwrite, String fromDate,
             String to,
             String mdFormat
-    )
+    ) throws HarvesterFailedException
     {
 
         final String oaiBaseUrl = oaiBase( url );
-        log.info( "URL: {}, set: {}, list size: {}, restoken {}", url, set, records.size(), resumptionToken );
         try
         {
-            log.trace( "recurse:\turl {} set {} token {}", url, set, resumptionToken );
-            ListIdentifiers li;
-            if ( resumptionToken != null )
-            {
-                log.trace( url );
-                li = new ListIdentifiers( oaiBaseUrl, resumptionToken, harvesterConfiguration.getTimeout() );
-            }
-            else
-            {
-                // TODO Due to changes by setting set not to all in an exception I need to check for empty set.
-                // set must be null or set = "all", if in configuration set is not set....
-                if ( set.compareTo( url ) == 0 || set.isEmpty() )
-                {
-                    set = null;
-                }
-                log.debug( "From {}, until {}, {}, {}, {}", fromDate, to, oaiBaseUrl, set, mdFormat );
-                li = new ListIdentifiers( oaiBaseUrl, fromDate, to, set,
-                        Optional.ofNullable( overwrite ).orElse( mdFormat ), harvesterConfiguration.getTimeout() );
-            }
-            log.trace( li.getRequestURL() );
-            Document identifiers = li.getDocument();
+            String resumptionToken = null;
+            final ArrayList<String> records = new ArrayList<>();
 
-            // add to list of records to fetch
-            NodeList identifiersIDs = identifiers.getElementsByTagName( "identifier" );
-            IntStream.range( 0, identifiersIDs.getLength() ).mapToObj( identifiersIDs::item )
-                    .map( Node::getTextContent )
-                    .filter( Objects::nonNull )
-                    .forEach( records::add );
-
-            // need to recurse?
-            NodeList resumptionTokenReq = identifiers.getElementsByTagName( "resumptionToken" );
-            if ( resumptionTokenReq.getLength() > 0 )
+            do
             {
-                Node resumptionTokenNode = resumptionTokenReq.item( 0 );
-                if ( !resumptionTokenNode.getTextContent().isEmpty() )
+                log.debug( "URL: {}, set: {}, list size: {}", url, set, records.size() );
+
+                ListIdentifiers li;
+                if ( resumptionToken == null )
                 {
-                    String rTok = resumptionTokenNode.getTextContent();
-                    getIdentifiersForSet( url, set, rTok, records, null, fromDate, to, mdFormat );
-                    // need to interrupt recursion?
+                    li = new ListIdentifiers( oaiBaseUrl, fromDate, null, set,
+                            Optional.ofNullable( overwrite ).orElse( mdFormat ), harvesterConfiguration.getTimeout() );
                 }
-                if ( resumptionTokenNode.hasAttributes() && resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" ) != null )
+                else
                 {
-                    long itemsInCurrentSet = Long.parseLong(
-                            resumptionTokenNode.getAttributes().getNamedItem( "completeListSize" ).getTextContent()
-                    );
-                    log.info( "Items in current set: {}", itemsInCurrentSet );
+                    log.trace( "recurse: url {}\tset {}\ttoken {}", url, set, resumptionToken );
+                    li = new ListIdentifiers( oaiBaseUrl, resumptionToken, harvesterConfiguration.getTimeout() );
+                }
+
+                Document identifiers = li.getDocument();
+
+                // add to list of records to fetch
+                NodeList identifiersIDs = identifiers.getElementsByTagName( "identifier" );
+                for ( int i = 0; i < identifiersIDs.getLength(); i++ )
+                {
+                    String identifier = identifiersIDs.item( i ).getTextContent()
+                    ;
+                    records.add( identifier );
+                }
+
+                // need to continue looping?
+                NodeList resumptionTokenReq = identifiers.getElementsByTagName( "resumptionToken" );
+                if ( resumptionTokenReq.getLength() > 0 && !resumptionTokenReq.item( 0 ).getTextContent().isEmpty() )
+                {
+                    resumptionToken = resumptionTokenReq.item( 0 ).getTextContent();
+                }
+                else
+                {
+                    resumptionToken = null;
                 }
             }
+            while ( resumptionToken != null );
+
+            return records;
         }
-        catch (IOException | SAXException | DOMException | TransformerException | NumberFormatException e)
+        catch ( IOException | SAXException e )
         {
-            log.error( "Fetching identifiers failed: {}", e.toString() );
+            throw new HarvesterFailedException( "Fetching identifiers failed for " + oaiBaseUrl + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix="
+                    + mdFormat + "&from=" + fromDate + ": " + e.toString(), e );
         }
-        log.trace( "Records to fetch : {}", records.size() );
     }
 
-    protected void writeToLocalFileSystem( Collection<String> records, String oaiUrl, String specId, String path, String mdFormat )
+    private void writeToLocalFileSystem( Collection<String> records, String oaiUrl, Path repositoryDirectory )
     {
-
-        String indexName = shortened( oaiUrl ) + "-" + specId;
-        Path dest = Paths.get( path, indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ) );
-        try
+        for ( String currentRecord : records )
         {
-            Files.createDirectories( dest );
+            String fileName = currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName() + ".xml";
 
-            records.stream().map( String::trim ).forEach( currentRecord ->
+            try
             {
-
-                String fname = (indexName + "__" + currentRecord + "_"
-                        + harvesterConfiguration.getDialectDefinitionName()
-                        + ".xml").replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" );
-
-                try
-                {
-                    GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration
+                log.debug( "Harvesting {} from {}", currentRecord, oaiUrl );
+                GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration
                             .getTimeout() );
-                    Path fdest = Paths.get( path,
-                            indexName.replace( ":", "-" ).replace( "\\", "-" ).replace( "/", "-" ), fname );
-                    if ( pmhRecord.getDocument().getElementsByTagName( "metadata" ).getLength() > 0 )
-                    {
-                        final DOMSource source;
 
-                        // remove envelope?
-                        if ( harvesterConfiguration.isRemoveOAIEnvelope() )
-                        {
-                            NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( "metadata" )
+                final NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( METADATA );
+                if ( metadataElements.getLength() > 0 )
+                {
+                    final DOMSource source;
+
+                    // remove envelope?
+                    if ( harvesterConfiguration.isRemoveOAIEnvelope() )
+                    {
+                        NodeList metadataChildNodes = metadataElements
                                     .item( 0 )
                                     .getChildNodes();
-                            source = IntStream.range( 0, metadataElements.getLength() )
-                                    .mapToObj( metadataElements::item )
+                            source = IntStream.range( 0, metadataChildNodes.getLength() )
+                                    .mapToObj( metadataChildNodes::item )
                                     .filter( Element.class::isInstance )
                                     .map( DOMSource::new )
-                                    .findAny().orElseThrow( () -> new NoSuchElementException(
-                                            "No elements with the tag name 'metadata' were found" ) );
-                        }
-                        else
-                        {
-                            source = new DOMSource( pmhRecord.getDocument() );
-                        }
-
-                        try ( OutputStream fOutputStream = Files.newOutputStream( fdest ) )
-                        {
-                            factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
-                        }
+                                .findAny().orElseThrow( () ->
+                                        new NoSuchElementException( "No elements with the tag name '" + METADATA + "' were found" )
+                                );
                     }
                     else
                     {
-                        NodeList errorList = pmhRecord.getDocument().getElementsByTagName( "error" );
-                        if ( errorList.getLength() == 0 )
-                        {
-                            NodeList header = pmhRecord.getDocument().getElementsByTagName( "header" );
-                            Node status = header.item( 0 ).getAttributes().getNamedItem( "status" );
-                        }
+                        source = new DOMSource( pmhRecord.getDocument() );
+                    }
 
+                    Path fdest = repositoryDirectory.resolve( URLEncoder.encode( fileName, StandardCharsets.UTF_8.name() ) );
+                    try ( OutputStream fOutputStream = Files.newOutputStream( fdest ) )
+                    {
+                        log.trace( "Writing to {}", fdest );
+                        factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
                     }
                 }
-                catch ( IOException | NoSuchElementException | SAXException | TransformerException e1 )
-                {
-                    log.error( "Failed to harvest record {}: {}", currentRecord, e1.getMessage() );
-                }
-            } );
-        }
-        catch (IOException e)
-        {
-            log.error( "{}", oaiUrl, e );
-        }
-    }
-
-    private static void addSet( String url, Set<String> unfoldedSets )
-    {
-        if ( unfoldedSets.add( url ) )
-        {
-            log.info( "Set: {}", url );
+            }
+            catch ( TransformerConfigurationException e )
+            {
+                // This is not recoverable
+                throw new IllegalStateException( e );
+            }
+            catch ( IOException | SAXException | TransformerException e1 )
+            {
+                log.error( "Failed to harvest record {}: {}", currentRecord.trim(), e1.toString() );
+            }
         }
     }
 
-    Set<String> getSpecs( String url )
+    private Set<String> getSpecs( URI url )
     {
-
-        HashSet<String> unfoldedSets = new HashSet<>();
-        // skip if set is explicitly referenced
-        if ( url.isEmpty() )
-        {
-            return unfoldedSets;
-        }
-        if ( url.contains( "set=" ) )
-        {
-            unfoldedSets.add( url.substring( url.indexOf( "set=" ) + 4 ) );
-            return unfoldedSets;
-        }
         try
         {
-            getSetStrings( url, unfoldedSets );
-        }
-        catch (IOException | TransformerException | SAXException e)
-        {
-            log.error( "Repository has no sets defined / no response: set set=all", e );
-            // set set=all in case of no sets found
-            addSet( "all", unfoldedSets );
+            final Set<String> unfoldedSets = getSetStrings( url );
+            log.info( "No. of sets: {}", unfoldedSets.size() );
             return unfoldedSets;
         }
-        log.info( "No. of sets: {}", unfoldedSets.size() );
-        return unfoldedSets;
+        catch ( IOException | TransformerException | SAXException e )
+        {
+            log.warn( "Repository has no sets defined / no response: set set=all", e );
+            // set set=all in case of no sets found
+            return Collections.singleton( null );
+        }
     }
 
-    public void getSetStrings( String url, Set<String> unfoldedSets )
+    /**
+     * Retrieves the sets from the OAI-PMH repository using the ListSets verb.
+     *
+     * @param url the URL of the repository.
+     * @return a {@link Set} containing all of the sets in the remote repository.
+     */
+    public Set<String> getSetStrings( final URI url )
             throws IOException, SAXException, TransformerException
     {
-        try
+        HashSet<String> unfoldedSets = new HashSet<>();
+
+        URI urlToSend = url;
+        String resumptionToken;
+        do
         {
-            StringBuilder urlBuilder = new StringBuilder( url );
-            ListSets ls;
-            do
+            ListSets ls = new ListSets( urlToSend.toString(), harvesterConfiguration.getTimeout() );
+
+            Document document = ls.getDocument();
+
+            NodeList nl = document.getElementsByTagName( "setSpec" );
+
+            for ( int i = 0; i < nl.getLength(); i++ )
             {
-                if ( log.isWarnEnabled() )
-                {
-                    log.warn( urlBuilder.toString() );
-                }
-                ls = new ListSets( urlBuilder.toString().trim(), harvesterConfiguration.getTimeout() );
+                unfoldedSets.add( nl.item( i ).getTextContent() );
+            }
 
-                Document document = ls.getDocument();
+            if ( ls.toString().contains( "error" ) )
+            {
+                log.error( "Invalid request {}", ls );
+            }
 
-                NodeList nl = document.getElementsByTagName( "setSpec" );
-
-                for ( int i = 0; i <= nl.getLength() - 1; i++ )
-                {
-                    String setSpec = nl.item( i ).getTextContent();
-                    addSet( setSpec, unfoldedSets );
-                }
-                if ( ls.toString().contains( "error" ) )
-                {
-                    log.error( "Invalid request {}", ls );
-
-                }
-                if ( !ls.getResumptionToken().isEmpty() )
-                {
-                    log.info( ls.getResumptionToken() );
-                    urlBuilder.append( "?verb=ListSets&resumptionToken=" ).append( ls.getResumptionToken() );
-                    if ( log.isInfoEnabled() )
-                    {
-                        log.info( urlBuilder.toString() );
-                    }
-                }
-            } while (unfoldedSets.size() % 50 == 0 && !ls.getResumptionToken().isEmpty()
-                    && !urlBuilder.toString().trim().isEmpty());
+            resumptionToken = ls.getResumptionToken();
+            if ( !resumptionToken.isEmpty() )
+            {
+                log.info( resumptionToken );
+                urlToSend = URI.create( url + "?verb=ListSets&resumptionToken=" + resumptionToken);
+            }
         }
+        while ( !resumptionToken.isEmpty() );
 
-        catch (SocketTimeoutException ste)
-        {
-            log.error( "Request to oai endpoint timed out {}", harvesterConfiguration.getTimeout() );
-        }
+        return unfoldedSets;
     }
 
     @PreDestroy
     void printConfig()
     {
         if ( log.isInfoEnabled() )
-            hlog.info( harvesterConfiguration.toString() );
+        {
+            log.info( harvesterConfiguration.toString() );
+        }
     }
 }
