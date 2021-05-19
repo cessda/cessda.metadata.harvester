@@ -55,6 +55,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -83,7 +85,6 @@ public class Server implements CommandLineRunner
     public static void main( String[] args )
     {
         SpringApplication.run( Server.class, args );
-        log.info( "Harvester running. " );
     }
 
     @Override
@@ -312,6 +313,9 @@ public class Server implements CommandLineRunner
 
         log.info( "Harvesting started from {}", fromDate );
 
+        var executor = Executors.newFixedThreadPool(harvesterConfiguration.getRepos().size());
+
+        var futures = new ArrayList<CompletableFuture<Void>>();
         for ( Repo repo : harvesterConfiguration.getRepos() )
         {
             URI baseUrl = repo.getUrl();
@@ -325,15 +329,15 @@ public class Server implements CommandLineRunner
             }
             else
             {
-                throw new IllegalArgumentException(
-                        "Repository \"" + repo.getUrl() + "\" has no metadata format configured.\n" );
+                throw new IllegalArgumentException( "Repository \"" + repo.getUrl() + "\" has no metadata format configured.\n" );
             }
 
-            for ( String set : sets )
-            {
-                harvestSet( baseUrl.toString(), set, fromDate, mdFormat );
-            }
+            futures.add(
+                    CompletableFuture.runAsync( () -> sets.forEach( set -> harvestSet( baseUrl.toString(), set, fromDate, mdFormat ) ), executor )
+            );
         }
+        futures.forEach( CompletableFuture::join );
+        executor.shutdown();
     }
 
     /**
@@ -374,16 +378,24 @@ public class Server implements CommandLineRunner
         }
     }
 
+    /**
+     * Harvest a specific set from a repository.
+     * @param baseUrl the repository to harvest.
+     * @param set the set to harvest, set to {@code null} to disable set based harvesting.
+     * @param fromDate the date to harvest from.
+     * @param mdFormat the metadata format to harvest.
+     */
     private void harvestSet( String baseUrl, String set, String fromDate, String mdFormat )
     {
-        log.info( "Start to get records for {} / {} from {}", baseUrl, set, fromDate );
+        log.info( "Fetching records for repository: {}, set: {} from: {}", baseUrl, set, fromDate );
         try
         {
-            fetchDCRecords( oaiBase( baseUrl ), set, fromDate, mdFormat );
+            var oaiBase = oaiBase( baseUrl );
+            fetchDCRecords( oaiBase, set, fromDate, mdFormat );
         }
         catch ( HarvesterFailedException e )
         {
-            log.error( "Could not harvest {} / {}, {}", baseUrl, set, e.toString() );
+            log.error( "Could not harvest repository: {}, set: {}: {}", baseUrl, set, e.toString() );
         }
     }
 
@@ -404,19 +416,17 @@ public class Server implements CommandLineRunner
             throw new DirectoryCreationFailedException( repositoryDirectory, e );
         }
 
-        log.info( "Fetching records for repo {} and pmh set {}.", repoBase, setspec );
+        log.info( "Fetching records for repository {} and pmh set {}.", repoBase, setspec );
 
         var currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, fromDate, mdFormat );
 
         writeToLocalFileSystem( currentlyRetrievedSet, repoBase, repositoryDirectory, mdFormat );
 
-        log.info( "Retrieved {} files", currentlyRetrievedSet.size() );
+        log.info( "Retrieved {} files from repository {}", currentlyRetrievedSet.size(), repoBase );
     }
 
-    private List<String> getIdentifiersForSet( String url, String set, String fromDate, String mdFormat ) throws HarvesterFailedException
+    private List<String> getIdentifiersForSet( String oaiBaseUrl, String set, String fromDate, String mdFormat ) throws HarvesterFailedException
     {
-
-        final String oaiBaseUrl = oaiBase( url );
         try
         {
             String resumptionToken = null;
@@ -424,7 +434,7 @@ public class Server implements CommandLineRunner
 
             do
             {
-                log.debug( "URL: {}, set: {}, list size: {}", url, set, records.size() );
+                log.debug( "URL: {}, set: {}, list size: {}", oaiBaseUrl, set, records.size() );
 
                 ListIdentifiers li;
                 if ( resumptionToken == null )
@@ -433,7 +443,7 @@ public class Server implements CommandLineRunner
                 }
                 else
                 {
-                    log.trace( "recurse: url {}\ttoken: {}", url, resumptionToken );
+                    log.trace( "recurse: url {}\ttoken: {}", oaiBaseUrl, resumptionToken );
                     li = new ListIdentifiers( oaiBaseUrl, resumptionToken, harvesterConfiguration.getTimeout() );
                 }
 
@@ -464,8 +474,7 @@ public class Server implements CommandLineRunner
         }
         catch ( IOException | SAXException e )
         {
-            throw new HarvesterFailedException( "Fetching identifiers failed for " + oaiBaseUrl + "?verb=ListRecords" + "&set=" + set + "&metadataPrefix="
-                    + mdFormat + "&from=" + fromDate + ": " + e.toString(), e );
+            throw new HarvesterFailedException( "Fetching identifiers failed for " + oaiBaseUrl + ": " + e.toString(), e );
         }
     }
 
