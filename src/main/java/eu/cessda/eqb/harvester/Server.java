@@ -32,19 +32,18 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.annotation.PreDestroy;
 import javax.xml.XMLConstants;
+import javax.xml.transform.Source;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -52,11 +51,9 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @EnableConfigurationProperties
 @SpringBootApplication
@@ -64,7 +61,6 @@ public class Server implements CommandLineRunner
 {
 
     private static final Logger log = LoggerFactory.getLogger( Server.class );
-    public static final String METADATA = "metadata";
 
     private final HarvesterConfiguration harvesterConfiguration;
     private final TransformerFactory factory;
@@ -194,12 +190,9 @@ public class Server implements CommandLineRunner
         {
             return;
         }
-        log.info( "Full harvest schedule: {}", harvesterConfiguration.getCron().getFull() );
-        log.info( "Incremental harvest schedule: {}", harvesterConfiguration.getCron().getIncremental() );
 
         log.info( "Initial harvesting starting from {}", harvesterConfiguration.getFrom().getInitial() );
-        log.info( "Incremental harvesting will start with cron schedule {} from {}",
-                harvesterConfiguration.getCron().getIncremental(), harvesterConfiguration.getFrom().getIncremental() );
+
         try
         {
             runHarvest( harvesterConfiguration.getFrom().getInitial() );
@@ -314,7 +307,7 @@ public class Server implements CommandLineRunner
 
         for ( Repo repo : harvesterConfiguration.getRepos() )
         {
-            URI baseUrl = repo.getUrl();
+            log.info( "Harvesting repository {}", repo );
 
             Set<String> sets = discoverSets( repo );
 
@@ -325,13 +318,12 @@ public class Server implements CommandLineRunner
             }
             else
             {
-                throw new IllegalArgumentException(
-                        "Repository \"" + repo.getUrl() + "\" has no metadata format configured.\n" );
+                throw new IllegalArgumentException( "Repository \"" + repo.getUrl() + "\" has no metadata format configured.\n" );
             }
 
             for ( String set : sets )
             {
-                harvestSet( baseUrl.toString(), set, fromDate, mdFormat );
+                harvestSet( repo.getUrl().toString(), set, fromDate, mdFormat );
             }
         }
     }
@@ -389,11 +381,10 @@ public class Server implements CommandLineRunner
 
     private void fetchDCRecords( String repoBase, String setspec, String fromDate, String mdFormat ) throws HarvesterFailedException
     {
-        var path = Paths.get( harvesterConfiguration.getDir() );
 
         String indexName = shortened( repoBase, setspec );
 
-        final var repositoryDirectory = path.resolve( indexName );
+        final var repositoryDirectory = harvesterConfiguration.getDir().resolve( indexName );
         try
         {
             log.debug( "Creating destination directory: {}", repositoryDirectory );
@@ -469,48 +460,46 @@ public class Server implements CommandLineRunner
         }
     }
 
-    private void writeToLocalFileSystem( Collection<String> records, String oaiUrl, Path repositoryDirectory, String mdFormat )
+    private void writeToLocalFileSystem( Collection<String> records, String oaiUrl, Path repositoryDirectory, String mdFormat ) throws DirectoryCreationFailedException
     {
-        for ( String currentRecord : records )
+        var unwrappedOutputDirectory = repositoryDirectory.resolve( "unwrapped" );
+        var wrappedOutputDirectory = repositoryDirectory.resolve( "wrapped" );
+        try
         {
-            String fileName = currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName() + ".xml";
+            log.debug( "Creating destination directory: {}", repositoryDirectory );
+            Files.createDirectories( unwrappedOutputDirectory );
+            Files.createDirectories( wrappedOutputDirectory );
+        }
+        catch ( IOException e )
+        {
+            throw new DirectoryCreationFailedException( repositoryDirectory, e );
+        }
+
+        for ( var currentRecord : records )
+        {
+            var fileName = URLEncoder.encode( currentRecord + "_" + mdFormat + ".xml", StandardCharsets.UTF_8 );
 
             try
             {
                 log.debug( "Harvesting {} from {}", currentRecord, oaiUrl );
-                GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration
-                        .getTimeout() );
+                var pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout() );
 
-                final NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( METADATA );
-                if ( metadataElements.getLength() > 0 )
+                // Remove envelope
+                if (harvesterConfiguration.removeOAIEnvelope())
                 {
-                    final DOMSource source;
+                    var metadata = pmhRecord.getMetadata();
+                    if (metadata.isPresent())
+                    {
+                        var source = new DOMSource( metadata.orElseThrow() );
+                        writeDomSource( source, unwrappedOutputDirectory.resolve( fileName ) );
+                    }
+                }
 
-                    // remove envelope?
-                    if ( harvesterConfiguration.isRemoveOAIEnvelope() )
-                    {
-                        NodeList metadataChildNodes = metadataElements
-                                    .item( 0 )
-                                    .getChildNodes();
-                            source = IntStream.range( 0, metadataChildNodes.getLength() )
-                                    .mapToObj( metadataChildNodes::item )
-                                    .filter( Element.class::isInstance )
-                                    .map( DOMSource::new )
-                                .findAny().orElseThrow( () ->
-                                        new NoSuchElementException( "No elements with the tag name '" + METADATA + "' were found" )
-                                );
-                    }
-                    else
-                    {
-                        source = new DOMSource( pmhRecord.getDocument() );
-                    }
-
-                    Path fdest = repositoryDirectory.resolve( URLEncoder.encode( fileName, StandardCharsets.UTF_8.name() ) );
-                    try ( OutputStream fOutputStream = Files.newOutputStream( fdest ) )
-                    {
-                        log.trace( "Writing to {}", fdest );
-                        factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
-                    }
+                // Keep envelope
+                if (harvesterConfiguration.keepOAIEnvelope())
+                {
+                    var source = new DOMSource( pmhRecord.getDocument() );
+                    writeDomSource( source, wrappedOutputDirectory.resolve( fileName ) );
                 }
             }
             catch ( TransformerConfigurationException e )
@@ -522,6 +511,20 @@ public class Server implements CommandLineRunner
             {
                 log.error( "Failed to harvest record {}: {}", currentRecord.trim(), e1.toString() );
             }
+        }
+    }
+
+    /**
+     * Writes the given {@link Source} to the specified {@link Path}.
+     * @throws IOException if an IO error occurs while writing the file.
+     * @throws TransformerException if an unrecoverable error occurs whilst writing the source.
+     */
+    private void writeDomSource( Source source, Path fdest ) throws IOException, TransformerException
+    {
+        try ( var fOutputStream = Files.newOutputStream( fdest ) )
+        {
+            log.trace( "Writing to {}", fdest );
+            factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
         }
     }
 

@@ -22,6 +22,7 @@ package eu.cessda.eqb.harvester;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -43,26 +44,15 @@ import java.util.Objects;
 @ConfigurationProperties( prefix = "harvester" )
 class HarvesterConfiguration
 {
-    private String dir = System.getProperty( "java.io.tmpdir" );
+    private Path dir = Path.of(System.getProperty( "java.io.tmpdir" ));
     private String recipient = null;
-    private String dialectDefinitionName = null;
+    private boolean keepOAIEnvelope = true;
     private boolean removeOAIEnvelope = false;
     private List<Repo> repos = new ArrayList<>();
-    private Cron cron;
     private From from;
     private int timeout;
 
-    public String getDialectDefinitionName()
-    {
-        return dialectDefinitionName;
-    }
-
-    public void setDialectDefinitionName( String dialectDefinitionName )
-    {
-        this.dialectDefinitionName = dialectDefinitionName;
-    }
-
-    public boolean isRemoveOAIEnvelope()
+    public boolean removeOAIEnvelope()
     {
         return removeOAIEnvelope;
     }
@@ -70,6 +60,16 @@ class HarvesterConfiguration
     public void setRemoveOAIEnvelope( boolean removeOAIEnvelope )
     {
         this.removeOAIEnvelope = removeOAIEnvelope;
+    }
+
+    public boolean keepOAIEnvelope()
+    {
+        return keepOAIEnvelope;
+    }
+
+    public void setKeepOAIEnvelope( boolean keepOAIEnvelope )
+    {
+        this.keepOAIEnvelope = keepOAIEnvelope;
     }
 
     public String getRecipient()
@@ -82,12 +82,12 @@ class HarvesterConfiguration
         this.recipient = recipient;
     }
 
-    public String getDir()
+    public Path getDir()
     {
         return dir;
     }
 
-    public void setDir( String dir )
+    public void setDir( Path dir )
     {
         this.dir = dir;
     }
@@ -100,16 +100,6 @@ class HarvesterConfiguration
     public void setRepos( List<Repo> repos )
     {
         this.repos = repos;
-    }
-
-    public Cron getCron()
-    {
-        return cron;
-    }
-
-    public void setCron( Cron cron )
-    {
-        this.cron = cron;
     }
 
     public From getFrom()
@@ -138,30 +128,27 @@ class HarvesterConfiguration
         if ( this == o ) return true;
         if ( o == null || getClass() != o.getClass() ) return false;
         HarvesterConfiguration that = (HarvesterConfiguration) o;
-        return removeOAIEnvelope == that.removeOAIEnvelope && Objects.equals( dir, that.dir ) &&
+        return keepOAIEnvelope == that.keepOAIEnvelope && removeOAIEnvelope == that.removeOAIEnvelope &&
+                timeout == that.timeout && Objects.equals( dir, that.dir ) &&
                 Objects.equals( recipient, that.recipient ) &&
-                Objects.equals( dialectDefinitionName, that.dialectDefinitionName ) &&
-                Objects.equals( repos, that.repos ) && Objects.equals( cron, that.cron ) &&
-                Objects.equals( from, that.from ) && Objects.equals( timeout, that.timeout );
+                Objects.equals( repos, that.repos ) && Objects.equals( from, that.from );
     }
 
     @Override
     public int hashCode()
     {
-        return Objects
-                .hash( dir, recipient, dialectDefinitionName, removeOAIEnvelope, repos, cron, from, timeout );
+        return Objects.hash( dir, recipient, keepOAIEnvelope, removeOAIEnvelope, repos, from, timeout );
     }
 
     @Override
     public String toString()
     {
         return "HarvesterConfiguration{" +
-                "dir='" + dir + '\'' +
+                "dir=" + dir +
                 ", recipient='" + recipient + '\'' +
-                ", dialectDefinitionName='" + dialectDefinitionName + '\'' +
+                ", keepOAIEnvelope=" + keepOAIEnvelope +
                 ", removeOAIEnvelope=" + removeOAIEnvelope +
                 ", repos=" + repos +
-                ", cron=" + cron +
                 ", from=" + from +
                 ", timeout=" + timeout +
                 '}';
@@ -242,54 +229,4 @@ class HarvesterConfiguration
                     '}';
         }
     }
-
-    public static class Cron
-    {
-
-        private String incremental;
-
-        private String full;
-
-        public String getIncremental()
-        {
-            return incremental;
-        }
-
-        public void setIncremental( String incremental )
-        {
-            this.incremental = incremental;
-        }
-
-        public String getFull()
-        {
-            return full;
-        }
-
-        public void setFull( String full )
-        {
-            this.full = full;
-        }
-
-        @Override
-        public boolean equals( Object o )
-        {
-            if ( this == o ) return true;
-            if ( o == null || getClass() != o.getClass() ) return false;
-            Cron cron = (Cron) o;
-            return Objects.equals( incremental, cron.incremental ) && Objects.equals( full, cron.full );
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Objects.hash( incremental, full );
-        }
-
-        @Override
-        public String toString()
-        {
-            return "Cron [incremental=" + incremental + ", full=" + full + "]";
-        }
-    }
-
 }

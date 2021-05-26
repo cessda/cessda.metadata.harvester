@@ -9,6 +9,7 @@ import org.springframework.test.context.TestPropertySource;
 import javax.xml.transform.TransformerConfigurationException;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
@@ -35,7 +36,7 @@ public class EQBHarvestingServiceTest
 	public EQBHarvestingServiceTest() throws TransformerConfigurationException
 	{
 		var harvesterConfiguration = new HarvesterConfiguration();
-		harvesterConfiguration.setDir( "data2" );
+		harvesterConfiguration.setDir( Path.of("data2") );
 		harvesterConfiguration.setFrom( new HarvesterConfiguration.From() );
 		harvesterConfiguration.getFrom().setSingle( "2020-12-08" );
 		var repo = new Repo();

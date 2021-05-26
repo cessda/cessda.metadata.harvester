@@ -14,6 +14,8 @@ harvester:
   dir: '@documents@'
   recipient: john.shepherdson@essex.ac.uk,toni.sissala@tuni.fi
   timeout: 100
+  keepOAIEnvelope: true
+  removeOAIEnvelope: true
   from:
     single: '1800-01-01'
     initial: '0001-01-01'

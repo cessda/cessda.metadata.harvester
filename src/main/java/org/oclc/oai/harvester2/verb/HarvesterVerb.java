@@ -76,6 +76,7 @@ public abstract class HarvesterVerb
 	private static final Logger log = LoggerFactory.getLogger( HarvesterVerb.class );
 
 	/* Primary OAI namespaces */
+	protected static final String OAI_2_0_NAMESPACE = "http://www.openarchives.org/OAI/2.0/";
 	public static final String SCHEMA_LOCATION_V2_0 = "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd";
 	public static final String SCHEMA_LOCATION_V1_1_GET_RECORD = "http://www.openarchives.org/OAI/1.1/OAI_GetRecord http://www.openarchives.org/OAI/1.1/OAI_GetRecord.xsd";
 	public static final String SCHEMA_LOCATION_V1_1_IDENTIFY = "http://www.openarchives.org/OAI/1.1/OAI_Identify http://www.openarchives.org/OAI/1.1/OAI_Identify.xsd";
@@ -121,8 +122,7 @@ public abstract class HarvesterVerb
 					"http://www.oclc.org/research/software/oai/harvester" );
 			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:xsi",
 					"http://www.w3.org/2001/XMLSchema-instance" );
-			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai20",
-					"http://www.openarchives.org/OAI/2.0/" );
+			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai20", OAI_2_0_NAMESPACE );
 			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_GetRecord",
 					"http://www.openarchives.org/OAI/1.1/OAI_GetRecord" );
 			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_Identify",
@@ -311,9 +311,7 @@ public abstract class HarvesterVerb
 	}
 
 	/**
-	 * Get the OAI request URL for this response
-	 *
-	 * @return the OAI request URL as a String
+	 * Get the OAI request URL for this response.
 	 */
 	public URI getRequestURL()
 	{
