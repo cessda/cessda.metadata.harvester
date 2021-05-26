@@ -50,7 +50,7 @@ class HarvesterConfiguration
     private boolean removeOAIEnvelope = false;
     private List<Repo> repos = new ArrayList<>();
     private From from;
-    private int timeout;
+    private int timeout = 30;
 
     public boolean removeOAIEnvelope()
     {

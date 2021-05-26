@@ -197,6 +197,8 @@ public abstract class HarvesterVerb
 		int responseCode;
 		int retries = 0;
 
+		log.debug( "URL: {}, Timeout : {} seconds", requestURL, timeout );
+
 		while ( true )
 		{
 			con = (HttpURLConnection) requestURL.openConnection();
@@ -204,7 +206,6 @@ public abstract class HarvesterVerb
 			con.setRequestProperty( "Accept-Encoding", "compress, gzip, identity" );
 
 			// TK added default timeout for dataverses taking too long to respond / stall
-			log.trace( "Timeout : {} seconds", timeout );
 			con.setConnectTimeout( timeout * 1000 );
 			con.setReadTimeout( timeout * 1000 );
 
@@ -293,21 +294,7 @@ public abstract class HarvesterVerb
 	 */
 	public NodeList getErrors()
 	{
-		try
-		{
-			if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
-			{
-				return XPathAPI.selectNodeList( getDocument(), "/oai20:OAI-PMH/oai20:error", namespaceElement );
-			}
-			else
-			{
-				return EMPTY_NODE_LIST;
-			}
-		}
-		catch ( TransformerException e )
-		{
-			throw new IllegalStateException( e );
-		}
+		return doc.getElementsByTagNameNS( OAI_2_0_NAMESPACE, "error" );
 	}
 
 	/**
@@ -320,7 +307,7 @@ public abstract class HarvesterVerb
 
 	private static InputStream decodeHttpInputStream( HttpURLConnection con ) throws IOException
 	{
-		String contentEncoding = con.getHeaderField( "Content-Encoding" );
+		var contentEncoding = con.getHeaderField( "Content-Encoding" );
 		log.trace( "contentEncoding={}", contentEncoding );
 
 		final InputStream inputStream;

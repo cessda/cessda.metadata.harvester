@@ -9,9 +9,6 @@ logging:
     springfox.documentation.spring.web.readers.operation: WARN
     de.codecentric.boot.admin.client.registration: WARN
 harvester:
-  removeOAIEnvelope: true
-  metadataFormat: oai_ddi32
-  dialectDefinitionName: gesisCMM-ddi32
   dir: '@documents@'
   recipient: thomas.kraemer@gesis.org
   timeout: 60
@@ -24,5 +21,6 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: https://dbk.gesis.org/dbkoai/
+  - url: https://dbkapps.gesis.org/dbkoai3/
     setName: DBK
+    metadataFormat: oai_ddi32

@@ -79,7 +79,6 @@ public class Server implements CommandLineRunner
     public static void main( String[] args )
     {
         SpringApplication.run( Server.class, args );
-        log.info( "Harvester running. " );
     }
 
     @Override
@@ -318,7 +317,7 @@ public class Server implements CommandLineRunner
             }
             else
             {
-                throw new IllegalArgumentException( "Repository \"" + repo.getUrl() + "\" has no metadata format configured.\n" );
+                throw new IllegalArgumentException( "Repository " + repo + " has no metadata format configured.\n" );
             }
 
             for ( String set : sets )
@@ -399,9 +398,9 @@ public class Server implements CommandLineRunner
 
         var currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, fromDate, mdFormat );
 
-        writeToLocalFileSystem( currentlyRetrievedSet, repoBase, repositoryDirectory, mdFormat );
+        log.info( "Retrieved {} record headers from {}", currentlyRetrievedSet.size(), repoBase );
 
-        log.info( "Retrieved {} files", currentlyRetrievedSet.size() );
+        writeToLocalFileSystem( currentlyRetrievedSet, repoBase, repositoryDirectory, mdFormat );
     }
 
     private List<String> getIdentifiersForSet( String url, String set, String fromDate, String mdFormat ) throws HarvesterFailedException
@@ -475,6 +474,8 @@ public class Server implements CommandLineRunner
             throw new DirectoryCreationFailedException( repositoryDirectory, e );
         }
 
+        int retrievedRecords = 0;
+
         for ( var currentRecord : records )
         {
             var fileName = URLEncoder.encode( currentRecord + "_" + mdFormat + ".xml", StandardCharsets.UTF_8 );
@@ -483,6 +484,19 @@ public class Server implements CommandLineRunner
             {
                 log.debug( "Harvesting {} from {}", currentRecord, oaiUrl );
                 var pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout() );
+
+                // Check for errors
+                if (pmhRecord.getErrors().getLength() != 0)
+                {
+                    var error = pmhRecord.getErrors().item( 0 );
+                    log.warn( "Failed to harvest record {}: {}: {}", currentRecord,
+                            error.getAttributes().getNamedItem( "code" ).getTextContent(),
+                            error.getTextContent()
+                    );
+                    continue;
+                }
+
+                retrievedRecords++;
 
                 // Remove envelope
                 if (harvesterConfiguration.removeOAIEnvelope())
@@ -509,9 +523,11 @@ public class Server implements CommandLineRunner
             }
             catch ( IOException | SAXException | TransformerException e1 )
             {
-                log.error( "Failed to harvest record {}: {}", currentRecord.trim(), e1.toString() );
+                log.warn( "Failed to harvest record {}: {}", currentRecord.trim(), e1.toString() );
             }
         }
+
+        log.info( "Retrieved {} records from {}", retrievedRecords, oaiUrl );
     }
 
     /**
