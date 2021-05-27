@@ -48,10 +48,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
-import java.time.Duration;
 import java.time.Duration;
 
 /**
@@ -156,7 +154,7 @@ public abstract class HarvesterVerb
 	{
 		this.requestURL = URI.create( requestURL );
 
-		try ( InputStream in = httpClient.getHttpResponse( this.requestURL.toURL(), Duration.ofSeconds(timeout) ) )
+		try ( var in = httpClient.getHttpResponse( this.requestURL.toURL(), timeout ) )
 		{
 			doc = factory.newDocumentBuilder().parse( in );
 		}

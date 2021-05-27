@@ -23,13 +23,16 @@ import static org.mockito.Mockito.when;
 
 class ListIdentifiersTests
 {
+
+    public static final Duration TIMEOUT = Duration.ofSeconds( 10 );
+
     @Test
     void shouldReturnRecordHeaders() throws IOException, SAXException
     {
         // Given
         var httpClient = mock( HttpClient.class );
 
-        when( httpClient.getHttpResponse( any(URL.class), eq(Duration.ofSeconds( 10 ) )) )
+        when( httpClient.getHttpResponse( any(URL.class), eq( TIMEOUT )) )
                 .thenReturn( new ByteArrayInputStream(
                         RecordHeadersMock.getListIdentifiersXMLResumptionEmpty().getBytes( StandardCharsets.UTF_8 )
                 ) );
@@ -40,7 +43,7 @@ class ListIdentifiersTests
                 null,
                 null,
                 "ddi",
-                10
+                TIMEOUT
         );
 
         var identifiersIDs = identifiers.getDocument().getElementsByTagName( "identifier" );
@@ -61,7 +64,7 @@ class ListIdentifiersTests
         // Given
         var httpClient = mock( HttpClient.class );
 
-        when( httpClient.getHttpResponse( any(URL.class), eq(Duration.ofSeconds( 10 ) )) )
+        when( httpClient.getHttpResponse( any(URL.class), eq( TIMEOUT )) )
                 .thenReturn( new ByteArrayInputStream(
                         RecordHeadersMock.getListIdentifiersXMLWithResumption().getBytes( StandardCharsets.UTF_8 )
                 ) );
@@ -72,7 +75,7 @@ class ListIdentifiersTests
                 null,
                 null,
                 "ddi",
-                10
+                TIMEOUT
         );
 
         assertEquals("3/6/7/ddi/null/2017-01-01/null", identifiers.getResumptionToken() );
@@ -84,7 +87,7 @@ class ListIdentifiersTests
         // Given
         var httpClient = mock( HttpClient.class );
 
-        when( httpClient.getHttpResponse( any(URL.class), eq(Duration.ofSeconds( 10 ) )) )
+        when( httpClient.getHttpResponse( any(URL.class), eq( TIMEOUT )) )
                 .thenReturn( new ByteArrayInputStream(
                         RecordHeadersMock.getListIdentifiersXMLWithResumptionLastList().getBytes( StandardCharsets.UTF_8 )
                 ) );
@@ -92,7 +95,7 @@ class ListIdentifiersTests
         var identifiers = new ListIdentifiers( httpClient,
                 "https://oai.ukdataservice.ac.uk:8443/oai/provider",
                 "3/6/7/ddi/null/2017-01-01/null",
-                10
+                TIMEOUT
         );
 
         // Then

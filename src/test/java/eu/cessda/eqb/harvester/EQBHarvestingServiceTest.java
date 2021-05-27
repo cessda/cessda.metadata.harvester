@@ -13,8 +13,6 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.sql.Date;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 
 import static org.mockito.Mockito.*;
@@ -44,6 +42,7 @@ class EQBHarvestingServiceTest
 		harvesterConfiguration.setDir( "data2" );
 		harvesterConfiguration.setFrom( new HarvesterConfiguration.From() );
 		harvesterConfiguration.getFrom().setSingle( "2020-12-08" );
+		harvesterConfiguration.setTimeout( Duration.ofSeconds( 10 ) );
 		var repo = new Repo();
 		repo.setUrl( URI.create( "http://services.fsd.uta.fi/v0/oai?set=study_group:paihde" ) );
 		repo.setMetadataFormat( "oai_ddi" );
@@ -59,13 +58,7 @@ class EQBHarvestingServiceTest
 	@Test
 	void indexAllTest()
 	{
-
-		SimpleDateFormat sdf = new SimpleDateFormat( "yyyy-MM-dd" );
-		Date now = new Date( System.currentTimeMillis() );
-		String snow = sdf.format( now );
-		log.info( snow );
 		server.singleHarvesting( 0 );
 		Assertions.assertTrue( Files.exists( Paths.get( "data2" ) ) );
-
 	}
 }
