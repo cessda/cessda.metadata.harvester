@@ -34,6 +34,7 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
@@ -41,7 +42,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
-
 import java.util.NoSuchElementException;
 
 /**
@@ -63,9 +63,9 @@ public class ListRecords extends HarvesterVerb
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	public ListRecords( String baseURL, String from, String until, String set, String metadataPrefix ) throws IOException, SAXException
+	public ListRecords( HttpClient httpClient, String baseURL, String from, String until, String set, String metadataPrefix ) throws IOException, SAXException
 	{
-		super( getRequestURL( baseURL, from, until, set, metadataPrefix ) );
+		super( httpClient, getRequestURL( baseURL, from, until, set, metadataPrefix ) );
 	}
 
 	/**
@@ -76,9 +76,9 @@ public class ListRecords extends HarvesterVerb
 	 * @throws IOException
 	 * @throws SAXException
 	 */
-	public ListRecords( String baseURL, String resumptionToken ) throws IOException, SAXException
+	public ListRecords( HttpClient httpClient, String baseURL, String resumptionToken ) throws IOException, SAXException
 	{
-		super( getRequestURL( baseURL, resumptionToken ) );
+		super( httpClient, getRequestURL( baseURL, resumptionToken ) );
 	}
 
 	/**

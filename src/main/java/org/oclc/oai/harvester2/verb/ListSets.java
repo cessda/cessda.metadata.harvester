@@ -34,6 +34,7 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import eu.cessda.eqb.harvester.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -41,6 +42,8 @@ import org.xml.sax.SAXException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.time.Duration;
+import java.util.Optional;
 
 /**
  * This class represents an ListSets response on either the server or on the client
@@ -59,9 +62,9 @@ public class ListSets extends HarvesterVerb
 	 * @throws MalformedURLException the baseURL is bad
 	 * @throws IOException           an I/O error occurred
 	 */
-	public ListSets( String baseURL, Integer timeout ) throws IOException, SAXException
+	public ListSets( HttpClient httpClient, String baseURL, Duration timeout ) throws IOException, SAXException
 	{
-		super( getRequestURL( baseURL ), timeout );
+		super( httpClient, getRequestURL( baseURL ), timeout );
 	}
 
 	/**
@@ -91,27 +94,27 @@ public class ListSets extends HarvesterVerb
 	 * @return the oai:resumptionToken as a String
 	 * @throws TransformerException
 	 */
-	public String getResumptionToken() throws TransformerException
+	public Optional<String> getResumptionToken() throws TransformerException
 	{
 		final String schemaLocation = getSchemaLocation();
 
 		if ( schemaLocation == null )
 		{
 			log.warn( "Could not get resumptionToken: Schema location unset" );
-			return "";
+			return Optional.empty();
 		}
 
 		switch ( schemaLocation )
 		{
 			case SCHEMA_LOCATION_V2_0:
-				return getSingleString( "/oai20:OAI-PMH/oai20:ListSets/oai20:resumptionToken" );
+				return Optional.of( getSingleString( "/oai20:OAI-PMH/oai20:ListSets/oai20:resumptionToken" ) );
 
 			case SCHEMA_LOCATION_V1_1_LIST_SETS:
-				return getSingleString( "/oai11_ListSets:ListSets/oai11_ListSets:resumptionToken" );
+				return Optional.of( getSingleString( "/oai11_ListSets:ListSets/oai11_ListSets:resumptionToken" ) );
 
 			default:
 				log.warn( "Could not get resumptionToken: Schema {} didn't match: {}, {}", schemaLocation, SCHEMA_LOCATION_V2_0, SCHEMA_LOCATION_V1_1_LIST_SETS );
-				return "";
+				return Optional.empty();
 		}
 	}
 }

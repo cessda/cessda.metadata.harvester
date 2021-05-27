@@ -23,6 +23,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -50,7 +51,7 @@ class HarvesterConfiguration
     private boolean removeOAIEnvelope = false;
     private List<Repo> repos = new ArrayList<>();
     private From from;
-    private int timeout = 30;
+    private Duration timeout = Duration.ofSeconds( 30 );
 
     public boolean removeOAIEnvelope()
     {
@@ -112,12 +113,12 @@ class HarvesterConfiguration
         this.from = from;
     }
 
-    public int getTimeout()
+    public Duration getTimeout()
     {
         return timeout;
     }
 
-    public void setTimeout( int timeout )
+    public void setTimeout( Duration timeout )
     {
         this.timeout = timeout;
     }

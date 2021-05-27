@@ -13,7 +13,7 @@ harvester:
   dialectDefinitionName: gesisCMM-ddi122
   dir: '@documents@'
   recipient: john.shepherdson@essex.ac.uk,toni.sissala@tuni.fi
-  timeout: 100
+  timeout: 100s
   keepOAIEnvelope: true
   removeOAIEnvelope: true
   from:

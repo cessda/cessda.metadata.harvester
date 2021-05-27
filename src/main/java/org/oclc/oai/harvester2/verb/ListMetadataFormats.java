@@ -34,6 +34,7 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
@@ -59,9 +60,9 @@ public class ListMetadataFormats extends HarvesterVerb
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	public ListMetadataFormats( String baseURL ) throws IOException, SAXException, TransformerException
+	public ListMetadataFormats( HttpClient httpClient, String baseURL ) throws IOException, SAXException, TransformerException
 	{
-		this( baseURL, null );
+		this( httpClient, baseURL, null );
 	}
 
 	/**
@@ -73,10 +74,10 @@ public class ListMetadataFormats extends HarvesterVerb
 	 * @throws SAXException
 	 * @throws TransformerException
 	 */
-	public ListMetadataFormats( String baseURL, String identifier ) throws IOException, SAXException,
+	public ListMetadataFormats( HttpClient httpClient, String baseURL, String identifier ) throws IOException, SAXException,
 			TransformerException
 	{
-		super( getRequestURL( baseURL, identifier ) );
+		super( httpClient, getRequestURL( baseURL, identifier ) );
 	}
 
 	/**

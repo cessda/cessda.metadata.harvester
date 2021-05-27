@@ -7,12 +7,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.test.context.TestPropertySource;
 
 import javax.xml.transform.TransformerConfigurationException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Date;
-import java.text.SimpleDateFormat;
+import java.time.Duration;
+
+import static org.mockito.Mockito.*;
 
 @TestPropertySource(
 		properties = {"spring.mail.host=localhost",
@@ -27,35 +31,35 @@ import java.text.SimpleDateFormat;
 				"harvester.cron.initialDelay=5000000",
 				"harvester.repos[0].url=http://services.fsd.uta.fi/v0/oai?set=study_group:paihde",
 				"spring.boot.admin.client.enabled=false"} )
-public class EQBHarvestingServiceTest
+class EQBHarvestingServiceTest
 {
 	private static final Logger log = LoggerFactory.getLogger( EQBHarvestingServiceTest.class );
 
 	private final Server server;
 
-	public EQBHarvestingServiceTest() throws TransformerConfigurationException
+	public EQBHarvestingServiceTest() throws TransformerConfigurationException, IOException
 	{
 		var harvesterConfiguration = new HarvesterConfiguration();
 		harvesterConfiguration.setDir( Path.of("data2") );
 		harvesterConfiguration.setFrom( new HarvesterConfiguration.From() );
 		harvesterConfiguration.getFrom().setSingle( "2020-12-08" );
+		harvesterConfiguration.setTimeout( Duration.ofSeconds( 10 ) );
 		var repo = new Repo();
 		repo.setUrl( URI.create( "http://services.fsd.uta.fi/v0/oai?set=study_group:paihde" ) );
 		repo.setMetadataFormat( "oai_ddi" );
 		harvesterConfiguration.getRepos().add( repo );
-		server = new Server( harvesterConfiguration );
+
+		var httpClient = mock( HttpClient.class );
+		when( httpClient.getHttpResponse( any(URL.class), any(Duration.class) ) )
+			.thenReturn( InputStream.nullInputStream() );
+
+		server = new Server( harvesterConfiguration, httpClient );
 	}
 
 	@Test
-	public void indexAllTest()
+	void indexAllTest()
 	{
-
-		SimpleDateFormat sdf = new SimpleDateFormat( "yyyy-MM-dd" );
-		Date now = new Date( System.currentTimeMillis() );
-		String snow = sdf.format( now );
-		log.info( snow );
 		server.singleHarvesting( 0 );
 		Assertions.assertTrue( Files.exists( Paths.get( "data2" ) ) );
-
 	}
 }

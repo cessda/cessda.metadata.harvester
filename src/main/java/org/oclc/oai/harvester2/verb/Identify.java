@@ -34,12 +34,11 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
-import java.net.MalformedURLException;
-
 import java.util.NoSuchElementException;
 
 /**
@@ -53,12 +52,11 @@ public class Identify extends HarvesterVerb
 	 * Client-side Identify verb constructor
 	 *
 	 * @param baseURL the baseURL of the server to be queried
-	 * @throws MalformedURLException the baseURL is bad
 	 * @throws IOException           an I/O error occurred
 	 */
-	public Identify( String baseURL ) throws IOException, SAXException
+	public Identify( HttpClient httpClient, String baseURL ) throws IOException, SAXException
 	{
-		super( getRequestURL( baseURL ) );
+		super( httpClient, baseURL + "?verb=Identify" );
 	}
 
 	/**
@@ -89,14 +87,4 @@ public class Identify extends HarvesterVerb
 		}
 	}
 
-	/**
-	 * generate the Identify request URL for the specified baseURL
-	 * 
-	 * @param baseURL
-	 * @return the requestURL
-	 */
-	private static String getRequestURL( String baseURL )
-	{
-		return baseURL + "?verb=Identify";
-	}
 }

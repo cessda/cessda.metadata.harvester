@@ -34,32 +34,23 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import eu.cessda.eqb.harvester.HttpClient;
 import org.apache.xpath.XPathAPI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringWriter;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.InflaterInputStream;
-import java.util.zip.ZipInputStream;
-
-import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
+import java.time.Duration;
 
 /**
  * HarvesterVerb is the parent class for each of the OAI verbs.
@@ -68,13 +59,6 @@ import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
  */
 public abstract class HarvesterVerb
 {
-
-	// Constants used by the HTTP client
-	private static final String RETRY_AFTER = "Retry-After";
-
-	// Logger
-	private static final Logger log = LoggerFactory.getLogger( HarvesterVerb.class );
-
 	/* Primary OAI namespaces */
 	protected static final String OAI_2_0_NAMESPACE = "http://www.openarchives.org/OAI/2.0/";
 	public static final String SCHEMA_LOCATION_V2_0 = "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd";
@@ -154,9 +138,9 @@ public abstract class HarvesterVerb
 	 * @throws IOException
 	 * @throws SAXException
 	 */
-	protected HarvesterVerb( String requestURL ) throws IOException, SAXException
+	protected HarvesterVerb( HttpClient httpClient, String requestURL ) throws IOException, SAXException
 	{
-		this( requestURL, 10 );
+		this(httpClient, requestURL, Duration.ofSeconds( 10 ) );
 	}
 
 	/**
@@ -166,11 +150,11 @@ public abstract class HarvesterVerb
 	 * @throws IOException
 	 * @throws SAXException
 	 */
-	protected HarvesterVerb( String requestURL, int timeout ) throws IOException, SAXException
+	protected HarvesterVerb( HttpClient httpClient, String requestURL, Duration timeout ) throws IOException, SAXException
 	{
 		this.requestURL = URI.create( requestURL );
 
-		try ( InputStream in = getHttpResponse( this.requestURL.toURL(), timeout ) )
+		try ( var in = httpClient.getHttpResponse( this.requestURL.toURL(), timeout ) )
 		{
 			doc = factory.newDocumentBuilder().parse( in );
 		}
@@ -189,82 +173,6 @@ public abstract class HarvesterVerb
 			schemaLocationTemp = "";
 		}
 		this.schemaLocation = schemaLocationTemp;
-	}
-
-	private static InputStream getHttpResponse( URL requestURL, int timeout ) throws IOException
-	{
-		HttpURLConnection con;
-		int responseCode;
-		int retries = 0;
-
-		log.debug( "URL: {}, Timeout : {} seconds", requestURL, timeout );
-
-		while ( true )
-		{
-			con = (HttpURLConnection) requestURL.openConnection();
-			con.setRequestProperty( "User-Agent", "OAIHarvester/2.0" );
-			con.setRequestProperty( "Accept-Encoding", "compress, gzip, identity" );
-
-			// TK added default timeout for dataverses taking too long to respond / stall
-			con.setConnectTimeout( timeout * 1000 );
-			con.setReadTimeout( timeout * 1000 );
-
-			responseCode = con.getResponseCode();
-			log.trace( "responseCode={}", responseCode );
-
-			if ( responseCode == HTTP_UNAVAILABLE && retries++ < 3 )
-			{
-				long retrySeconds = con.getHeaderFieldInt( RETRY_AFTER, -1 );
-				if ( retrySeconds == -1 )
-				{
-					long now = Instant.now().toEpochMilli();
-					long retryDate = con.getHeaderFieldDate( RETRY_AFTER, now );
-					retrySeconds = retryDate - now;
-				}
-				if ( retrySeconds > 0 )
-				{
-					log.debug( "Server response: Retry-After={}", con.getHeaderField( RETRY_AFTER ) );
-					try
-					{
-						TimeUnit.SECONDS.sleep( retrySeconds );
-					}
-					catch ( InterruptedException ex )
-					{
-						Thread.currentThread().interrupt();
-						return InputStream.nullInputStream();
-					}
-				}
-			}
-			else
-			{
-				break;
-			}
-		}
-
-		if ( responseCode >= 400 )
-		{
-			throw handleHTTPResponseErrors( con, responseCode );
-		}
-
-		return decodeHttpInputStream( con );
-	}
-
-	private static IOException handleHTTPResponseErrors( HttpURLConnection con, int responseCode )
-	{
-		IOException exception;
-		try ( var stream = decodeHttpInputStream( con ) )
-		{
-			exception = new IOException( String.format( "Server returned %d, body: %s",
-					responseCode,
-					new String( stream.readAllBytes(), StandardCharsets.UTF_8 )
-			) );
-		}
-		catch ( IOException e )
-		{
-			// Make sure the response code is not lost if an IO error occurs
-			exception = new IOException( String.format( "Server returned %d", responseCode ), e );
-		}
-		return exception;
 	}
 
 	/**
@@ -305,41 +213,6 @@ public abstract class HarvesterVerb
 		return requestURL;
 	}
 
-	private static InputStream decodeHttpInputStream( HttpURLConnection con ) throws IOException
-	{
-		var contentEncoding = con.getHeaderField( "Content-Encoding" );
-		log.trace( "contentEncoding={}", contentEncoding );
-
-		final InputStream inputStream;
-		if ( con.getResponseCode() < 400 )
-		{
-			inputStream = con.getInputStream();
-		}
-		else
-		{
-			inputStream = con.getErrorStream();
-		}
-
-		if ( contentEncoding == null )
-		{
-			return inputStream;
-		}
-
-		switch ( contentEncoding )
-		{
-			case "compress":
-				ZipInputStream zis = new ZipInputStream( inputStream );
-				zis.getNextEntry();
-				return zis;
-			case "gzip":
-				return new GZIPInputStream( inputStream );
-			case "deflate":
-				return new InflaterInputStream( inputStream );
-			default:
-				return inputStream;
-		}
-	}
-
 	/**
 	 * Get the String value for the given XPath location in the response DOM
 	 *
@@ -349,17 +222,16 @@ public abstract class HarvesterVerb
 	 */
 	public String getSingleString( String xpath ) throws TransformerException
 	{
-		return XPathAPI.eval( getDocument(), xpath, namespaceElement ).str();
+		return XPathAPI.eval( doc, xpath, namespaceElement ).str();
 	}
 
 	public String toString()
 	{
-		try ( StringWriter sw = new StringWriter() )
+		try ( var sw = new StringWriter() )
 		{
-			Result output = new StreamResult( sw );
-			Transformer idTransformer = xformFactory.newTransformer();
+			var idTransformer = xformFactory.newTransformer();
 			idTransformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "yes" );
-			idTransformer.transform( new DOMSource( getDocument() ), output );
+			idTransformer.transform( new DOMSource( doc ), new StreamResult( sw ) );
 			return sw.toString();
 		}
 		catch (TransformerException | IOException e)
