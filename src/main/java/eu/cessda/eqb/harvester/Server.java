@@ -107,19 +107,6 @@ public class Server implements CommandLineRunner
         return res + "Bundle harvesting finished from " + harvesterConfiguration.getFrom().getSingle();
     }
 
-    private static String oaiBase( String u )
-    {
-        final int endIndex = u.indexOf( '?' );
-        if ( endIndex != -1 )
-        {
-            return u.substring( 0, endIndex );
-        }
-        else
-        {
-            return u;
-        }
-    }
-
     /**
      * Returns the host portion of the URL string provided.
      * The resulting string is encoded using {@link StandardCharsets#UTF_8}.
@@ -311,7 +298,7 @@ public class Server implements CommandLineRunner
         var executor = Executors.newFixedThreadPool(harvesterConfiguration.getRepos().size());
 
         var futures = new ArrayList<CompletableFuture<Void>>();
-        for ( Repo repo : harvesterConfiguration.getRepos() )
+        for ( var repo : harvesterConfiguration.getRepos() )
         {
             log.info( "Harvesting repository {}", repo );
 
@@ -324,7 +311,7 @@ public class Server implements CommandLineRunner
             }
             else
             {
-                throw new IllegalArgumentException( "Repository " + repo + " has no metadata format configured.\n" );
+                throw new IllegalArgumentException( "Repository " + repo + " has no metadata format configured." );
             }
 
             futures.add(
@@ -348,16 +335,16 @@ public class Server implements CommandLineRunner
      */
     private Set<String> discoverSets( Repo repo )
     {
-        if ( repo.getSetName() != null )
+        if ( repo.getSet() != null )
         {
-            return Collections.singleton( repo.getSetName() );
+            return Collections.singleton( repo.getSet() );
         }
         else if ( repo.discoverSets() )
         {
             try
             {
                 var unfoldedSets = getSetStrings( repo.getUrl() );
-                log.info( "No. of sets: {}", unfoldedSets.size() );
+                log.debug( "No. of sets: {}", unfoldedSets.size() );
                 return unfoldedSets;
             }
             catch ( IOException | TransformerException | SAXException e )
@@ -385,8 +372,7 @@ public class Server implements CommandLineRunner
         log.info( "Fetching records for repository: {}, set: {} from: {}", baseUrl, set, fromDate );
         try
         {
-            var oaiBase = oaiBase( baseUrl );
-            fetchDCRecords( oaiBase, set, fromDate, mdFormat );
+            fetchDCRecords( baseUrl, set, fromDate, mdFormat );
         }
         catch ( HarvesterFailedException e )
         {
@@ -410,7 +396,7 @@ public class Server implements CommandLineRunner
             throw new DirectoryCreationFailedException( repositoryDirectory, e );
         }
 
-        log.info( "Fetching records for repository {} and pmh set {}.", repoBase, setspec );
+        log.info( "Fetching records for repository: {}, set: {}.", repoBase, setspec );
 
         var currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, fromDate, mdFormat );
 
@@ -440,7 +426,7 @@ public class Server implements CommandLineRunner
 
                 if (resumptionToken.isPresent())
                 {
-                    log.trace( "recurse: url {}\ttoken: {}", url, resumptionToken );
+                    log.trace( "recurse: url {}\ttoken: {}", oaiBaseUrl, resumptionToken );
                     li = new ListIdentifiers( httpClient, oaiBaseUrl, resumptionToken.orElseThrow(), harvesterConfiguration.getTimeout() );
                 }
             }
@@ -518,7 +504,7 @@ public class Server implements CommandLineRunner
             }
             catch ( IOException | SAXException | TransformerException e1 )
             {
-                log.warn( "Failed to harvest record {}: {}", currentRecord.trim(), e1.toString() );
+                log.warn( "Failed to harvest record {} from {}: {}", currentRecord.trim(), oaiUrl, e1.toString() );
             }
         }
 

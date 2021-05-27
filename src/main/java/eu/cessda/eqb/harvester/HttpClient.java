@@ -2,6 +2,7 @@ package eu.cessda.eqb.harvester;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +19,7 @@ import java.util.zip.ZipInputStream;
 import static java.lang.Math.toIntExact;
 import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
 
+@Service
 public class HttpClient
 {
     // Constants used by the HTTP client

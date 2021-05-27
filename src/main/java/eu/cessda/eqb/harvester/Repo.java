@@ -6,7 +6,7 @@ import java.util.Objects;
 public class Repo
 {
     private URI url;
-    private String setName;
+    private String set;
     private String metadataFormat;
     private boolean discoverSets;
 
@@ -20,14 +20,14 @@ public class Repo
         this.url = url;
     }
 
-    public String getSetName()
+    public String getSet()
     {
-        return setName;
+        return set;
     }
 
-    public void setSetName( String setName )
+    public void setSet( String set )
     {
-        this.setName = setName;
+        this.set = set;
     }
 
     public String getMetadataFormat()
@@ -58,14 +58,14 @@ public class Repo
         Repo repo = (Repo) o;
         return discoverSets == repo.discoverSets &&
                 Objects.equals( url, repo.url ) &&
-                Objects.equals( setName, repo.setName ) &&
+                Objects.equals( set, repo.set ) &&
                 Objects.equals( metadataFormat, repo.metadataFormat );
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash( url, setName, metadataFormat, discoverSets );
+        return Objects.hash( url, set, metadataFormat, discoverSets );
     }
 
     @Override
@@ -73,7 +73,7 @@ public class Repo
     {
         return "Repo{" +
                 "url=" + url +
-                ", setName='" + setName + '\'' +
+                ", setName='" + set + '\'' +
                 ", metadataFormat='" + metadataFormat + '\'' +
                 ", discoverSets=" + discoverSets +
                 '}';

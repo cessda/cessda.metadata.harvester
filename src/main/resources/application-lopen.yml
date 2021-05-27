@@ -60,142 +60,128 @@ harvester:
     full: 00 12 13 * * ?
   repos:
   - url: https://oar.tib.eu/oai/oaiwgl
-    setName: 
     dataProvider: TIB Hannover
     metaDataProvider: TIB Hannover
   - url: https://journals.ub.uni-heidelberg.de/index.php/azgnm/oai
-    setName: 
     dataProvider: Heidelberg-AZGNM
     metaDataProvider: Heidelberg-AZGNM
   - url: https://journals.ub.uni-heidelberg.de/index.php/kulturgut/oai
-    setName: 
     dataProvider: Heidelberg-KulturGut
     metaDataProvider: Heidelberg-KulturGut
   - url: https://books.ub.uni-heidelberg.de/index.php/arthistoricum/oai
-    setName: 
     dataProvider: Heidelberg-Kunstgeschichte
     metaDataProvider: Heidelberg-Kunstgeschichte
   - url: https://journals.ub.uni-heidelberg.de/index.php/ma/oai
-    setName: 
     dataProvider: Heidelberg-MA-GNM
     metaDataProvider: Heidelberg-MA-GNM
   - url: https://books.ub.uni-heidelberg.de/index.php/propylaeum/oai
-    setName: propylaeum:byzanzoo
+    set: propylaeum:byzanzoo
     dataProvider: Heidelberg-Propyl-Byz
     metaDataProvider: Heidelberg-Propyl-Byz
   - url: https://journals.ub.uni-heidelberg.de/index.php/jahrb-rgzm/oai
-    setName: 
     dataProvider: Heidelberg-RGZM
     metaDataProvider: Heidelberg-RGZM
   - url: http://repository.gei.de/oai/request
-    setName: 
     dataProvider: GEI
     metaDataProvider: GEI
   - url: http://open.ifz-muenchen.de/api/v0/oai
-    setName: 
     dataProvider: IFZ
     metaDataProvider: IFZ
   - url: http://www.die-bonn.de/oai/default.aspx
-    setName: oadie
+    set: oadie
     dataProvider: DIE
     metaDataProvider: DIE
   - url: http://archiv.ub.uni-heidelberg.de/artdok/cgi/oai2
-    setName: WGL
+    set: WGL
     dataProvider: GNM 
     metaDataProvider: GNM 
   - url: https://digital.herder-institut.de/publications/oai
-    setName: wglsubject
+    set: wglsubject
     dataProvider: HI
     metaDataProvider: HI 
   - url: https://ids-pub.bsz-bw.de/oai
-    setName: WglSubject
+    set: WglSubject
     dataProvider:  IDS
     metaDataProvider: IDS
   - url: https://www.psycharchives.org/oai/request
-    setName: 
     dataProvider: ZPID
     metaDataProvider: ZPID
   - url: https://drops.dagstuhl.de/opus/phpoai/oai2.php
-    setName: 
     dataProvider: LZI Dagstuhl 
     metaDataProvider: LZI Dagstuhl
   - url: https://www.pedocs.de/oai2/oai2.php
-    setName: 
     dataProvider: Pedocs
     metaDataProvider: Pedocs
   - url: https://www.ssoar.info/OAIHandler/wgl
-    setName: WGL
+    set: WGL
     dataProvider: SSOAR 
     metaDataProvider: SSOAR
   - url: https://oar.tib.eu/oai/oaiwgl
-    setName: 
     dataProvider: TIB Hannover
     metaDataProvider: TIB Hannover
   - url: http://frl.publisso.de/oai-pmh
-    setName: 
     dataProvider: ZB MED
     metaDataProvider: ZB MED
   - url: https://zeitgeschichte-digital.de/doks/oai
-    setName: open_access
+    set: open_access
     dataProvider: Zentrum für Zeithistorische Forschung(ZZF)
     metaDataProvider: Zentrum für Zeithistorische Forschung(ZZF)
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_157390
+    set: col_10419_157390
     dataProvider: ECONSTOR 157390
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_48632
+    set: col_10419_48632
     dataProvider: ECONSTOR 48632
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_48633
+    set: col_10419_48633
     dataProvider: ECONSTOR 48633
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_48634
+    set: col_10419_48634
     dataProvider: ECONSTOR 48634
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_48635
+    set: col_10419_48635
     dataProvider: ECONSTOR 48635
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_48636
+    set: col_10419_48636
     dataProvider: ECONSTOR 48636
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_48637
+    set: col_10419_48637
     dataProvider: ECONSTOR 48637
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_213320
+    set: col_10419_213320
     dataProvider: ECONSTOR 213320
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_213349
+    set: col_10419_213349
     dataProvider: ECONSTOR 213349
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_48638
+    set: col_10419_48638
     dataProvider: ECONSTOR 48638
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_48639
+    set: col_10419_48639
     dataProvider: ECONSTOR 48639
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_8
+    set: col_10419_8
     dataProvider: ECONSTOR 10419 8
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    setName: col_10419_59810
+    set: col_10419_59810
     dataProvider: ECONSTOR 59810
     metaDataProvider: ECONSTOR
   - url: http://pub.zbw.eu/dspace-oai/request
-    setName: open_access
+    set: open_access
     dataProvider: ECONSTOR-Set-open_access
     metaDataProvider: zbw
   - url: https://journals.ub.uni-heidelberg.de/index.php/ak/oai
-    setName: 
     dataProvider: Heidelberg-AK
     metaDataProvider: Heidelberg-AK    

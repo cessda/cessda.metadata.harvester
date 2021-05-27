@@ -22,5 +22,5 @@ harvester:
     full: 00 31 12 * * ?
   repos:
   - url: https://dbkapps.gesis.org/dbkoai3/
-    setName: DBK
+    set: DBK
     metadataFormat: oai_ddi32
