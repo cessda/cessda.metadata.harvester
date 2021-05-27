@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.stream.IntStream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
@@ -46,16 +45,17 @@ class ListIdentifiersTests
                 TIMEOUT
         );
 
-        var identifiersIDs = identifiers.getDocument().getElementsByTagName( "identifier" );
+        var identifiersIDs = identifiers.getIdentifiers();
 
-        assertEquals( 3, identifiersIDs.getLength());
+        assertEquals( 3, identifiersIDs.size());
 
-        IntStream.range( 0, identifiersIDs.getLength() ).mapToObj( identifiersIDs::item ).forEach( i ->
-                assertThat(
-                    i.getTextContent(),
+        for ( var record : identifiersIDs )
+        {
+            assertThat(
+                    record,
                     anyOf( is( "850229" ), is( "850232" ), is( "850235" ) )
-                )
-        );
+            );
+        }
     }
 
     @Test
@@ -78,7 +78,7 @@ class ListIdentifiersTests
                 TIMEOUT
         );
 
-        assertEquals("3/6/7/ddi/null/2017-01-01/null", identifiers.getResumptionToken() );
+        assertEquals("3/6/7/ddi/null/2017-01-01/null", identifiers.getResumptionToken().orElseThrow() );
     }
 
     @Test

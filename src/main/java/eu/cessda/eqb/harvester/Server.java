@@ -411,46 +411,28 @@ public class Server implements CommandLineRunner
         final String oaiBaseUrl = oaiBase( url );
         try
         {
-            String resumptionToken = null;
             final var records = new ArrayList<String>();
+            var li = new ListIdentifiers( httpClient, oaiBaseUrl, fromDate, null, set, mdFormat, harvesterConfiguration.getTimeout() );
+
+            Optional<String> resumptionToken;
 
             do
             {
                 log.debug( "URL: {}, set: {}, list size: {}", url, set, records.size() );
 
-                ListIdentifiers li;
-                if ( resumptionToken == null )
-                {
-                    li = new ListIdentifiers( httpClient, oaiBaseUrl, fromDate, null, set, mdFormat, harvesterConfiguration.getTimeout() );
-                }
-                else
-                {
-                    log.trace( "recurse: url {}\ttoken: {}", url, resumptionToken );
-                    li = new ListIdentifiers( httpClient, oaiBaseUrl, resumptionToken, harvesterConfiguration.getTimeout() );
-                }
-
-                Document identifiers = li.getDocument();
-
                 // add to list of records to fetch
-                var identifiersIDs = identifiers.getElementsByTagName( "identifier" );
-                for ( int i = 0; i < identifiersIDs.getLength(); i++ )
-                {
-                    String identifier = identifiersIDs.item( i ).getTextContent();
-                    records.add( identifier );
-                }
+                records.addAll( li.getIdentifiers() );
 
                 // need to continue looping?
-                NodeList resumptionTokenReq = identifiers.getElementsByTagName( "resumptionToken" );
-                if ( resumptionTokenReq.getLength() > 0 && !resumptionTokenReq.item( 0 ).getTextContent().isEmpty() )
+                resumptionToken = li.getResumptionToken();
+
+                if (resumptionToken.isPresent())
                 {
-                    resumptionToken = resumptionTokenReq.item( 0 ).getTextContent();
-                }
-                else
-                {
-                    resumptionToken = null;
+                    log.trace( "recurse: url {}\ttoken: {}", url, resumptionToken );
+                    li = new ListIdentifiers( httpClient, oaiBaseUrl, resumptionToken.orElseThrow(), harvesterConfiguration.getTimeout() );
                 }
             }
-            while ( resumptionToken != null );
+            while ( resumptionToken.isPresent() );
 
             return records;
         }

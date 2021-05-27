@@ -37,12 +37,14 @@ package org.oclc.oai.harvester2.verb;
 import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.NoSuchElementException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * This class represents an ListIdentifiers response on either the server or on the client
@@ -104,32 +106,35 @@ public class ListIdentifiers extends HarvesterVerb
 	}
 
 	/**
+	 * Returns a list of identifiers found in the response. The returned list is unmodifiable.
+	 */
+	public List<String> getIdentifiers()
+	{
+		var identifiersIDs = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "identifier" );
+		var records = new ArrayList<String>(identifiersIDs.getLength());
+		for ( int i = 0; i < identifiersIDs.getLength(); i++ )
+		{
+			var identifier = identifiersIDs.item( i ).getTextContent();
+			records.add(identifier);
+		}
+		return Collections.unmodifiableList(records);
+	}
+
+	/**
 	 * Get the oai:resumptionToken from the response
 	 *
-	 * @return the oai:resumptionToken value
-	 * @throws NoSuchElementException if the schema of the document does not support resumption tokens.
+	 * @return the oai:resumptionToken value, or an empty optional if a resumption token is not present
 	 */
-	public String getResumptionToken()
+	public Optional<String> getResumptionToken()
 	{
-		try
+		var resumptionToken = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "resumptionToken" );
+
+		if (resumptionToken.getLength() > 0)
 		{
-			if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
-			{
-				return getSingleString( "/oai20:OAI-PMH/oai20:ListIdentifiers/oai20:resumptionToken" );
-			}
-			else if ( SCHEMA_LOCATION_V1_1_LIST_IDENTIFIERS.equals( getSchemaLocation() ) )
-			{
-				return getSingleString( "/oai11_ListIdentifiers:ListIdentifiers/oai11_ListIdentifiers:resumptionToken" );
-			}
-			else
-			{
-				throw new NoSuchElementException( getSchemaLocation() );
-			}
+			var token = resumptionToken.item( 0 ).getTextContent();
+			return Optional.of( token );
 		}
-		catch ( TransformerException e )
-		{
-			throw new IllegalStateException( e );
-		}
+		return Optional.empty();
 	}
 
 	/**
