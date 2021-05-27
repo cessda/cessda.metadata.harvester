@@ -34,6 +34,7 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import eu.cessda.eqb.harvester.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -59,9 +60,9 @@ public class ListSets extends HarvesterVerb
 	 * @throws MalformedURLException the baseURL is bad
 	 * @throws IOException           an I/O error occurred
 	 */
-	public ListSets( String baseURL, Integer timeout ) throws IOException, SAXException
+	public ListSets( HttpClient httpClient, String baseURL, int timeout ) throws IOException, SAXException
 	{
-		super( getRequestURL( baseURL ), timeout );
+		super( httpClient, getRequestURL( baseURL ), timeout );
 	}
 
 	/**

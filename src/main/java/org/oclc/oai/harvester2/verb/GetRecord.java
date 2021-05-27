@@ -34,6 +34,7 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
@@ -60,10 +61,10 @@ public class GetRecord extends HarvesterVerb
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	public GetRecord( String baseURL, String identifier, String metadataPrefix, Integer timeout )
+	public GetRecord( HttpClient httpClient, String baseURL, String identifier, String metadataPrefix, int timeout )
 			throws IOException, SAXException
 	{
-		super( getRequestURL( baseURL, identifier, metadataPrefix ), timeout );
+		super( httpClient, getRequestURL( baseURL, identifier, metadataPrefix ), timeout );
 	}
 
 	/**

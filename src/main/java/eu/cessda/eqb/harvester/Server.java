@@ -67,15 +67,17 @@ public class Server implements CommandLineRunner
     public static final String METADATA = "metadata";
 
     private final HarvesterConfiguration harvesterConfiguration;
+    private final HttpClient httpClient;
     private final TransformerFactory factory;
     private boolean fullIsRunning = false;
     private boolean incrementalIsRunning = false;
 
     @Autowired
-    public Server( HarvesterConfiguration harvesterConfiguration )
+    public Server( HarvesterConfiguration harvesterConfiguration, HttpClient httpClient )
             throws TransformerConfigurationException
     {
         this.harvesterConfiguration = harvesterConfiguration;
+        this.httpClient = httpClient;
         factory = TransformerFactory.newInstance();
         factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
     }
@@ -429,12 +431,12 @@ public class Server implements CommandLineRunner
                 ListIdentifiers li;
                 if ( resumptionToken == null )
                 {
-                    li = new ListIdentifiers( oaiBaseUrl, fromDate, null, set, mdFormat, harvesterConfiguration.getTimeout() );
+                    li = new ListIdentifiers( httpClient, oaiBaseUrl, fromDate, null, set, mdFormat, harvesterConfiguration.getTimeout() );
                 }
                 else
                 {
                     log.trace( "recurse: url {}\ttoken: {}", url, resumptionToken );
-                    li = new ListIdentifiers( oaiBaseUrl, resumptionToken, harvesterConfiguration.getTimeout() );
+                    li = new ListIdentifiers( httpClient, oaiBaseUrl, resumptionToken, harvesterConfiguration.getTimeout() );
                 }
 
                 Document identifiers = li.getDocument();
@@ -478,7 +480,7 @@ public class Server implements CommandLineRunner
             try
             {
                 log.debug( "Harvesting {} from {}", currentRecord, oaiUrl );
-                GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration
+                GetRecord pmhRecord = new GetRecord( httpClient, oaiUrl, currentRecord, mdFormat, harvesterConfiguration
                         .getTimeout() );
 
                 final NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( METADATA );
@@ -539,7 +541,7 @@ public class Server implements CommandLineRunner
         String resumptionToken;
         do
         {
-            ListSets ls = new ListSets( urlToSend.toString(), harvesterConfiguration.getTimeout() );
+            ListSets ls = new ListSets( httpClient, urlToSend.toString(), harvesterConfiguration.getTimeout() );
 
             Document document = ls.getDocument();
 
