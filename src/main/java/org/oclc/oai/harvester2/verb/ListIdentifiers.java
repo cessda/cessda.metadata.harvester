@@ -41,6 +41,7 @@ import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.NoSuchElementException;
 
 /**
@@ -57,7 +58,7 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @throws SAXException the xml response is bad
 	 * @throws IOException  an I/O error occurred
 	 */
-	public ListIdentifiers( HttpClient httpClient, String baseURL, String from, String until, String set, String metadataPrefix, int timeout )
+	public ListIdentifiers( HttpClient httpClient, String baseURL, String from, String until, String set, String metadataPrefix, Duration timeout )
 			throws IOException, SAXException
 	{
 		super( httpClient, getRequestURL( baseURL, from, until, set, metadataPrefix ), timeout );
@@ -71,7 +72,7 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @throws IOException
 	 * @throws SAXException
 	 */
-	public ListIdentifiers( HttpClient httpClient, String baseURL, String resumptionToken, int timeout ) throws IOException, SAXException
+	public ListIdentifiers( HttpClient httpClient, String baseURL, String resumptionToken, Duration timeout ) throws IOException, SAXException
 	{
 		super( httpClient, getRequestURL( baseURL, resumptionToken ), timeout );
 	}

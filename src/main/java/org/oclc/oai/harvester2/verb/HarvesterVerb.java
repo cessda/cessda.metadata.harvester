@@ -52,6 +52,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
 import java.time.Duration;
+import java.time.Duration;
 
 /**
  * HarvesterVerb is the parent class for each of the OAI verbs.
@@ -141,7 +142,7 @@ public abstract class HarvesterVerb
 	 */
 	protected HarvesterVerb( HttpClient httpClient, String requestURL ) throws IOException, SAXException
 	{
-		this(httpClient, requestURL, 10 );
+		this(httpClient, requestURL, Duration.ofSeconds( 10 ) );
 	}
 
 	/**
@@ -151,7 +152,7 @@ public abstract class HarvesterVerb
 	 * @throws IOException
 	 * @throws SAXException
 	 */
-	protected HarvesterVerb( HttpClient httpClient, String requestURL, int timeout ) throws IOException, SAXException
+	protected HarvesterVerb( HttpClient httpClient, String requestURL, Duration timeout ) throws IOException, SAXException
 	{
 		this.requestURL = URI.create( requestURL );
 

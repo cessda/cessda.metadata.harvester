@@ -22,6 +22,7 @@ package eu.cessda.eqb.harvester;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -50,7 +51,7 @@ class HarvesterConfiguration
     private List<Repo> repos = new ArrayList<>();
     private Cron cron;
     private From from;
-    private int timeout;
+    private Duration timeout;
 
     public String getDialectDefinitionName()
     {
@@ -122,12 +123,12 @@ class HarvesterConfiguration
         this.from = from;
     }
 
-    public int getTimeout()
+    public Duration getTimeout()
     {
         return timeout;
     }
 
-    public void setTimeout( int timeout )
+    public void setTimeout( Duration timeout )
     {
         this.timeout = timeout;
     }
