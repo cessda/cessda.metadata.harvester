@@ -31,7 +31,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -369,7 +368,6 @@ public class Server implements CommandLineRunner
      */
     private void harvestSet( String baseUrl, String set, String fromDate, String mdFormat )
     {
-        log.info( "Fetching records for repository: {}, set: {} from: {}", baseUrl, set, fromDate );
         try
         {
             fetchDCRecords( baseUrl, set, fromDate, mdFormat );
@@ -541,18 +539,18 @@ public class Server implements CommandLineRunner
         {
             var ls = new ListSets( httpClient, urlToSend.toString(), harvesterConfiguration.getTimeout() );
 
-            Document document = ls.getDocument();
+            if ( ls.getErrors().getLength() != 0 )
+            {
+                log.error( "Invalid request {}", ls );
+            }
+
+            var document = ls.getDocument();
 
             NodeList nl = document.getElementsByTagName( "setSpec" );
 
             for ( int i = 0; i < nl.getLength(); i++ )
             {
                 unfoldedSets.add( nl.item( i ).getTextContent() );
-            }
-
-            if ( ls.toString().contains( "error" ) )
-            {
-                log.error( "Invalid request {}", ls );
             }
 
             resumptionToken = ls.getResumptionToken();

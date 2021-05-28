@@ -15,6 +15,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -82,6 +83,29 @@ class ListIdentifiersTests
     }
 
     @Test
+    void shouldReturnEmptyOptionalForAnEmptyResumptionToken() throws IOException, SAXException
+    {
+        // Given
+        var httpClient = mock( HttpClient.class );
+
+        when( httpClient.getHttpResponse( any(URL.class), eq( TIMEOUT )) )
+                .thenReturn( new ByteArrayInputStream(
+                        RecordHeadersMock.getListIdentifiersXMLResumptionEmpty().getBytes( StandardCharsets.UTF_8 )
+                ) );
+
+        var identifiers = new ListIdentifiers( httpClient,
+                "https://oai.ukdataservice.ac.uk:8443/oai/provider",
+                null,
+                null,
+                null,
+                "ddi",
+                TIMEOUT
+        );
+
+        assertTrue( identifiers.getResumptionToken().isEmpty() );
+    }
+
+    @Test
     void shouldReturnDocumentWhenResumingWithToken() throws IOException, SAXException
     {
         // Given
@@ -99,10 +123,34 @@ class ListIdentifiersTests
         );
 
         // Then
-        var identifiersIDs = identifiers.getDocument().getElementsByTagName( "identifier" );
+        var identifiersIDs = identifiers.getIdentifiers();
 
-        assertEquals( 1, identifiersIDs.getLength());
+        assertEquals( 1, identifiersIDs.size());
 
-        assertEquals( "998", identifiersIDs.item( 0 ).getTextContent() );
+        assertEquals( "998", identifiersIDs.get( 0 ) );
+    }
+
+    @Test
+    void shouldReturnNoRecordsOnError() throws IOException, SAXException
+    {
+        // Given
+        var httpClient = mock( HttpClient.class );
+
+        when( httpClient.getHttpResponse( any(URL.class), eq( TIMEOUT )) )
+                .thenReturn( new ByteArrayInputStream(
+                        RecordHeadersMock.getListIdentifiersXMLWithCannotDisseminateFormatError().getBytes( StandardCharsets.UTF_8 )
+                ) );
+
+        var identifiers = new ListIdentifiers( httpClient,
+                "https://oai.ukdataservice.ac.uk:8443/oai/provider",
+                "3/6/7/ddi/null/2017-01-01/null",
+                TIMEOUT
+        );
+
+        // Then
+        var identifiersIDs = identifiers.getIdentifiers();
+
+        assertTrue( identifiersIDs.isEmpty() );
+        assertTrue( identifiers.getResumptionToken().isEmpty() );
     }
 }

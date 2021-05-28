@@ -44,14 +44,13 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * This class represents an ListIdentifiers response on either the server or on the client
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class ListIdentifiers extends HarvesterVerb
+public class ListIdentifiers extends HarvesterVerb implements Resumable
 {
 	/**
 	 * Client-side ListIdentifiers verb constructor
@@ -118,23 +117,6 @@ public class ListIdentifiers extends HarvesterVerb
 			records.add(identifier);
 		}
 		return Collections.unmodifiableList(records);
-	}
-
-	/**
-	 * Get the oai:resumptionToken from the response
-	 *
-	 * @return the oai:resumptionToken value, or an empty optional if a resumption token is not present
-	 */
-	public Optional<String> getResumptionToken()
-	{
-		var resumptionToken = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "resumptionToken" );
-
-		if (resumptionToken.getLength() > 0)
-		{
-			var token = resumptionToken.item( 0 ).getTextContent();
-			return Optional.of( token );
-		}
-		return Optional.empty();
 	}
 
 	/**

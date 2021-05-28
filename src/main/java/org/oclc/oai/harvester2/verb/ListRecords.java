@@ -37,19 +37,17 @@ package org.oclc.oai.harvester2.verb;
 import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URLEncoder;
-import java.util.NoSuchElementException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * This class represents an ListRecords response on either the server or on the client
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class ListRecords extends HarvesterVerb
+public class ListRecords extends HarvesterVerb implements Resumable
 {
 	/**
 	 * Client-side ListRecords verb constructor
@@ -79,35 +77,6 @@ public class ListRecords extends HarvesterVerb
 	public ListRecords( HttpClient httpClient, String baseURL, String resumptionToken ) throws IOException, SAXException
 	{
 		super( httpClient, getRequestURL( baseURL, resumptionToken ) );
-	}
-
-	/**
-	 * Get the oai:resumptionToken from the response
-	 *
-	 * @return the oai:resumptionToken value
-	 */
-	public String getResumptionToken()
-	{
-		try
-		{
-			String schemaLocation = getSchemaLocation();
-			if ( schemaLocation.contains( SCHEMA_LOCATION_V2_0 ) )
-			{
-				return getSingleString( "/oai20:OAI-PMH/oai20:ListRecords/oai20:resumptionToken" );
-			}
-			else if ( schemaLocation.contains( SCHEMA_LOCATION_V1_1_LIST_RECORDS ) )
-			{
-				return getSingleString( "/oai11_ListRecords:ListRecords/oai11_ListRecords:resumptionToken" );
-			}
-			else
-			{
-				throw new NoSuchElementException( schemaLocation );
-			}
-		}
-		catch ( TransformerException e )
-		{
-			throw new IllegalStateException(e);
-		}
 	}
 
 	/**
@@ -141,8 +110,8 @@ public class ListRecords extends HarvesterVerb
 	 * @param resumptionToken
 	 * @return
 	 */
-	private static String getRequestURL( String baseURL, String resumptionToken ) throws UnsupportedEncodingException
+	private static String getRequestURL( String baseURL, String resumptionToken )
 	{
-		return baseURL + "?verb=ListRecords" + "&resumptionToken=" + URLEncoder.encode( resumptionToken, "UTF-8" );
+		return baseURL + "?verb=ListRecords" + "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 );
 	}
 }
