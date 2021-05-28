@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Configuration;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -45,24 +46,34 @@ import java.util.Objects;
 @ConfigurationProperties( prefix = "harvester" )
 class HarvesterConfiguration
 {
+    /**
+     * List of repositories to harvest.
+     */
+    private final List<Repo> repos = new ArrayList<>();
+    /**
+     * The output directory of the harvester.
+     */
     private Path dir = Path.of(System.getProperty( "java.io.tmpdir" ));
-    private String recipient = null;
+    /**
+     * Keep the OAI envelope.
+     */
     private boolean keepOAIEnvelope = true;
+    /**
+     * Remove the OAI envelope.
+     */
     private boolean removeOAIEnvelope = false;
-    private List<Repo> repos = new ArrayList<>();
+    /**
+     * Date to harvest from.
+     */
     private From from;
+    /**
+     * Timeout for HTTP requests, defaults to 30 seconds if unspecified.
+     */
     private Duration timeout = Duration.ofSeconds( 30 );
 
-    public boolean removeOAIEnvelope()
-    {
-        return removeOAIEnvelope;
-    }
-
-    public void setRemoveOAIEnvelope( boolean removeOAIEnvelope )
-    {
-        this.removeOAIEnvelope = removeOAIEnvelope;
-    }
-
+    /**
+     * Keep the OAI envelope.
+     */
     public boolean keepOAIEnvelope()
     {
         return keepOAIEnvelope;
@@ -73,34 +84,54 @@ class HarvesterConfiguration
         this.keepOAIEnvelope = keepOAIEnvelope;
     }
 
-    public String getRecipient()
+    /**
+     * Remove the OAI envelope.
+     */
+    public boolean removeOAIEnvelope()
     {
-        return recipient;
+        return removeOAIEnvelope;
     }
 
-    public void setRecipient( String recipient )
+    public void setRemoveOAIEnvelope( boolean removeOAIEnvelope )
     {
-        this.recipient = recipient;
+        this.removeOAIEnvelope = removeOAIEnvelope;
     }
 
+    /**
+     * Gets the output directory of the harvester.
+     */
     public Path getDir()
     {
         return dir;
     }
 
+    /**
+     * Sets the output directory of the harvester.
+     * @param dir the directory, must not be {@code null}.
+     */
     public void setDir( Path dir )
     {
+        Objects.requireNonNull( dir, "dir must not be null" );
         this.dir = dir;
     }
 
+    /**
+     * Get the list of repositories to harvest.
+     */
     public List<Repo> getRepos()
     {
         return repos;
     }
 
-    public void setRepos( List<Repo> repos )
+    /**
+     * Set the list of repositories to harvest.
+     * @param repos the collection of repos to add, must not be {@code null}.
+     */
+    public void setRepos( Collection<Repo> repos )
     {
-        this.repos = repos;
+        Objects.requireNonNull( repos, "repos must not be null" );
+        this.repos.clear();
+        this.repos.addAll( repos );
     }
 
     public From getFrom()
@@ -113,13 +144,21 @@ class HarvesterConfiguration
         this.from = from;
     }
 
+    /**
+     * Gets the timeout for HTTP requests.
+     */
     public Duration getTimeout()
     {
         return timeout;
     }
 
+    /**
+     * Sets the timeout for HTTP requests.
+     * @param timeout the timeout, must not be {@code null}.
+     */
     public void setTimeout( Duration timeout )
     {
+        Objects.requireNonNull( timeout, "timeout must not be null" );
         this.timeout = timeout;
     }
 
@@ -131,14 +170,13 @@ class HarvesterConfiguration
         HarvesterConfiguration that = (HarvesterConfiguration) o;
         return keepOAIEnvelope == that.keepOAIEnvelope && removeOAIEnvelope == that.removeOAIEnvelope &&
                 timeout == that.timeout && Objects.equals( dir, that.dir ) &&
-                Objects.equals( recipient, that.recipient ) &&
                 Objects.equals( repos, that.repos ) && Objects.equals( from, that.from );
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash( dir, recipient, keepOAIEnvelope, removeOAIEnvelope, repos, from, timeout );
+        return Objects.hash( dir, keepOAIEnvelope, removeOAIEnvelope, repos, from, timeout );
     }
 
     @Override
@@ -146,7 +184,6 @@ class HarvesterConfiguration
     {
         return "HarvesterConfiguration{" +
                 "dir=" + dir +
-                ", recipient='" + recipient + '\'' +
                 ", keepOAIEnvelope=" + keepOAIEnvelope +
                 ", removeOAIEnvelope=" + removeOAIEnvelope +
                 ", repos=" + repos +
@@ -209,7 +246,8 @@ class HarvesterConfiguration
             if ( o == null || getClass() != o.getClass() ) return false;
             From from = (From) o;
             return Objects.equals( incremental, from.incremental ) &&
-                    Objects.equals( initial, from.initial ) && Objects.equals( full, from.full ) &&
+                    Objects.equals( initial, from.initial ) &&
+                    Objects.equals( full, from.full ) &&
                     Objects.equals( single, from.single );
         }
 

@@ -394,13 +394,15 @@ public class Server implements CommandLineRunner
             throw new DirectoryCreationFailedException( repositoryDirectory, e );
         }
 
-        log.info( "Fetching records for repository: {}, set: {}.", repoBase, setspec );
+        log.debug( "Fetching records for repository: {}, set: {}.", repoBase, setspec );
 
         var currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, fromDate, mdFormat );
 
-        log.info( "Retrieved {} record headers from {}", currentlyRetrievedSet.size(), repoBase );
+        log.info( "Retrieved {} record headers from {}, set: {}.", currentlyRetrievedSet.size(), repoBase, setspec );
 
-        writeToLocalFileSystem( currentlyRetrievedSet, repoBase, repositoryDirectory, mdFormat );
+        var retrievedRecords = writeToLocalFileSystem( currentlyRetrievedSet, repoBase, repositoryDirectory, mdFormat );
+
+        log.info( "Retrieved {} records from {}, set: {}.", retrievedRecords, repoBase, setspec );
     }
 
     private List<String> getIdentifiersForSet( String oaiBaseUrl, String set, String fromDate, String mdFormat ) throws HarvesterFailedException
@@ -438,10 +440,11 @@ public class Server implements CommandLineRunner
         }
     }
 
-    private void writeToLocalFileSystem( Collection<String> records, String oaiUrl, Path repositoryDirectory, String mdFormat ) throws DirectoryCreationFailedException
+    private int writeToLocalFileSystem( Collection<String> records, String oaiUrl, Path repositoryDirectory, String mdFormat ) throws DirectoryCreationFailedException
     {
         var unwrappedOutputDirectory = repositoryDirectory.resolve( "unwrapped" );
         var wrappedOutputDirectory = repositoryDirectory.resolve( "wrapped" );
+
         try
         {
             log.debug( "Creating destination directory: {}", repositoryDirectory );
@@ -506,7 +509,7 @@ public class Server implements CommandLineRunner
             }
         }
 
-        log.info( "Retrieved {} records from {}", retrievedRecords, oaiUrl );
+        return retrievedRecords;
     }
 
     /**
