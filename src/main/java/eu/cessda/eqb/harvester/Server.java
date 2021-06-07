@@ -31,20 +31,18 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.annotation.PreDestroy;
 import javax.xml.XMLConstants;
+import javax.xml.transform.Source;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -52,13 +50,11 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @EnableConfigurationProperties
 @SpringBootApplication
@@ -66,18 +62,19 @@ public class Server implements CommandLineRunner
 {
 
     private static final Logger log = LoggerFactory.getLogger( Server.class );
-    public static final String METADATA = "metadata";
 
     private final HarvesterConfiguration harvesterConfiguration;
+    private final HttpClient httpClient;
     private final TransformerFactory factory;
     private boolean fullIsRunning = false;
     private boolean incrementalIsRunning = false;
 
     @Autowired
-    public Server( HarvesterConfiguration harvesterConfiguration )
+    public Server( HarvesterConfiguration harvesterConfiguration, HttpClient httpClient )
             throws TransformerConfigurationException
     {
         this.harvesterConfiguration = harvesterConfiguration;
+        this.httpClient = httpClient;
         factory = TransformerFactory.newInstance();
         factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
     }
@@ -107,19 +104,6 @@ public class Server implements CommandLineRunner
                 .mapToObj( i -> "Repo " + i + " : " + singleHarvesting( i ) + "\n" )
                 .collect( Collectors.joining() );
         return res + "Bundle harvesting finished from " + harvesterConfiguration.getFrom().getSingle();
-    }
-
-    private static String oaiBase( String u )
-    {
-        final int endIndex = u.indexOf( '?' );
-        if ( endIndex != -1 )
-        {
-            return u.substring( 0, endIndex );
-        }
-        else
-        {
-            return u;
-        }
     }
 
     /**
@@ -195,12 +179,9 @@ public class Server implements CommandLineRunner
         {
             return;
         }
-        log.info( "Full harvest schedule: {}", harvesterConfiguration.getCron().getFull() );
-        log.info( "Incremental harvest schedule: {}", harvesterConfiguration.getCron().getIncremental() );
 
         log.info( "Initial harvesting starting from {}", harvesterConfiguration.getFrom().getInitial() );
-        log.info( "Incremental harvesting will start with cron schedule {} from {}",
-                harvesterConfiguration.getCron().getIncremental(), harvesterConfiguration.getFrom().getIncremental() );
+
         try
         {
             runHarvest( harvesterConfiguration.getFrom().getInitial() );
@@ -316,9 +297,9 @@ public class Server implements CommandLineRunner
         var executor = Executors.newFixedThreadPool(harvesterConfiguration.getRepos().size());
 
         var futures = new ArrayList<CompletableFuture<Void>>();
-        for ( Repo repo : harvesterConfiguration.getRepos() )
+        for ( var repo : harvesterConfiguration.getRepos() )
         {
-            URI baseUrl = repo.getUrl();
+            log.info( "Harvesting repository {}", repo );
 
             Set<String> sets = discoverSets( repo );
 
@@ -329,11 +310,11 @@ public class Server implements CommandLineRunner
             }
             else
             {
-                throw new IllegalArgumentException( "Repository \"" + repo.getUrl() + "\" has no metadata format configured.\n" );
+                throw new IllegalArgumentException( "Repository " + repo + " has no metadata format configured." );
             }
 
             futures.add(
-                    CompletableFuture.runAsync( () -> sets.forEach( set -> harvestSet( baseUrl.toString(), set, fromDate, mdFormat ) ), executor )
+                    CompletableFuture.runAsync( () -> sets.forEach( set -> harvestSet( repo.getUrl().toString(), set, fromDate, mdFormat ) ), executor )
             );
         }
         futures.forEach( CompletableFuture::join );
@@ -353,16 +334,16 @@ public class Server implements CommandLineRunner
      */
     private Set<String> discoverSets( Repo repo )
     {
-        if ( repo.getSetName() != null && !repo.getSetName().isEmpty() )
+        if ( repo.getSet() != null )
         {
-            return Collections.singleton( repo.getSetName() );
+            return Collections.singleton( repo.getSet() );
         }
         else if ( repo.discoverSets() )
         {
             try
             {
-                final Set<String> unfoldedSets = getSetStrings( repo.getUrl() );
-                log.info( "No. of sets: {}", unfoldedSets.size() );
+                var unfoldedSets = getSetStrings( repo.getUrl() );
+                log.debug( "No. of sets: {}", unfoldedSets.size() );
                 return unfoldedSets;
             }
             catch ( IOException | TransformerException | SAXException e )
@@ -387,11 +368,9 @@ public class Server implements CommandLineRunner
      */
     private void harvestSet( String baseUrl, String set, String fromDate, String mdFormat )
     {
-        log.info( "Fetching records for repository: {}, set: {} from: {}", baseUrl, set, fromDate );
         try
         {
-            var oaiBase = oaiBase( baseUrl );
-            fetchDCRecords( oaiBase, set, fromDate, mdFormat );
+            fetchDCRecords( baseUrl, set, fromDate, mdFormat );
         }
         catch ( HarvesterFailedException e )
         {
@@ -401,11 +380,10 @@ public class Server implements CommandLineRunner
 
     private void fetchDCRecords( String repoBase, String setspec, String fromDate, String mdFormat ) throws HarvesterFailedException
     {
-        var path = Paths.get( harvesterConfiguration.getDir() );
 
         String indexName = shortened( repoBase, setspec );
 
-        final var repositoryDirectory = path.resolve( indexName );
+        final var repositoryDirectory = harvesterConfiguration.getDir().resolve( indexName );
         try
         {
             log.debug( "Creating destination directory: {}", repositoryDirectory );
@@ -416,59 +394,43 @@ public class Server implements CommandLineRunner
             throw new DirectoryCreationFailedException( repositoryDirectory, e );
         }
 
-        log.info( "Fetching records for repository {} and pmh set {}.", repoBase, setspec );
+        log.debug( "Fetching records for repository: {}, set: {}.", repoBase, setspec );
 
         var currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, fromDate, mdFormat );
 
-        writeToLocalFileSystem( currentlyRetrievedSet, repoBase, repositoryDirectory, mdFormat );
+        log.info( "Retrieved {} record headers from {}, set: {}.", currentlyRetrievedSet.size(), repoBase, setspec );
 
-        log.info( "Retrieved {} files from repository {}", currentlyRetrievedSet.size(), repoBase );
+        var retrievedRecords = writeToLocalFileSystem( currentlyRetrievedSet, repoBase, repositoryDirectory, mdFormat );
+
+        log.info( "Retrieved {} records from {}, set: {}.", retrievedRecords, repoBase, setspec );
     }
 
     private List<String> getIdentifiersForSet( String oaiBaseUrl, String set, String fromDate, String mdFormat ) throws HarvesterFailedException
     {
         try
         {
-            String resumptionToken = null;
             final var records = new ArrayList<String>();
+            var li = new ListIdentifiers( httpClient, oaiBaseUrl, fromDate, null, set, mdFormat, harvesterConfiguration.getTimeout() );
+
+            Optional<String> resumptionToken;
 
             do
             {
                 log.debug( "URL: {}, set: {}, list size: {}", oaiBaseUrl, set, records.size() );
 
-                ListIdentifiers li;
-                if ( resumptionToken == null )
-                {
-                    li = new ListIdentifiers( oaiBaseUrl, fromDate, null, set, mdFormat, harvesterConfiguration.getTimeout() );
-                }
-                else
-                {
-                    log.trace( "recurse: url {}\ttoken: {}", oaiBaseUrl, resumptionToken );
-                    li = new ListIdentifiers( oaiBaseUrl, resumptionToken, harvesterConfiguration.getTimeout() );
-                }
-
-                Document identifiers = li.getDocument();
-
                 // add to list of records to fetch
-                var identifiersIDs = identifiers.getElementsByTagName( "identifier" );
-                for ( int i = 0; i < identifiersIDs.getLength(); i++ )
-                {
-                    String identifier = identifiersIDs.item( i ).getTextContent();
-                    records.add( identifier );
-                }
+                records.addAll( li.getIdentifiers() );
 
                 // need to continue looping?
-                NodeList resumptionTokenReq = identifiers.getElementsByTagName( "resumptionToken" );
-                if ( resumptionTokenReq.getLength() > 0 && !resumptionTokenReq.item( 0 ).getTextContent().isEmpty() )
+                resumptionToken = li.getResumptionToken();
+
+                if (resumptionToken.isPresent())
                 {
-                    resumptionToken = resumptionTokenReq.item( 0 ).getTextContent();
-                }
-                else
-                {
-                    resumptionToken = null;
+                    log.trace( "recurse: url {}\ttoken: {}", oaiBaseUrl, resumptionToken );
+                    li = new ListIdentifiers( httpClient, oaiBaseUrl, resumptionToken.orElseThrow(), harvesterConfiguration.getTimeout() );
                 }
             }
-            while ( resumptionToken != null );
+            while ( resumptionToken.isPresent() );
 
             return records;
         }
@@ -478,48 +440,62 @@ public class Server implements CommandLineRunner
         }
     }
 
-    private void writeToLocalFileSystem( Collection<String> records, String oaiUrl, Path repositoryDirectory, String mdFormat )
+    private int writeToLocalFileSystem( Collection<String> records, String oaiUrl, Path repositoryDirectory, String mdFormat ) throws DirectoryCreationFailedException
     {
-        for ( String currentRecord : records )
+        var unwrappedOutputDirectory = repositoryDirectory.resolve( "unwrapped" );
+        var wrappedOutputDirectory = repositoryDirectory.resolve( "wrapped" );
+
+        try
         {
-            String fileName = currentRecord + "_" + harvesterConfiguration.getDialectDefinitionName() + ".xml";
+            log.debug( "Creating destination directory: {}", repositoryDirectory );
+            Files.createDirectories( unwrappedOutputDirectory );
+            Files.createDirectories( wrappedOutputDirectory );
+        }
+        catch ( IOException e )
+        {
+            throw new DirectoryCreationFailedException( repositoryDirectory, e );
+        }
+
+        int retrievedRecords = 0;
+
+        for ( var currentRecord : records )
+        {
+            var fileName = URLEncoder.encode( currentRecord + "_" + mdFormat + ".xml", StandardCharsets.UTF_8 );
 
             try
             {
                 log.debug( "Harvesting {} from {}", currentRecord, oaiUrl );
-                GetRecord pmhRecord = new GetRecord( oaiUrl, currentRecord, mdFormat, harvesterConfiguration
-                        .getTimeout() );
+                var pmhRecord = new GetRecord( httpClient, oaiUrl, currentRecord, mdFormat, harvesterConfiguration.getTimeout() );
 
-                final NodeList metadataElements = pmhRecord.getDocument().getElementsByTagName( METADATA );
-                if ( metadataElements.getLength() > 0 )
+                // Check for errors
+                if (pmhRecord.getErrors().getLength() != 0)
                 {
-                    final DOMSource source;
+                    var error = pmhRecord.getErrors().item( 0 );
+                    log.warn( "Failed to harvest record {}: {}: {}", currentRecord,
+                            error.getAttributes().getNamedItem( "code" ).getTextContent(),
+                            error.getTextContent()
+                    );
+                    continue;
+                }
 
-                    // remove envelope?
-                    if ( harvesterConfiguration.isRemoveOAIEnvelope() )
-                    {
-                        NodeList metadataChildNodes = metadataElements
-                                    .item( 0 )
-                                    .getChildNodes();
-                            source = IntStream.range( 0, metadataChildNodes.getLength() )
-                                    .mapToObj( metadataChildNodes::item )
-                                    .filter( Element.class::isInstance )
-                                    .map( DOMSource::new )
-                                .findAny().orElseThrow( () ->
-                                        new NoSuchElementException( "No elements with the tag name '" + METADATA + "' were found" )
-                                );
-                    }
-                    else
-                    {
-                        source = new DOMSource( pmhRecord.getDocument() );
-                    }
+                retrievedRecords++;
 
-                    Path fdest = repositoryDirectory.resolve( URLEncoder.encode( fileName, StandardCharsets.UTF_8.name() ) );
-                    try ( OutputStream fOutputStream = Files.newOutputStream( fdest ) )
+                // Remove envelope
+                if (harvesterConfiguration.removeOAIEnvelope())
+                {
+                    var metadata = pmhRecord.getMetadata();
+                    if (metadata.isPresent())
                     {
-                        log.trace( "Writing to {}", fdest );
-                        factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
+                        var source = new DOMSource( metadata.orElseThrow() );
+                        writeDomSource( source, unwrappedOutputDirectory.resolve( fileName ) );
                     }
+                }
+
+                // Keep envelope
+                if (harvesterConfiguration.keepOAIEnvelope())
+                {
+                    var source = new DOMSource( pmhRecord.getDocument() );
+                    writeDomSource( source, wrappedOutputDirectory.resolve( fileName ) );
                 }
             }
             catch ( TransformerConfigurationException e )
@@ -529,8 +505,24 @@ public class Server implements CommandLineRunner
             }
             catch ( IOException | SAXException | TransformerException e1 )
             {
-                log.error( "Failed to harvest record {}: {}", currentRecord.trim(), e1.toString() );
+                log.warn( "Failed to harvest record {} from {}: {}", currentRecord.trim(), oaiUrl, e1.toString() );
             }
+        }
+
+        return retrievedRecords;
+    }
+
+    /**
+     * Writes the given {@link Source} to the specified {@link Path}.
+     * @throws IOException if an IO error occurs while writing the file.
+     * @throws TransformerException if an unrecoverable error occurs whilst writing the source.
+     */
+    private void writeDomSource( Source source, Path fdest ) throws IOException, TransformerException
+    {
+        try ( var fOutputStream = Files.newOutputStream( fdest ) )
+        {
+            log.trace( "Writing to {}", fdest );
+            factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
         }
     }
 
@@ -545,12 +537,17 @@ public class Server implements CommandLineRunner
         HashSet<String> unfoldedSets = new HashSet<>();
 
         URI urlToSend = url;
-        String resumptionToken;
+        Optional<String> resumptionToken;
         do
         {
-            ListSets ls = new ListSets( urlToSend.toString(), harvesterConfiguration.getTimeout() );
+            var ls = new ListSets( httpClient, urlToSend.toString(), harvesterConfiguration.getTimeout() );
 
-            Document document = ls.getDocument();
+            if ( ls.getErrors().getLength() != 0 )
+            {
+                log.error( "Invalid request {}", ls );
+            }
+
+            var document = ls.getDocument();
 
             NodeList nl = document.getElementsByTagName( "setSpec" );
 
@@ -559,19 +556,13 @@ public class Server implements CommandLineRunner
                 unfoldedSets.add( nl.item( i ).getTextContent() );
             }
 
-            if ( ls.toString().contains( "error" ) )
-            {
-                log.error( "Invalid request {}", ls );
-            }
-
             resumptionToken = ls.getResumptionToken();
-            if ( !resumptionToken.isEmpty() )
+            if ( resumptionToken.isPresent() )
             {
-                log.info( resumptionToken );
-                urlToSend = URI.create( url + "?verb=ListSets&resumptionToken=" + resumptionToken);
+                urlToSend = URI.create( url + "?verb=ListSets&resumptionToken=" + resumptionToken.orElseThrow() );
             }
         }
-        while ( !resumptionToken.isEmpty() );
+        while ( resumptionToken.isPresent() );
 
         return unfoldedSets;
     }

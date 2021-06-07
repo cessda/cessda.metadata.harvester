@@ -34,12 +34,16 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import org.w3c.dom.Node;
+import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.time.Duration;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 /**
  * This class represents an GetRecord response on either the server or on the client
@@ -48,6 +52,7 @@ import java.util.NoSuchElementException;
  */
 public class GetRecord extends HarvesterVerb
 {
+
 	/**
 	 * Client-side GetRecord verb constructor
 	 *
@@ -60,10 +65,10 @@ public class GetRecord extends HarvesterVerb
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	public GetRecord( String baseURL, String identifier, String metadataPrefix, Integer timeout )
+	public GetRecord( HttpClient httpClient, String baseURL, String identifier, String metadataPrefix, Duration timeout )
 			throws IOException, SAXException
 	{
-		super( getRequestURL( baseURL, identifier, metadataPrefix ), timeout );
+		super( httpClient, getRequestURL( baseURL, identifier, metadataPrefix ), timeout );
 	}
 
 	/**
@@ -92,6 +97,25 @@ public class GetRecord extends HarvesterVerb
 		{
 			throw new IllegalStateException( e );
 		}
+	}
+
+	/**
+	 * Gets the metadata of the OAI-PMH response.
+	 *
+	 * @return the metadata section of the document, or an empty optional if metadata was not returned.
+	 */
+	public Optional<Node> getMetadata()
+	{
+		var metadataElements = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "metadata" );
+
+		// If a record is deleted, then the metadata section will not be present
+		if (metadataElements.getLength() > 0)
+		{
+			var metadataChildNodes = metadataElements.item( 0 ).getChildNodes();
+			return Optional.ofNullable( metadataChildNodes.item( 0 ) );
+		}
+
+		return Optional.empty();
 	}
 
 	/**

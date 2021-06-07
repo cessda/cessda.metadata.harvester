@@ -34,20 +34,23 @@
 
 package org.oclc.oai.harvester2.verb;
 
+import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.NoSuchElementException;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * This class represents an ListIdentifiers response on either the server or on the client
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class ListIdentifiers extends HarvesterVerb
+public class ListIdentifiers extends HarvesterVerb implements Resumable
 {
 	/**
 	 * Client-side ListIdentifiers verb constructor
@@ -56,10 +59,10 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @throws SAXException the xml response is bad
 	 * @throws IOException  an I/O error occurred
 	 */
-	public ListIdentifiers( String baseURL, String from, String until, String set, String metadataPrefix, Integer timeout )
+	public ListIdentifiers( HttpClient httpClient, String baseURL, String from, String until, String set, String metadataPrefix, Duration timeout )
 			throws IOException, SAXException
 	{
-		super( getRequestURL( baseURL, from, until, set, metadataPrefix ), timeout );
+		super( httpClient, getRequestURL( baseURL, from, until, set, metadataPrefix ), timeout );
 	}
 
 	/**
@@ -70,9 +73,9 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @throws IOException
 	 * @throws SAXException
 	 */
-	public ListIdentifiers( String baseURL, String resumptionToken, int timeout ) throws IOException, SAXException
+	public ListIdentifiers( HttpClient httpClient, String baseURL, String resumptionToken, Duration timeout ) throws IOException, SAXException
 	{
-		super( getRequestURL( baseURL, resumptionToken ), timeout );
+		super( httpClient, getRequestURL( baseURL, resumptionToken ), timeout );
 	}
 
 	/**
@@ -102,32 +105,18 @@ public class ListIdentifiers extends HarvesterVerb
 	}
 
 	/**
-	 * Get the oai:resumptionToken from the response
-	 *
-	 * @return the oai:resumptionToken value
-	 * @throws NoSuchElementException if the schema of the document does not support resumption tokens.
+	 * Returns a list of identifiers found in the response. The returned list is unmodifiable.
 	 */
-	public String getResumptionToken()
+	public List<String> getIdentifiers()
 	{
-		try
+		var identifiersIDs = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "identifier" );
+		var records = new ArrayList<String>(identifiersIDs.getLength());
+		for ( int i = 0; i < identifiersIDs.getLength(); i++ )
 		{
-			if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
-			{
-				return getSingleString( "/oai20:OAI-PMH/oai20:ListIdentifiers/oai20:resumptionToken" );
-			}
-			else if ( SCHEMA_LOCATION_V1_1_LIST_IDENTIFIERS.equals( getSchemaLocation() ) )
-			{
-				return getSingleString( "/oai11_ListIdentifiers:ListIdentifiers/oai11_ListIdentifiers:resumptionToken" );
-			}
-			else
-			{
-				throw new NoSuchElementException( getSchemaLocation() );
-			}
+			var identifier = identifiersIDs.item( i ).getTextContent();
+			records.add(identifier);
 		}
-		catch ( TransformerException e )
-		{
-			throw new IllegalStateException( e );
-		}
+		return Collections.unmodifiableList(records);
 	}
 
 	/**
@@ -138,14 +127,7 @@ public class ListIdentifiers extends HarvesterVerb
 	 * @return
 	 */
 	private static String getRequestURL( String baseURL, String resumptionToken )
-{
-		try
 	{
-			return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode( resumptionToken, "UTF-8" );
-		}
-		catch ( UnsupportedEncodingException e )
-	{
-			throw new IllegalStateException(e);
-		}
+		return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 );
 	}
 }

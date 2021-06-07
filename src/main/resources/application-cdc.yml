@@ -10,10 +10,11 @@ logging:
     springfox.documentation.spring.web.readers.operation: WARN
 harvester:
   metadataFormat: ddi
-  dialectDefinitionName: gesisCMM-ddi122
   dir: '@documents@'
-  recipient: john.shepherdson@essex.ac.uk,toni.sissala@tuni.fi
-  timeout: 100
+  recipient: support@cessda.eu
+  timeout: 100s
+  keepOAIEnvelope: false
+  removeOAIEnvelope: false
   from:
     single: '1800-01-01'
     initial: '0001-01-01'
@@ -35,8 +36,9 @@ harvester:
       metadataFormat: oai_ddi25
     - url: http://147.213.4.44:6003/v0/oai
       metadataFormat: oai_ddi25
-    - url: https://snd.gu.se/en/oai-pmh?set=discipline:social-science
+    - url: https://snd.gu.se/en/oai-pmh
       metadataFormat: oai_ddi25
+      set: discipline:social-science
     - url: https://easy.dans.knaw.nl/oai/
       metadataFormat: oai_ddi25_en
     - url: https://easy.dans.knaw.nl/oai/
@@ -49,8 +51,9 @@ harvester:
       metadataFormat: oai_ddi
     - url: http://nesstar.sciences-po.fr/oai-pmh/
       metadataFormat: oai_ddi
-    - url: http://harvester.sodanet.gr:8080/oai/request?set=CESSDA
+    - url: http://harvester.sodanet.gr:8080/oai/request
       metadataFormat: oai_ddi
+      set: CESSDA
     - url: http://nesstar.unidata.unimib.it/oai-pmh/
       metadataFormat: oai_ddi
     - url: http://nesstar.soc.cas.cz/oai-pmh/

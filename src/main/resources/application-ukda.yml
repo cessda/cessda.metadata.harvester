@@ -58,9 +58,8 @@ spring:
       period: 5000
 harvester:
   metadataFormat: ddi
-  dialectDefinitionName: gesisCMM-ddi25
   dir: '@documents@'
-  recipient: thomas.kraemer@gesis.org
+  recipient: support@cessda.eu
   timeout: 60
   from:
     single: '1800-01-01'

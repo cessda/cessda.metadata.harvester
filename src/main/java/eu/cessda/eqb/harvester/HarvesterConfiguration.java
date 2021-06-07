@@ -22,7 +22,10 @@ package eu.cessda.eqb.harvester;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -43,26 +46,48 @@ import java.util.Objects;
 @ConfigurationProperties( prefix = "harvester" )
 class HarvesterConfiguration
 {
-    private String dir = System.getProperty( "java.io.tmpdir" );
-    private String recipient = null;
-    private String dialectDefinitionName = null;
+    /**
+     * List of repositories to harvest.
+     */
+    private final List<Repo> repos = new ArrayList<>();
+    /**
+     * The output directory of the harvester.
+     */
+    private Path dir = Path.of(System.getProperty( "java.io.tmpdir" ));
+    /**
+     * Keep the OAI envelope.
+     */
+    private boolean keepOAIEnvelope = true;
+    /**
+     * Remove the OAI envelope.
+     */
     private boolean removeOAIEnvelope = false;
-    private List<Repo> repos = new ArrayList<>();
-    private Cron cron;
+    /**
+     * Date to harvest from.
+     */
     private From from;
-    private int timeout;
+    /**
+     * Timeout for HTTP requests, defaults to 30 seconds if unspecified.
+     */
+    private Duration timeout = Duration.ofSeconds( 30 );
 
-    public String getDialectDefinitionName()
+    /**
+     * Keep the OAI envelope.
+     */
+    public boolean keepOAIEnvelope()
     {
-        return dialectDefinitionName;
+        return keepOAIEnvelope;
     }
 
-    public void setDialectDefinitionName( String dialectDefinitionName )
+    public void setKeepOAIEnvelope( boolean keepOAIEnvelope )
     {
-        this.dialectDefinitionName = dialectDefinitionName;
+        this.keepOAIEnvelope = keepOAIEnvelope;
     }
 
-    public boolean isRemoveOAIEnvelope()
+    /**
+     * Remove the OAI envelope.
+     */
+    public boolean removeOAIEnvelope()
     {
         return removeOAIEnvelope;
     }
@@ -72,44 +97,41 @@ class HarvesterConfiguration
         this.removeOAIEnvelope = removeOAIEnvelope;
     }
 
-    public String getRecipient()
-    {
-        return recipient;
-    }
-
-    public void setRecipient( String recipient )
-    {
-        this.recipient = recipient;
-    }
-
-    public String getDir()
+    /**
+     * Gets the output directory of the harvester.
+     */
+    public Path getDir()
     {
         return dir;
     }
 
-    public void setDir( String dir )
+    /**
+     * Sets the output directory of the harvester.
+     * @param dir the directory, must not be {@code null}.
+     */
+    public void setDir( Path dir )
     {
+        Objects.requireNonNull( dir, "dir must not be null" );
         this.dir = dir;
     }
 
+    /**
+     * Get the list of repositories to harvest.
+     */
     public List<Repo> getRepos()
     {
         return repos;
     }
 
-    public void setRepos( List<Repo> repos )
+    /**
+     * Set the list of repositories to harvest.
+     * @param repos the collection of repos to add, must not be {@code null}.
+     */
+    public void setRepos( Collection<Repo> repos )
     {
-        this.repos = repos;
-    }
-
-    public Cron getCron()
-    {
-        return cron;
-    }
-
-    public void setCron( Cron cron )
-    {
-        this.cron = cron;
+        Objects.requireNonNull( repos, "repos must not be null" );
+        this.repos.clear();
+        this.repos.addAll( repos );
     }
 
     public From getFrom()
@@ -122,13 +144,21 @@ class HarvesterConfiguration
         this.from = from;
     }
 
-    public int getTimeout()
+    /**
+     * Gets the timeout for HTTP requests.
+     */
+    public Duration getTimeout()
     {
         return timeout;
     }
 
-    public void setTimeout( int timeout )
+    /**
+     * Sets the timeout for HTTP requests.
+     * @param timeout the timeout, must not be {@code null}.
+     */
+    public void setTimeout( Duration timeout )
     {
+        Objects.requireNonNull( timeout, "timeout must not be null" );
         this.timeout = timeout;
     }
 
@@ -138,30 +168,25 @@ class HarvesterConfiguration
         if ( this == o ) return true;
         if ( o == null || getClass() != o.getClass() ) return false;
         HarvesterConfiguration that = (HarvesterConfiguration) o;
-        return removeOAIEnvelope == that.removeOAIEnvelope && Objects.equals( dir, that.dir ) &&
-                Objects.equals( recipient, that.recipient ) &&
-                Objects.equals( dialectDefinitionName, that.dialectDefinitionName ) &&
-                Objects.equals( repos, that.repos ) && Objects.equals( cron, that.cron ) &&
-                Objects.equals( from, that.from ) && Objects.equals( timeout, that.timeout );
+        return keepOAIEnvelope == that.keepOAIEnvelope && removeOAIEnvelope == that.removeOAIEnvelope &&
+                timeout == that.timeout && Objects.equals( dir, that.dir ) &&
+                Objects.equals( repos, that.repos ) && Objects.equals( from, that.from );
     }
 
     @Override
     public int hashCode()
     {
-        return Objects
-                .hash( dir, recipient, dialectDefinitionName, removeOAIEnvelope, repos, cron, from, timeout );
+        return Objects.hash( dir, keepOAIEnvelope, removeOAIEnvelope, repos, from, timeout );
     }
 
     @Override
     public String toString()
     {
         return "HarvesterConfiguration{" +
-                "dir='" + dir + '\'' +
-                ", recipient='" + recipient + '\'' +
-                ", dialectDefinitionName='" + dialectDefinitionName + '\'' +
+                "dir=" + dir +
+                ", keepOAIEnvelope=" + keepOAIEnvelope +
                 ", removeOAIEnvelope=" + removeOAIEnvelope +
                 ", repos=" + repos +
-                ", cron=" + cron +
                 ", from=" + from +
                 ", timeout=" + timeout +
                 '}';
@@ -221,7 +246,8 @@ class HarvesterConfiguration
             if ( o == null || getClass() != o.getClass() ) return false;
             From from = (From) o;
             return Objects.equals( incremental, from.incremental ) &&
-                    Objects.equals( initial, from.initial ) && Objects.equals( full, from.full ) &&
+                    Objects.equals( initial, from.initial ) &&
+                    Objects.equals( full, from.full ) &&
                     Objects.equals( single, from.single );
         }
 
@@ -242,54 +268,4 @@ class HarvesterConfiguration
                     '}';
         }
     }
-
-    public static class Cron
-    {
-
-        private String incremental;
-
-        private String full;
-
-        public String getIncremental()
-        {
-            return incremental;
-        }
-
-        public void setIncremental( String incremental )
-        {
-            this.incremental = incremental;
-        }
-
-        public String getFull()
-        {
-            return full;
-        }
-
-        public void setFull( String full )
-        {
-            this.full = full;
-        }
-
-        @Override
-        public boolean equals( Object o )
-        {
-            if ( this == o ) return true;
-            if ( o == null || getClass() != o.getClass() ) return false;
-            Cron cron = (Cron) o;
-            return Objects.equals( incremental, cron.incremental ) && Objects.equals( full, cron.full );
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Objects.hash( incremental, full );
-        }
-
-        @Override
-        public String toString()
-        {
-            return "Cron [incremental=" + incremental + ", full=" + full + "]";
-        }
-    }
-
 }
