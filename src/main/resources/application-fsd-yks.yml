@@ -55,7 +55,6 @@ spring:
       period: 5000
 harvester:
   metadataFormat: ddi_c
-  dialectDefinitionName: gesisCMM-ddi25
   dir: '@documents@'
   recipient: support@cessda.eu
   timeout: 60

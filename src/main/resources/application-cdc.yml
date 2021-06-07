@@ -10,7 +10,6 @@ logging:
     springfox.documentation.spring.web.readers.operation: WARN
 harvester:
   metadataFormat: ddi
-  dialectDefinitionName: gesisCMM-ddi122
   dir: '@documents@'
   recipient: support@cessda.eu
   timeout: 100s
