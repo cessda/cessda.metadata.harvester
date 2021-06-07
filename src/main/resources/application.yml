@@ -10,7 +10,7 @@ logging:
     de.codecentric.boot.admin.client.registration: WARN
 harvester:
   dir: '@documents@'
-  recipient: thomas.kraemer@gesis.org
+  recipient: support@cessda.eu
   from:
     single: '1800-01-01'
     initial:

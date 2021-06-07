@@ -48,7 +48,7 @@ harvester:
   removeOAIEnvelope: false
   metadataFormat: oai_wgl
   dir:  ${user.home}${file.separator}lopen
-  recipient: claus-peter.klas@gesis.org
+  recipient: support@cessda.eu
   timeout: 60
   from:
     single: '1800-01-01'

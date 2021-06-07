@@ -55,7 +55,7 @@ harvester:
   metadataFormat: ddi_c
   dialectDefinitionName: gesisCMM-ddi25
   dir: '@documents@'
-  recipient: esra.akdeniz@gesis.org, thomas.kraemer@gesis.org
+  recipient: support@cessda.eu
   timeout: 100
   from:
     single: '1800-01-01'
