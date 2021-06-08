@@ -13,8 +13,8 @@ harvester:
   dir: '@documents@'
   recipient: support@cessda.eu
   timeout: 100s
-  keepOAIEnvelope: false
-  removeOAIEnvelope: false
+  keepOAIEnvelope: true
+  removeOAIEnvelope: true
   from:
     single: '1800-01-01'
     initial: '0001-01-01'
