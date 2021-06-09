@@ -31,7 +31,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.annotation.PreDestroy;
@@ -547,14 +546,7 @@ public class Server implements CommandLineRunner
                 log.error( "Invalid request {}", ls );
             }
 
-            var document = ls.getDocument();
-
-            NodeList nl = document.getElementsByTagName( "setSpec" );
-
-            for ( int i = 0; i < nl.getLength(); i++ )
-            {
-                unfoldedSets.add( nl.item( i ).getTextContent() );
-            }
+            unfoldedSets.addAll( ls.getSets() );
 
             resumptionToken = ls.getResumptionToken();
             if ( resumptionToken.isPresent() )
