@@ -1,13 +1,3 @@
-logging:
-  file: '@logging.file@'
-  pattern:
-    console: '%d{yyyy-dd-MM HH:mm:ss.SSS} %highlight(%-5level) %30.30((%M\)) %40.40((%file:%line\)) - %message%n'
-    file: '%d{yyyy-dd-MM HH:mm:ss.SSS}  %-5level  %30.30((%M\)) %40.40((%file:%line\)) - %message%n'  
-  level:
-    org:
-      springframework: '@logging.level.org.springframework@'
-    springfox.documentation.spring.web.readers.operation: WARN
-    de.codecentric.boot.admin.client.registration: WARN
 harvester:
   dir: '@documents@'
   recipient: support@cessda.eu
