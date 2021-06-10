@@ -13,9 +13,7 @@ harvester:
   recipient: support@cessda.eu
   from:
     single: '1800-01-01'
-    initial:
     incremental: '2017-02-28'
-    full:
   cron:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?

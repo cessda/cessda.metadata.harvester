@@ -42,6 +42,7 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -60,7 +61,7 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 	 * @throws SAXException the xml response is bad
 	 * @throws IOException  an I/O error occurred
 	 */
-	public ListIdentifiers( HttpClient httpClient, URI baseURL, String from, String until, String set, String metadataPrefix, Duration timeout )
+	public ListIdentifiers( HttpClient httpClient, URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix, Duration timeout )
 			throws IOException, SAXException
 	{
 		super( httpClient, getRequestURL( baseURL, from, until, set, metadataPrefix ), timeout );
@@ -84,7 +85,7 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 	 *
 	 * @return a String containing the query portion of the http request
 	 */
-	private static URI getRequestURL( URI baseURL, String from, String until, String set, String metadataPrefix )
+	private static URI getRequestURL( URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix )
 	{
 
 		StringBuilder requestURL = new StringBuilder( baseURL.toString() );
