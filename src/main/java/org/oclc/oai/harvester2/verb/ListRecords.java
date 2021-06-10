@@ -39,6 +39,7 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
@@ -84,7 +85,7 @@ public class ListRecords extends HarvesterVerb implements Resumable
 	 *
 	 * @return a String containing the query portion of the http request
 	 */
-	private static String getRequestURL(
+	private static URI getRequestURL(
 			String baseURL,
 			String from,
 			String until,
@@ -94,13 +95,19 @@ public class ListRecords extends HarvesterVerb implements Resumable
 		StringBuilder requestURL = new StringBuilder( baseURL );
 		requestURL.append( "?verb=ListRecords" );
 		if ( from != null )
+		{
 			requestURL.append( "&from=" ).append( from );
+		}
 		if ( until != null )
+		{
 			requestURL.append( "&until=" ).append( until );
+		}
 		if ( set != null )
+		{
 			requestURL.append( "&set=" ).append( set );
+		}
 		requestURL.append( "&metadataPrefix=" ).append( metadataPrefix );
-		return requestURL.toString();
+		return URI.create(requestURL.toString());
 	}
 
 	/**
@@ -110,8 +117,10 @@ public class ListRecords extends HarvesterVerb implements Resumable
 	 * @param resumptionToken
 	 * @return
 	 */
-	private static String getRequestURL( String baseURL, String resumptionToken )
+	private static URI getRequestURL( String baseURL, String resumptionToken )
 	{
-		return baseURL + "?verb=ListRecords" + "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 );
+		return URI.create(baseURL + "?verb=ListRecords"
+				+ "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 )
+		);
 	}
 }

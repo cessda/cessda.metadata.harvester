@@ -20,10 +20,14 @@
 package eu.cessda.eqb.harvester;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -194,47 +198,52 @@ class HarvesterConfiguration
 
     public static class From
     {
-        private String incremental;
-        private String initial;
-        private String full;
-        private String single;
+        private LocalDate incremental;
+        private LocalDate initial;
+        private LocalDate full;
+        private LocalDate single;
 
-        public String getIncremental()
+        public LocalDate getIncremental()
         {
             return incremental;
         }
 
-        public void setIncremental( String incremental )
+        public void setIncremental( LocalDate incremental )
         {
             this.incremental = incremental;
         }
 
-        public String getInitial()
+        public void setIncremental( String incremental )
+        {
+            this.incremental = LocalDate.parse( incremental );
+        }
+
+        public LocalDate getInitial()
         {
             return initial;
         }
 
-        public void setInitial( String initial )
+        public void setInitial( LocalDate initial )
         {
             this.initial = initial;
         }
 
-        public String getFull()
+        public LocalDate getFull()
         {
             return full;
         }
 
-        public void setFull( String full )
+        public void setFull( LocalDate full )
         {
             this.full = full;
         }
 
-        public String getSingle()
+        public LocalDate getSingle()
         {
             return single;
         }
 
-        public void setSingle( String single )
+        public void setSingle( LocalDate single )
         {
             this.single = single;
         }
@@ -266,6 +275,17 @@ class HarvesterConfiguration
                     ", full='" + full + '\'' +
                     ", single='" + single + '\'' +
                     '}';
+        }
+    }
+
+    @Component
+    @ConfigurationPropertiesBinding
+    public static class LocalDateConverter implements Converter<String, LocalDate>
+    {
+        @Override
+        public LocalDate convert( String s )
+        {
+            return LocalDate.parse( s );
         }
     }
 }

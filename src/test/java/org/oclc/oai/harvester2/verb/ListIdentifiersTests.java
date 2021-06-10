@@ -1,19 +1,17 @@
 package org.oclc.oai.harvester2.verb;
 
 import eu.cessda.eqb.harvester.HttpClient;
-import eu.cessda.eqb.harvester.RecordHeadersMock;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,8 +21,8 @@ import static org.mockito.Mockito.when;
 
 class ListIdentifiersTests
 {
-
-    public static final Duration TIMEOUT = Duration.ofSeconds( 10 );
+    private static final Duration TIMEOUT = Duration.ofSeconds( 10 );
+    private static final URI BASE_URL = URI.create( "https://oai.ukdataservice.ac.uk:8443/oai/provider" );
 
     @Test
     void shouldReturnRecordHeaders() throws IOException, SAXException
@@ -38,7 +36,7 @@ class ListIdentifiersTests
                 ) );
 
         var identifiers = new ListIdentifiers( httpClient,
-                "https://oai.ukdataservice.ac.uk:8443/oai/provider",
+                BASE_URL,
                 null,
                 null,
                 null,
@@ -50,13 +48,7 @@ class ListIdentifiersTests
 
         assertEquals( 3, identifiersIDs.size());
 
-        for ( var record : identifiersIDs )
-        {
-            assertThat(
-                    record,
-                    anyOf( is( "850229" ), is( "850232" ), is( "850235" ) )
-            );
-        }
+        assertThat( identifiersIDs ).containsExactlyInAnyOrder( "850229", "850232", "850235" );
     }
 
     @Test
@@ -71,7 +63,7 @@ class ListIdentifiersTests
                 ) );
 
         var identifiers = new ListIdentifiers( httpClient,
-                "https://oai.ukdataservice.ac.uk:8443/oai/provider",
+                BASE_URL,
                 null,
                 null,
                 null,
@@ -94,7 +86,7 @@ class ListIdentifiersTests
                 ) );
 
         var identifiers = new ListIdentifiers( httpClient,
-                "https://oai.ukdataservice.ac.uk:8443/oai/provider",
+                BASE_URL,
                 null,
                 null,
                 null,
@@ -117,7 +109,7 @@ class ListIdentifiersTests
                 ) );
 
         var identifiers = new ListIdentifiers( httpClient,
-                "https://oai.ukdataservice.ac.uk:8443/oai/provider",
+                BASE_URL,
                 "3/6/7/ddi/null/2017-01-01/null",
                 TIMEOUT
         );
@@ -142,7 +134,7 @@ class ListIdentifiersTests
                 ) );
 
         var identifiers = new ListIdentifiers( httpClient,
-                "https://oai.ukdataservice.ac.uk:8443/oai/provider",
+                BASE_URL,
                 "3/6/7/ddi/null/2017-01-01/null",
                 TIMEOUT
         );

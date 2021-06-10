@@ -34,13 +34,14 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import org.w3c.dom.Node;
 import eu.cessda.eqb.harvester.HttpClient;
+import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.time.Duration;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -65,7 +66,7 @@ public class GetRecord extends HarvesterVerb
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	public GetRecord( HttpClient httpClient, String baseURL, String identifier, String metadataPrefix, Duration timeout )
+	public GetRecord( HttpClient httpClient, URI baseURL, String identifier, String metadataPrefix, Duration timeout )
 			throws IOException, SAXException
 	{
 		super( httpClient, getRequestURL( baseURL, identifier, metadataPrefix ), timeout );
@@ -123,8 +124,11 @@ public class GetRecord extends HarvesterVerb
 	 *
 	 * @return a String containing the query portion of the http request
 	 */
-	private static String getRequestURL( String baseURL, String identifier, String metadataPrefix )
+	private static URI getRequestURL( URI baseURL, String identifier, String metadataPrefix )
 	{
-		return baseURL + "?verb=GetRecord" + "&identifier=" + identifier + "&metadataPrefix=" + metadataPrefix;
+		return URI.create(baseURL + "?verb=GetRecord"
+				+ "&identifier=" + identifier
+				+ "&metadataPrefix=" + metadataPrefix
+		);
 	}
 }

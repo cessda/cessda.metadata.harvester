@@ -39,6 +39,7 @@ import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.net.URI;
 import java.util.NoSuchElementException;
 
 /**
@@ -54,9 +55,9 @@ public class Identify extends HarvesterVerb
 	 * @param baseURL the baseURL of the server to be queried
 	 * @throws IOException           an I/O error occurred
 	 */
-	public Identify( HttpClient httpClient, String baseURL ) throws IOException, SAXException
+	public Identify( HttpClient httpClient, URI baseURL ) throws IOException, SAXException
 	{
-		super( httpClient, baseURL + "?verb=Identify" );
+		super( httpClient, URI.create(baseURL + "?verb=Identify") );
 	}
 
 	/**

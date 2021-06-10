@@ -40,6 +40,8 @@ import org.xml.sax.SAXException;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.util.Objects;
 
 /**
  * This class represents an ListMetadataFormats response on either the server or on the client
@@ -60,9 +62,9 @@ public class ListMetadataFormats extends HarvesterVerb
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	public ListMetadataFormats( HttpClient httpClient, String baseURL ) throws IOException, SAXException, TransformerException
+	public ListMetadataFormats( HttpClient httpClient, URI baseURL ) throws IOException, SAXException, TransformerException
 	{
-		this( httpClient, baseURL, null );
+		super( httpClient, getRequestURL( baseURL, null ) );
 	}
 
 	/**
@@ -72,12 +74,10 @@ public class ListMetadataFormats extends HarvesterVerb
 	 * @param identifier
 	 * @throws IOException
 	 * @throws SAXException
-	 * @throws TransformerException
 	 */
-	public ListMetadataFormats( HttpClient httpClient, String baseURL, String identifier ) throws IOException, SAXException,
-			TransformerException
+	public ListMetadataFormats( HttpClient httpClient, URI baseURL, String identifier ) throws IOException, SAXException
 	{
-		super( httpClient, getRequestURL( baseURL, identifier ) );
+		super( httpClient, getRequestURL( baseURL, Objects.requireNonNull(identifier, "identifier cannot be null") ) );
 	}
 
 	/**
@@ -85,12 +85,16 @@ public class ListMetadataFormats extends HarvesterVerb
 	 *
 	 * @return a String containing the query portion of the http request
 	 */
-	private static String getRequestURL( String baseURL, String identifier )
+	private static URI getRequestURL( URI baseURL, String identifier )
 	{
-		StringBuilder requestURL = new StringBuilder( baseURL );
+		StringBuilder requestURL = new StringBuilder( baseURL.toString() );
 		requestURL.append( "?verb=ListMetadataFormats" );
+
 		if ( identifier != null )
+		{
 			requestURL.append( "&identifier=" ).append( identifier );
-		return requestURL.toString();
+		}
+
+		return URI.create(requestURL.toString());
 	}
 }

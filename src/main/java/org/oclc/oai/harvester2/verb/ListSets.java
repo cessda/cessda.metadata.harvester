@@ -35,13 +35,16 @@
 package org.oclc.oai.harvester2.verb;
 
 import eu.cessda.eqb.harvester.HttpClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.time.Duration;
+import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * This class represents an ListSets response on either the server or on the client
@@ -50,8 +53,17 @@ import java.time.Duration;
  */
 public class ListSets extends HarvesterVerb implements Resumable
 {
-
-	private static final Logger log = LoggerFactory.getLogger( ListSets.class );
+	/**
+	 * Client-side ListSets verb constructor
+	 *
+	 * @param baseURL the baseURL of the server to be queried
+	 * @throws MalformedURLException the baseURL is bad
+	 * @throws IOException           an I/O error occurred
+	 */
+	public ListSets( HttpClient httpClient, URI baseURL ) throws IOException, SAXException
+	{
+		super( httpClient, getRequestURL( baseURL ));
+	}
 
 	/**
 	 * Client-side ListSets verb constructor
@@ -60,9 +72,23 @@ public class ListSets extends HarvesterVerb implements Resumable
 	 * @throws MalformedURLException the baseURL is bad
 	 * @throws IOException           an I/O error occurred
 	 */
-	public ListSets( HttpClient httpClient, String baseURL, Duration timeout ) throws IOException, SAXException
+	public ListSets( HttpClient httpClient, URI baseURL, String resumptionToken ) throws IOException, SAXException
 	{
-		super( httpClient, getRequestURL( baseURL ), timeout );
+		super( httpClient, getRequestURL( baseURL, resumptionToken ) );
+	}
+
+	/**
+	 * Returns a list of sets found in the response. The returned list is unmodifiable.
+	 */
+	public List<String> getSets()
+	{
+		var nl = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "setSpec" );
+		var sets = new ArrayList<String>(nl.getLength());
+		for ( int i = 0; i < nl.getLength(); i++ )
+		{
+			sets.add( nl.item( i ).getTextContent() );
+		}
+		return Collections.unmodifiableList( sets );
 	}
 
 	/**
@@ -71,18 +97,22 @@ public class ListSets extends HarvesterVerb implements Resumable
 	 * @param baseURL
 	 * @return
 	 */
-	private static String getRequestURL( String baseURL )
+	private static URI getRequestURL( URI baseURL )
 	{
-		StringBuilder requestURL = new StringBuilder( baseURL );
-		if ( baseURL.contains( "?" ) )
-		{
-			requestURL.append( "&verb=ListSets" );
-		}
-		else
-		{
-			requestURL.append( "?verb=ListSets" );
-		}
-		log.info( "get Sets: {}", requestURL );
-		return requestURL.toString();
+		return URI.create(baseURL + "?verb=ListSets");
+	}
+
+	/**
+	 * Construct the query portion of the http request (resumptionToken version)
+	 *
+	 * @param baseURL
+	 * @param resumptionToken
+	 * @return
+	 */
+	private static URI getRequestURL( URI baseURL, String resumptionToken )
+	{
+		return URI.create(baseURL + "?verb=ListRecords"
+				+ "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 )
+		);
 	}
 }
