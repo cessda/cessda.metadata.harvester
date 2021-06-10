@@ -38,6 +38,7 @@ import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -59,7 +60,7 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 	 * @throws SAXException the xml response is bad
 	 * @throws IOException  an I/O error occurred
 	 */
-	public ListIdentifiers( HttpClient httpClient, String baseURL, String from, String until, String set, String metadataPrefix, Duration timeout )
+	public ListIdentifiers( HttpClient httpClient, URI baseURL, String from, String until, String set, String metadataPrefix, Duration timeout )
 			throws IOException, SAXException
 	{
 		super( httpClient, getRequestURL( baseURL, from, until, set, metadataPrefix ), timeout );
@@ -73,7 +74,7 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 	 * @throws IOException
 	 * @throws SAXException
 	 */
-	public ListIdentifiers( HttpClient httpClient, String baseURL, String resumptionToken, Duration timeout ) throws IOException, SAXException
+	public ListIdentifiers( HttpClient httpClient, URI baseURL, String resumptionToken, Duration timeout ) throws IOException, SAXException
 	{
 		super( httpClient, getRequestURL( baseURL, resumptionToken ), timeout );
 	}
@@ -83,10 +84,10 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 	 *
 	 * @return a String containing the query portion of the http request
 	 */
-	private static String getRequestURL( String baseURL, String from, String until, String set, String metadataPrefix )
+	private static URI getRequestURL( URI baseURL, String from, String until, String set, String metadataPrefix )
 	{
 
-		StringBuilder requestURL = new StringBuilder( baseURL );
+		StringBuilder requestURL = new StringBuilder( baseURL.toString() );
 		requestURL.append( "?verb=ListIdentifiers" );
 		if ( from != null )
 		{
@@ -101,7 +102,7 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 			requestURL.append( "&set=" ).append( set );
 		}
 		requestURL.append( "&metadataPrefix=" ).append( metadataPrefix );
-		return requestURL.toString();
+		return URI.create(requestURL.toString());
 	}
 
 	/**
@@ -122,12 +123,13 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 	/**
 	 * Construct the query portion of the http request (resumptionToken version)
 	 *
-	 * @param baseURL
-	 * @param resumptionToken
-	 * @return
+	 * @param baseURL the base URL of the OAI-PMH repository.
+	 * @param resumptionToken the resumption token.
 	 */
-	private static String getRequestURL( String baseURL, String resumptionToken )
+	private static URI getRequestURL( URI baseURL, String resumptionToken )
 	{
-		return baseURL + "?verb=ListIdentifiers" + "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 );
+		return URI.create(baseURL + "?verb=ListIdentifiers"
+				+ "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 )
+		);
 	}
 }

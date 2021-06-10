@@ -36,7 +36,10 @@ package org.oclc.oai.harvester2.verb;
 
 import eu.cessda.eqb.harvester.HttpClient;
 import org.apache.xpath.XPathAPI;
-import org.w3c.dom.*;
+import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -72,24 +75,6 @@ public abstract class HarvesterVerb
 	private static final Element namespaceElement;
 	private static final DocumentBuilderFactory factory;
 	private static final TransformerFactory xformFactory = TransformerFactory.newInstance();
-
-	/**
-	 * A node list that is always empty.
-	 */
-	public static final NodeList EMPTY_NODE_LIST = new NodeList()
-	{
-		@Override
-		public Node item( int index )
-		{
-			return null;
-		}
-
-		@Override
-		public int getLength()
-		{
-			return 0;
-		}
-	};
 
 	static
 	{
@@ -138,21 +123,21 @@ public abstract class HarvesterVerb
 	 * @throws IOException
 	 * @throws SAXException
 	 */
-	protected HarvesterVerb( HttpClient httpClient, String requestURL ) throws IOException, SAXException
+	protected HarvesterVerb( HttpClient httpClient, URI requestURL ) throws IOException, SAXException
 	{
 		this(httpClient, requestURL, Duration.ofSeconds( 10 ) );
 	}
 
 	/**
-	 * Performs the OAI request
+	 * Performs the OAI request.
 	 *
-	 * @param requestURL
+	 * @param requestURL the URL where the OAI-PMH resource is located.
 	 * @throws IOException
 	 * @throws SAXException
 	 */
-	protected HarvesterVerb( HttpClient httpClient, String requestURL, Duration timeout ) throws IOException, SAXException
+	protected HarvesterVerb( HttpClient httpClient, URI requestURL, Duration timeout ) throws IOException, SAXException
 	{
-		this.requestURL = URI.create( requestURL );
+		this.requestURL = requestURL;
 
 		try ( var in = httpClient.getHttpResponse( this.requestURL.toURL(), timeout ) )
 		{

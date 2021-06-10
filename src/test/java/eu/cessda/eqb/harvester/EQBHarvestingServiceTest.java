@@ -2,8 +2,6 @@ package eu.cessda.eqb.harvester;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.test.context.TestPropertySource;
 
 import javax.xml.transform.TransformerConfigurationException;
@@ -33,9 +31,7 @@ import static org.mockito.Mockito.*;
 				"spring.boot.admin.client.enabled=false"} )
 class EQBHarvestingServiceTest
 {
-	private static final Logger log = LoggerFactory.getLogger( EQBHarvestingServiceTest.class );
-
-	private final Server server;
+	private final Harvester harvester;
 
 	public EQBHarvestingServiceTest() throws TransformerConfigurationException, IOException
 	{
@@ -53,13 +49,13 @@ class EQBHarvestingServiceTest
 		when( httpClient.getHttpResponse( any(URL.class), any(Duration.class) ) )
 			.thenReturn( InputStream.nullInputStream() );
 
-		server = new Server( harvesterConfiguration, httpClient );
+		harvester = new Harvester( harvesterConfiguration, httpClient );
 	}
 
 	@Test
 	void indexAllTest()
 	{
-		server.singleHarvesting( 0 );
+		harvester.singleHarvesting( 0 );
 		Assertions.assertTrue( Files.exists( Paths.get( "data2" ) ) );
 	}
 }
