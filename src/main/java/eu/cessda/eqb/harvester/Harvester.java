@@ -361,9 +361,7 @@ public class Harvester implements CommandLineRunner
      */
     private void harvestSet( Repo repo, String setspec, LocalDate fromDate) throws HarvesterFailedException
     {
-        var indexName = getURLEncodedHost( repo.getUrl() );
-
-        var repositoryDirectory = harvesterConfiguration.getDir().resolve( indexName );
+        var repositoryDirectory = Path.of( getURLEncodedHost( repo.getUrl() ) );
 
         // Sets are nested in their own directories
         if (setspec != null)
@@ -374,25 +372,25 @@ public class Harvester implements CommandLineRunner
         if (harvesterConfiguration.keepOAIEnvelope())
         {
             var wrappedRepositoryDirectory = harvesterConfiguration.getDir().resolve( WRAPPED_DIRECTORY_NAME );
-            createDestinationDirectory( wrappedRepositoryDirectory, indexName );
+            createDestinationDirectory( wrappedRepositoryDirectory, repositoryDirectory );
         }
 
         if (harvesterConfiguration.removeOAIEnvelope())
         {
             var unwrappedRepositoryDirectory = harvesterConfiguration.getDir().resolve( UNWRAPPED_DIRECTORY_NAME );
-            createDestinationDirectory( unwrappedRepositoryDirectory, indexName );
+            createDestinationDirectory( unwrappedRepositoryDirectory, repositoryDirectory );
         }
 
         log.debug( "Fetching records for repository: {}, set: {}.", repo.getUrl(), setspec );
 
-        var currentlyRetrievedSet = getIdentifiersForSet( repo, setspec, fromDate );
+        var recordIdentifiers = getIdentifiersForSet( repo, setspec, fromDate );
 
-        log.info( "Retrieved {} record headers from {}, set: {}.", currentlyRetrievedSet.size(),
+        log.info( "Retrieved {} record headers from {}, set: {}.", recordIdentifiers.size(),
                 value(OAI_URL, repo.getUrl()),
                 value(OAI_SET, setspec)
         );
 
-        var retrievedRecords = writeToLocalFileSystem( currentlyRetrievedSet, repo, indexName, repositoryDirectory );
+        var retrievedRecords = writeToLocalFileSystem( recordIdentifiers, repo, harvesterConfiguration.getDir(), repositoryDirectory );
 
         log.info( "Retrieved {} records from {}, set: {}.", retrievedRecords,
                 value(OAI_URL, repo.getUrl()),
@@ -406,17 +404,17 @@ public class Harvester implements CommandLineRunner
      * @param indexName the name of the repository.
      * @throws DirectoryCreationFailedException if the directory cannot be created.
      */
-    private void createDestinationDirectory( Path destinationDirectory, String indexName ) throws DirectoryCreationFailedException
+    private void createDestinationDirectory( Path destinationDirectory, Path repositoryDirectory ) throws DirectoryCreationFailedException
     {
-        var repositoryDirectory = destinationDirectory.resolve( indexName );
+        var outputDirectory = destinationDirectory.resolve( repositoryDirectory );
         try
         {
-            log.debug( "Creating destination directory: {}", repositoryDirectory );
-            Files.createDirectories( repositoryDirectory );
+            log.debug( "Creating destination directory: {}", outputDirectory );
+            Files.createDirectories( outputDirectory );
         }
         catch ( IOException e )
         {
-            throw new DirectoryCreationFailedException( repositoryDirectory, e );
+            throw new DirectoryCreationFailedException( outputDirectory, e );
         }
     }
 
@@ -455,7 +453,7 @@ public class Harvester implements CommandLineRunner
         }
     }
 
-    private int writeToLocalFileSystem( Collection<String> records, Repo repo, String indexName, Path baseDirectory )
+    private int writeToLocalFileSystem( Collection<String> records, Repo repo, Path baseDirectory, Path repoDirectory )
     {
         int retrievedRecords = 0;
 
@@ -489,7 +487,7 @@ public class Harvester implements CommandLineRunner
                     if (metadata.isPresent())
                     {
                         var source = new DOMSource( metadata.orElseThrow() );
-                        writeDomSource( source, baseDirectory.resolve( UNWRAPPED_DIRECTORY_NAME ).resolve( indexName ).resolve( fileName ) );
+                        writeDomSource( source, baseDirectory.resolve( UNWRAPPED_DIRECTORY_NAME ).resolve( repoDirectory ).resolve( fileName ) );
                     }
                 }
 
@@ -497,7 +495,7 @@ public class Harvester implements CommandLineRunner
                 if (harvesterConfiguration.keepOAIEnvelope())
                 {
                     var source = new DOMSource( pmhRecord.getDocument() );
-                    writeDomSource( source, baseDirectory.resolve( WRAPPED_DIRECTORY_NAME ).resolve( indexName ).resolve( fileName ) );
+                    writeDomSource( source, baseDirectory.resolve( WRAPPED_DIRECTORY_NAME ).resolve( repoDirectory ).resolve( fileName ) );
                 }
             }
             catch ( TransformerConfigurationException e )
