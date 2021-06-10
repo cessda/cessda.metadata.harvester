@@ -62,6 +62,8 @@ public class Server implements CommandLineRunner
 {
 
     private static final Logger log = LoggerFactory.getLogger( Server.class );
+    private static final String WRAPPED_DIRECTORY_NAME = "wrapped";
+    private static final String UNWRAPPED_DIRECTORY_NAME = "unwrapped";
 
     private final HarvesterConfiguration harvesterConfiguration;
     private final HttpClient httpClient;
@@ -381,9 +383,40 @@ public class Server implements CommandLineRunner
     private void fetchDCRecords( String repoBase, String setspec, String fromDate, String mdFormat ) throws HarvesterFailedException
     {
 
-        String indexName = shortened( repoBase, setspec );
+        var indexName = shortened( repoBase, setspec );
 
-        final var repositoryDirectory = harvesterConfiguration.getDir().resolve( indexName );
+        if (harvesterConfiguration.keepOAIEnvelope())
+        {
+            var wrappedRepositoryDirectory = harvesterConfiguration.getDir().resolve( WRAPPED_DIRECTORY_NAME );
+            createDestinationDirectory( wrappedRepositoryDirectory, indexName );
+        }
+
+        if (harvesterConfiguration.removeOAIEnvelope())
+        {
+            var unwrappedRepositoryDirectory = harvesterConfiguration.getDir().resolve( UNWRAPPED_DIRECTORY_NAME );
+            createDestinationDirectory( unwrappedRepositoryDirectory, indexName );
+        }
+
+        log.debug( "Fetching records for repository: {}, set: {}.", repoBase, setspec );
+
+        var currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, fromDate, mdFormat );
+
+        log.info( "Retrieved {} record headers from {}, set: {}.", currentlyRetrievedSet.size(), repoBase, setspec );
+
+        var retrievedRecords = writeToLocalFileSystem( currentlyRetrievedSet, repoBase, mdFormat, indexName, harvesterConfiguration.getDir() );
+
+        log.info( "Retrieved {} records from {}, set: {}.", retrievedRecords, repoBase, setspec );
+    }
+
+    /**
+     * Creates the destination directory for this repository.
+     * @param destinationDirectory the base directory.
+     * @param indexName the name of the repository.
+     * @throws DirectoryCreationFailedException if the directory cannot be created.
+     */
+    private void createDestinationDirectory( Path destinationDirectory, String indexName ) throws DirectoryCreationFailedException
+    {
+        var repositoryDirectory = destinationDirectory.resolve( indexName );
         try
         {
             log.debug( "Creating destination directory: {}", repositoryDirectory );
@@ -393,16 +426,6 @@ public class Server implements CommandLineRunner
         {
             throw new DirectoryCreationFailedException( repositoryDirectory, e );
         }
-
-        log.debug( "Fetching records for repository: {}, set: {}.", repoBase, setspec );
-
-        var currentlyRetrievedSet = getIdentifiersForSet( repoBase, setspec, fromDate, mdFormat );
-
-        log.info( "Retrieved {} record headers from {}, set: {}.", currentlyRetrievedSet.size(), repoBase, setspec );
-
-        var retrievedRecords = writeToLocalFileSystem( currentlyRetrievedSet, repoBase, repositoryDirectory, mdFormat );
-
-        log.info( "Retrieved {} records from {}, set: {}.", retrievedRecords, repoBase, setspec );
     }
 
     private List<String> getIdentifiersForSet( String oaiBaseUrl, String set, String fromDate, String mdFormat ) throws HarvesterFailedException
@@ -440,22 +463,8 @@ public class Server implements CommandLineRunner
         }
     }
 
-    private int writeToLocalFileSystem( Collection<String> records, String oaiUrl, Path repositoryDirectory, String mdFormat ) throws DirectoryCreationFailedException
+    private int writeToLocalFileSystem( Collection<String> records, String oaiUrl, String mdFormat, String indexName, Path baseDirectory )
     {
-        var unwrappedOutputDirectory = repositoryDirectory.resolve( "unwrapped" );
-        var wrappedOutputDirectory = repositoryDirectory.resolve( "wrapped" );
-
-        try
-        {
-            log.debug( "Creating destination directory: {}", repositoryDirectory );
-            Files.createDirectories( unwrappedOutputDirectory );
-            Files.createDirectories( wrappedOutputDirectory );
-        }
-        catch ( IOException e )
-        {
-            throw new DirectoryCreationFailedException( repositoryDirectory, e );
-        }
-
         int retrievedRecords = 0;
 
         for ( var currentRecord : records )
@@ -487,7 +496,7 @@ public class Server implements CommandLineRunner
                     if (metadata.isPresent())
                     {
                         var source = new DOMSource( metadata.orElseThrow() );
-                        writeDomSource( source, unwrappedOutputDirectory.resolve( fileName ) );
+                        writeDomSource( source, baseDirectory.resolve( UNWRAPPED_DIRECTORY_NAME ).resolve( indexName ).resolve( fileName ) );
                     }
                 }
 
@@ -495,7 +504,7 @@ public class Server implements CommandLineRunner
                 if (harvesterConfiguration.keepOAIEnvelope())
                 {
                     var source = new DOMSource( pmhRecord.getDocument() );
-                    writeDomSource( source, wrappedOutputDirectory.resolve( fileName ) );
+                    writeDomSource( source, baseDirectory.resolve( WRAPPED_DIRECTORY_NAME ).resolve( indexName ).resolve( fileName ) );
                 }
             }
             catch ( TransformerConfigurationException e )
