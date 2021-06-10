@@ -42,6 +42,9 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * This class represents an ListSets response on either the server or on the client
@@ -72,6 +75,20 @@ public class ListSets extends HarvesterVerb implements Resumable
 	public ListSets( HttpClient httpClient, URI baseURL, String resumptionToken ) throws IOException, SAXException
 	{
 		super( httpClient, getRequestURL( baseURL, resumptionToken ) );
+	}
+
+	/**
+	 * Returns a list of sets found in the response. The returned list is unmodifiable.
+	 */
+	public List<String> getSets()
+	{
+		var nl = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "setSpec" );
+		var sets = new ArrayList<String>(nl.getLength());
+		for ( int i = 0; i < nl.getLength(); i++ )
+		{
+			sets.add( nl.item( i ).getTextContent() );
+		}
+		return Collections.unmodifiableList( sets );
 	}
 
 	/**
