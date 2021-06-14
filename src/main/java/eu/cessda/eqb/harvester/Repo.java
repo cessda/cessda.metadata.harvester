@@ -5,10 +5,21 @@ import java.util.Objects;
 
 public class Repo
 {
+    private String code;
     private URI url;
     private String set;
     private String metadataFormat;
     private boolean discoverSets;
+
+    public String getCode()
+    {
+        return code;
+    }
+
+    public void setCode( String code )
+    {
+        this.code = code;
+    }
 
     public URI getUrl()
     {
@@ -57,6 +68,7 @@ public class Repo
         if ( o == null || getClass() != o.getClass() ) return false;
         Repo repo = (Repo) o;
         return discoverSets == repo.discoverSets &&
+                Objects.equals( code, repo.code ) &&
                 Objects.equals( url, repo.url ) &&
                 Objects.equals( set, repo.set ) &&
                 Objects.equals( metadataFormat, repo.metadataFormat );
@@ -65,15 +77,16 @@ public class Repo
     @Override
     public int hashCode()
     {
-        return Objects.hash( url, set, metadataFormat, discoverSets );
+        return Objects.hash( code, url, set, metadataFormat, discoverSets );
     }
 
     @Override
     public String toString()
     {
         return "Repo{" +
-                "url=" + url +
-                ", setName='" + set + '\'' +
+                "code='" + code + '\'' +
+                ", url=" + url +
+                ", set='" + set + '\'' +
                 ", metadataFormat='" + metadataFormat + '\'' +
                 ", discoverSets=" + discoverSets +
                 '}';
