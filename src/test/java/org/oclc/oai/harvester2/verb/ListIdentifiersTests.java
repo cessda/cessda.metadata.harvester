@@ -1,48 +1,25 @@
 package org.oclc.oai.harvester2.verb;
 
-import eu.cessda.eqb.harvester.HttpClient;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class ListIdentifiersTests
 {
-    private static final Duration TIMEOUT = Duration.ofSeconds( 10 );
-    private static final URI BASE_URL = URI.create( "https://oai.ukdataservice.ac.uk:8443/oai/provider" );
-
     @Test
     void shouldReturnRecordHeaders() throws IOException, SAXException
     {
         // Given
-        var httpClient = mock( HttpClient.class );
-
-        when( httpClient.getHttpResponse( any(URL.class), eq( TIMEOUT )) )
-                .thenReturn( new ByteArrayInputStream(
-                        RecordHeadersMock.getListIdentifiersXMLResumptionEmpty().getBytes( StandardCharsets.UTF_8 )
-                ) );
-
-        var identifiers = new ListIdentifiers( httpClient,
-                BASE_URL,
-                null,
-                null,
-                null,
-                "ddi",
-                TIMEOUT
-        );
+        var identifiers = new ListIdentifiers( new ByteArrayInputStream(
+                RecordHeadersMock.getListIdentifiersXMLResumptionEmpty().getBytes( StandardCharsets.UTF_8 )
+        ) );
 
         var identifiersIDs = identifiers.getIdentifiers();
 
@@ -55,21 +32,9 @@ class ListIdentifiersTests
     void shouldReturnResumptionToken() throws IOException, SAXException
     {
         // Given
-        var httpClient = mock( HttpClient.class );
-
-        when( httpClient.getHttpResponse( any(URL.class), eq( TIMEOUT )) )
-                .thenReturn( new ByteArrayInputStream(
-                        RecordHeadersMock.getListIdentifiersXMLWithResumption().getBytes( StandardCharsets.UTF_8 )
-                ) );
-
-        var identifiers = new ListIdentifiers( httpClient,
-                BASE_URL,
-                null,
-                null,
-                null,
-                "ddi",
-                TIMEOUT
-        );
+        var identifiers = new ListIdentifiers( new ByteArrayInputStream(
+                RecordHeadersMock.getListIdentifiersXMLWithResumption().getBytes( StandardCharsets.UTF_8 )
+        ));
 
         assertEquals("3/6/7/ddi/null/2017-01-01/null", identifiers.getResumptionToken().orElseThrow() );
     }
@@ -78,21 +43,9 @@ class ListIdentifiersTests
     void shouldReturnEmptyOptionalForAnEmptyResumptionToken() throws IOException, SAXException
     {
         // Given
-        var httpClient = mock( HttpClient.class );
-
-        when( httpClient.getHttpResponse( any(URL.class), eq( TIMEOUT )) )
-                .thenReturn( new ByteArrayInputStream(
-                        RecordHeadersMock.getListIdentifiersXMLResumptionEmpty().getBytes( StandardCharsets.UTF_8 )
-                ) );
-
-        var identifiers = new ListIdentifiers( httpClient,
-                BASE_URL,
-                null,
-                null,
-                null,
-                "ddi",
-                TIMEOUT
-        );
+        var identifiers = new ListIdentifiers(new ByteArrayInputStream(
+                RecordHeadersMock.getListIdentifiersXMLResumptionEmpty().getBytes( StandardCharsets.UTF_8 )
+        ));
 
         assertTrue( identifiers.getResumptionToken().isEmpty() );
     }
@@ -101,18 +54,9 @@ class ListIdentifiersTests
     void shouldReturnDocumentWhenResumingWithToken() throws IOException, SAXException
     {
         // Given
-        var httpClient = mock( HttpClient.class );
-
-        when( httpClient.getHttpResponse( any(URL.class), eq( TIMEOUT )) )
-                .thenReturn( new ByteArrayInputStream(
-                        RecordHeadersMock.getListIdentifiersXMLWithResumptionLastList().getBytes( StandardCharsets.UTF_8 )
-                ) );
-
-        var identifiers = new ListIdentifiers( httpClient,
-                BASE_URL,
-                "3/6/7/ddi/null/2017-01-01/null",
-                TIMEOUT
-        );
+        var identifiers = new ListIdentifiers(new ByteArrayInputStream(
+                RecordHeadersMock.getListIdentifiersXMLWithResumptionLastList().getBytes( StandardCharsets.UTF_8 )
+        ));
 
         // Then
         var identifiersIDs = identifiers.getIdentifiers();
@@ -126,18 +70,9 @@ class ListIdentifiersTests
     void shouldReturnNoRecordsOnError() throws IOException, SAXException
     {
         // Given
-        var httpClient = mock( HttpClient.class );
-
-        when( httpClient.getHttpResponse( any(URL.class), eq( TIMEOUT )) )
-                .thenReturn( new ByteArrayInputStream(
-                        RecordHeadersMock.getListIdentifiersXMLWithCannotDisseminateFormatError().getBytes( StandardCharsets.UTF_8 )
-                ) );
-
-        var identifiers = new ListIdentifiers( httpClient,
-                BASE_URL,
-                "3/6/7/ddi/null/2017-01-01/null",
-                TIMEOUT
-        );
+        var identifiers = new ListIdentifiers( new ByteArrayInputStream(
+                RecordHeadersMock.getListIdentifiersXMLWithCannotDisseminateFormatError().getBytes( StandardCharsets.UTF_8 )
+        ));
 
         // Then
         var identifiersIDs = identifiers.getIdentifiers();
