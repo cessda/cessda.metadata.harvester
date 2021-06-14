@@ -45,7 +45,6 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -55,6 +54,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static eu.cessda.eqb.harvester.LoggingConstants.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.logstash.logback.argument.StructuredArguments.value;
 
 @EnableConfigurationProperties
@@ -84,7 +84,7 @@ public class Harvester implements CommandLineRunner
 
     public static void main( String[] args )
     {
-        new SpringApplicationBuilder( Harvester.class).bannerMode( Banner.Mode.OFF ).run( args ) ;
+        new SpringApplicationBuilder( Harvester.class ).bannerMode( Banner.Mode.OFF ).run( args );
     }
 
     @Override
@@ -107,19 +107,6 @@ public class Harvester implements CommandLineRunner
                 .mapToObj( i -> "Repo " + i + " : " + singleHarvesting( i ) + "\n" )
                 .collect( Collectors.joining() );
         return res + "Bundle harvesting finished from " + harvesterConfiguration.getFrom().getSingle();
-    }
-
-    /**
-     * Returns the host portion of the URL string provided.
-     * The resulting string is encoded using {@link StandardCharsets#UTF_8}.
-     *
-     * @param oaiUrl the URI.
-     * @return the {@link StandardCharsets#UTF_8} encoded host.
-     */
-    private static String getURLEncodedHost( URI oaiUrl )
-    {
-        String indexName = oaiUrl.getHost();
-        return URLEncoder.encode( indexName, StandardCharsets.UTF_8 );
     }
 
     @ManagedOperation(
@@ -285,14 +272,19 @@ public class Harvester implements CommandLineRunner
         var futures = new ArrayList<CompletableFuture<Void>>();
         for ( var repo : harvesterConfiguration.getRepos() )
         {
-            log.info( "Harvesting repository {}", value("repo", repo ) );
-
-            var sets = discoverSets( repo );
+            if (repo.getCode() == null)
+            {
+                throw new IllegalArgumentException( "Repository " + repo + " has no identifier configured." );
+            }
 
             if ( repo.getMetadataFormat() == null )
             {
                 throw new IllegalArgumentException( "Repository " + repo + " has no metadata format configured." );
             }
+
+            log.info( "Harvesting repository {}", value("repo", repo ) );
+
+            var sets = discoverSets( repo );
 
             futures.add( CompletableFuture.runAsync( () ->
                 {
@@ -304,7 +296,7 @@ public class Harvester implements CommandLineRunner
                         }
                         catch ( HarvesterFailedException e )
                         {
-                            log.error( "Could not harvest repository: {}, set: {}: {}", repo.getUrl(), set, e.toString() );
+                            log.error( "Could not harvest repository: {}, set: {}: {}", repo.getCode(), set, e.toString() );
                         }
                     }
                 }, executor )
@@ -341,7 +333,7 @@ public class Harvester implements CommandLineRunner
             }
             catch ( IOException | TransformerException | SAXException e )
             {
-                log.warn( "Failed to discover sets from the remote repository: set set=all", e );
+                log.warn( "Failed to discover sets from {}: set set=all: {}", repo.getCode(), e.toString() );
                 // set set=all in case of no sets found
                 return Collections.singleton( null );
             }
@@ -357,17 +349,20 @@ public class Harvester implements CommandLineRunner
      * Harvest a specific set from a repository.
      * @param repo the repository to harvest.
      * @param setspec the set to harvest, set to {@code null} to disable set based harvesting.
-     * @param fromDate the date to harvest from, set to null to harvest from the beginning.
+     * @param fromDate the date to harvest from, set to {@code null} to harvest from the beginning.
      */
     private void harvestSet( Repo repo, String setspec, LocalDate fromDate) throws HarvesterFailedException
     {
-        var repositoryDirectory = Path.of( getURLEncodedHost( repo.getUrl() ) );
+        // The folder structure is repo/set(optional)/metadataFormat/record.xml
+        var repositoryDirectory = Path.of( repo.getCode() );
 
         // Sets are nested in their own directories
         if (setspec != null)
         {
             repositoryDirectory = repositoryDirectory.resolve( setspec );
         }
+
+        repositoryDirectory = repositoryDirectory.resolve( URLEncoder.encode( repo.getMetadataFormat(), UTF_8 ));
 
         if (harvesterConfiguration.keepOAIEnvelope())
         {
@@ -381,27 +376,29 @@ public class Harvester implements CommandLineRunner
             createDestinationDirectory( unwrappedRepositoryDirectory, repositoryDirectory );
         }
 
-        log.debug( "Fetching records for repository: {}, set: {}.", repo.getUrl(), setspec );
+        log.debug( "{}: Set: {}: Fetching records", repo.getCode(), setspec );
 
         var recordIdentifiers = getIdentifiersForSet( repo, setspec, fromDate );
 
-        log.info( "Retrieved {} record headers from {}, set: {}.", recordIdentifiers.size(),
-                value(OAI_URL, repo.getUrl()),
-                value(OAI_SET, setspec)
+        log.info( "{}: Set: {}: Retrieved {} record headers.",
+                value(REPO_NAME, repo.getCode()),
+                value(OAI_SET, setspec),
+                recordIdentifiers.size()
         );
 
         var retrievedRecords = writeToLocalFileSystem( recordIdentifiers, repo, harvesterConfiguration.getDir(), repositoryDirectory );
 
-        log.info( "Retrieved {} records from {}, set: {}.", retrievedRecords,
-                value(OAI_URL, repo.getUrl()),
-                value(OAI_SET, setspec)
+        log.info( "{}: Set: {}: Retrieved {} records.",
+                value(OAI_RECORD, repo.getCode()),
+                value(OAI_SET, setspec),
+                retrievedRecords
         );
     }
 
     /**
      * Creates the destination directory for this repository.
      * @param destinationDirectory the base directory.
-     * @param indexName the name of the repository.
+     * @param repositoryDirectory the name of the repository.
      * @throws DirectoryCreationFailedException if the directory cannot be created.
      */
     private void createDestinationDirectory( Path destinationDirectory, Path repositoryDirectory ) throws DirectoryCreationFailedException
@@ -420,6 +417,7 @@ public class Harvester implements CommandLineRunner
 
     private List<String> getIdentifiersForSet( Repo repo, String set, LocalDate fromDate ) throws HarvesterFailedException
     {
+        log.trace( "URL: {}, set: {}", repo.getUrl(), set );
         try
         {
             final var records = new ArrayList<String>();
@@ -429,8 +427,6 @@ public class Harvester implements CommandLineRunner
 
             do
             {
-                log.debug( "URL: {}, set: {}, list size: {}", repo.getUrl(), set, records.size() );
-
                 // add to list of records to fetch
                 records.addAll( li.getIdentifiers() );
 
@@ -449,7 +445,7 @@ public class Harvester implements CommandLineRunner
         }
         catch ( IOException | SAXException e )
         {
-            throw new HarvesterFailedException( "Fetching identifiers failed for " + repo + ": " + e, e );
+            throw new HarvesterFailedException( repo.getCode() + ": Fetching identifiers failed: " + e, e );
         }
     }
 
@@ -459,7 +455,7 @@ public class Harvester implements CommandLineRunner
 
         for ( var currentRecord : records )
         {
-            var fileName = URLEncoder.encode( currentRecord, StandardCharsets.UTF_8 ) + ".xml";
+            var fileName = URLEncoder.encode( currentRecord, UTF_8 ) + ".xml";
 
             try
             {
@@ -470,7 +466,8 @@ public class Harvester implements CommandLineRunner
                 if (pmhRecord.getErrors().getLength() != 0)
                 {
                     var error = pmhRecord.getErrors().item( 0 );
-                    log.warn( "Failed to harvest record {}: {}: {}",
+                    log.warn( "{}: Failed to harvest record {}: {}: {}",
+                            value(REPO_NAME, repo.getCode()),
                             value( OAI_RECORD, currentRecord ),
                             value( OAI_ERROR_CODE, error.getAttributes().getNamedItem( "code" ).getTextContent() ),
                             value( OAI_ERROR_MESSAGE, error.getTextContent() )
