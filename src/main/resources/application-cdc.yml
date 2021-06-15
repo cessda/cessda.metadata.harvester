@@ -25,36 +25,51 @@ harvester:
     full: 00 31 12 * * ?
   repos:
     - url: https://oai.ukdataservice.ac.uk:8443/oai/provider
+      code: UKDS
       metadataFormat: ddi
     - url: https://kuha.sa.dk/v0/oai
+      code: DNA
       metadataFormat: oai_ddi25
     - url: http://194.117.18.18:6003/v0/oai
+      code: APIS
       metadataFormat: oai_ddi25
     - url: http://services.fsd.uta.fi/v0/oai
+      code: FSD
       metadataFormat: oai_ddi25
     - url: https://dbkapps.gesis.org/dbkoai3
+      code: GESIS
       metadataFormat: oai_ddi25
     - url: http://147.213.4.44:6003/v0/oai
+      code: SASD
       metadataFormat: oai_ddi25
     - url: https://snd.gu.se/en/oai-pmh
+      code: SND
       metadataFormat: oai_ddi25
-      set: discipline:social-science
+      set: subject:social-sciences
     - url: https://easy.dans.knaw.nl/oai/
+      code: DANS
       metadataFormat: oai_ddi25_en
     - url: https://easy.dans.knaw.nl/oai/
+      code: DANS
       metadataFormat: oai_ddi25_nl
     - url: https://data2.aussda.at/oai
+      code: AUSSDA
       metadataFormat: oai_ddi
-    - url: https://nesstar2.adp.fdv.uni-lj.si/oai-pmh/
-      metadataFormat: oai_ddi
+    - url: https://www.adp.fdv.uni-lj.si/v0/oai
+      code: ADP
+      metadataFormat: oai_ddi25
     - url: https://oai-pmh.nsd.no/oai-pmh/
+      code: NSD
       metadataFormat: oai_ddi
-    - url: http://nesstar.sciences-po.fr/oai-pmh/
+    - url: https://data.sciencespo.fr/oai
+      code: ProgedoSciencesPo
       metadataFormat: oai_ddi
-    - url: http://harvester.sodanet.gr:8080/oai/request
+    - url: https://datacatalogue.sodanet.gr/oai
       metadataFormat: oai_ddi
       set: CESSDA
     - url: http://nesstar.unidata.unimib.it/oai-pmh/
+      code: UniData
       metadataFormat: oai_ddi
     - url: http://nesstar.soc.cas.cz/oai-pmh/
       metadataFormat: oai_ddi
+      code: CSDA

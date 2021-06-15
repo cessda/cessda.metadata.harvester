@@ -42,7 +42,8 @@ class EQBHarvestingServiceTest
 		harvesterConfiguration.getFrom().setSingle( LocalDate.parse("2020-12-08") );
 		harvesterConfiguration.setTimeout( Duration.ofSeconds( 10 ) );
 		var repo = new Repo();
-		repo.setUrl( URI.create( "http://services.fsd.uta.fi/v0/oai?set=study_group:paihde" ) );
+		repo.setCode( "TEST" );
+		repo.setUrl( URI.create( "http://localhost:8080/v0/oai?set=study_group:paihde" ) );
 		repo.setMetadataFormat( "oai_ddi" );
 		harvesterConfiguration.getRepos().add( repo );
 
