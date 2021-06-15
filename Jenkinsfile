@@ -77,7 +77,9 @@ pipeline {
         }
         stage('Check Requirements and Deployments') {
             steps {
-                build job: 'cessda.eqb.deploy/master', parameters: [string(name: 'harvester_image_tag', value: "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"), string(name: 'module', value: 'harvester')], wait: false
+                build job: 'cessda.cdc.aggregator.deploy/master', parameters: [
+                        string(name: 'harvesterImageTag', value: "${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
+                ], wait: false
             }
             when { branch 'master' }
         }
