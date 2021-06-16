@@ -2,7 +2,7 @@ logging:
   file: '@logging.file@'
   pattern:
     console: '%d{yyyy-dd-MM HH:mm:ss.SSS} %highlight(%-5level) %30.30((%M\)) %40.40((%file:%line\)) - %message%n'
-    file: '%d{yyyy-dd-MM HH:mm:ss.SSS}  %-5level  %30.30((%M\)) %40.40((%file:%line\)) - %message%n'  
+    file: '%d{yyyy-dd-MM HH:mm:ss.SSS}  %-5level  %30.30((%M\)) %40.40((%file:%line\)) - %message%n'
   level:
     org:
       springframework: '@logging.level.org.springframework@'
@@ -65,6 +65,7 @@ harvester:
       code: ProgedoSciencesPo
       metadataFormat: oai_ddi
     - url: https://datacatalogue.sodanet.gr/oai
+      code: SoDaNet
       metadataFormat: oai_ddi
       set: CESSDA
     - url: http://nesstar.unidata.unimib.it/oai-pmh/
