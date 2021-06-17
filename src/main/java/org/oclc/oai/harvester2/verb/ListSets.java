@@ -38,6 +38,7 @@ import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -60,21 +61,27 @@ public class ListSets extends HarvesterVerb implements Resumable
 	 * @throws MalformedURLException the baseURL is bad
 	 * @throws IOException           an I/O error occurred
 	 */
-	public ListSets( HttpClient httpClient, URI baseURL ) throws IOException, SAXException
+	ListSets( InputStream is ) throws IOException, SAXException
 	{
-		super( httpClient, getRequestURL( baseURL ));
+		super( is );
 	}
 
-	/**
-	 * Client-side ListSets verb constructor
-	 *
-	 * @param baseURL the baseURL of the server to be queried
-	 * @throws MalformedURLException the baseURL is bad
-	 * @throws IOException           an I/O error occurred
-	 */
-	public ListSets( HttpClient httpClient, URI baseURL, String resumptionToken ) throws IOException, SAXException
+	public static ListSets instance(URI baseURL) throws IOException, SAXException
 	{
-		super( httpClient, getRequestURL( baseURL, resumptionToken ) );
+		var requestURL = getRequestURL( baseURL );
+		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), DEFAULT_TIMEOUT ))
+		{
+			return new ListSets( is );
+		}
+	}
+
+	public static ListSets instance(URI baseURL, String resumptionToken) throws IOException, SAXException
+	{
+		var requestURL = getRequestURL( baseURL, resumptionToken );
+		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), DEFAULT_TIMEOUT ))
+		{
+			return new ListSets( is );
+		}
 	}
 
 	/**
@@ -111,7 +118,7 @@ public class ListSets extends HarvesterVerb implements Resumable
 	 */
 	private static URI getRequestURL( URI baseURL, String resumptionToken )
 	{
-		return URI.create(baseURL + "?verb=ListRecords"
+		return URI.create(baseURL + "?verb=ListSets"
 				+ "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 )
 		);
 	}

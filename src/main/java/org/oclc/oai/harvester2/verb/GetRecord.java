@@ -40,6 +40,7 @@ import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.time.Duration;
@@ -53,6 +54,10 @@ import java.util.Optional;
  */
 public class GetRecord extends HarvesterVerb
 {
+	GetRecord( InputStream in ) throws IOException, SAXException
+	{
+		super(in);
+	}
 
 	/**
 	 * Client-side GetRecord verb constructor
@@ -66,10 +71,13 @@ public class GetRecord extends HarvesterVerb
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	public GetRecord( HttpClient httpClient, URI baseURL, String identifier, String metadataPrefix, Duration timeout )
-			throws IOException, SAXException
+	public static GetRecord instance( URI baseURL, String identifier, String metadataPrefix, Duration timeout ) throws IOException, SAXException
 	{
-		super( httpClient, getRequestURL( baseURL, identifier, metadataPrefix ), timeout );
+		var requestURL = getRequestURL( baseURL, identifier, metadataPrefix );
+		try (var in = HttpClient.getHttpResponse( requestURL.toURL(), timeout ))
+		{
+			return new GetRecord( in );
+		}
 	}
 
 	/**

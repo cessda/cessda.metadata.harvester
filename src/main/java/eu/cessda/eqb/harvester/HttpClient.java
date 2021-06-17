@@ -2,7 +2,6 @@ package eu.cessda.eqb.harvester;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,9 +18,10 @@ import java.util.zip.ZipInputStream;
 import static java.lang.Math.toIntExact;
 import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
 
-@Service
 public class HttpClient
 {
+    private HttpClient() {}
+
     // Constants used by the HTTP client
     private static final String RETRY_AFTER = "Retry-After";
 
@@ -81,7 +81,7 @@ public class HttpClient
         }
     }
 
-    public InputStream getHttpResponse( URL requestURL, Duration timeout ) throws IOException
+    public static InputStream getHttpResponse( URL requestURL, Duration timeout ) throws IOException
     {
         HttpURLConnection con;
         int responseCode;

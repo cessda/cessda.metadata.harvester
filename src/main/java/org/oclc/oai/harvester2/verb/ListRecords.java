@@ -38,10 +38,13 @@ import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDate;
 
 /**
  * This class represents an ListRecords response on either the server or on the client
@@ -53,8 +56,6 @@ public class ListRecords extends HarvesterVerb implements Resumable
 	/**
 	 * Client-side ListRecords verb constructor
 	 *
-	 * @param baseURL
-	 *            the baseURL of the server to be queried
 	 * @throws MalformedURLException
 	 *             the baseURL is bad
 	 * @throws SAXException
@@ -62,22 +63,28 @@ public class ListRecords extends HarvesterVerb implements Resumable
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	public ListRecords( HttpClient httpClient, String baseURL, String from, String until, String set, String metadataPrefix ) throws IOException, SAXException
+	ListRecords( InputStream is ) throws IOException, SAXException
 	{
-		super( httpClient, getRequestURL( baseURL, from, until, set, metadataPrefix ) );
+		super( is );
 	}
 
-	/**
-	 * Client-side ListRecords verb constructor (resumptionToken version)
-	 *
-	 * @param baseURL
-	 * @param resumptionToken
-	 * @throws IOException
-	 * @throws SAXException
-	 */
-	public ListRecords( HttpClient httpClient, String baseURL, String resumptionToken ) throws IOException, SAXException
+	public static ListRecords instance(URI baseURL, String resumptionToken, Duration timeout) throws IOException, SAXException
 	{
-		super( httpClient, getRequestURL( baseURL, resumptionToken ) );
+		var requestURL = getRequestURL( baseURL, resumptionToken );
+		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), timeout ))
+		{
+			return new ListRecords( is );
+		}
+	}
+
+	public static ListRecords instance( URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix, Duration timeout)
+			throws IOException, SAXException
+	{
+		var requestURL = getRequestURL( baseURL, from, until, set, metadataPrefix );
+		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), timeout ))
+		{
+			return new ListRecords( is );
+		}
 	}
 
 	/**
@@ -86,13 +93,13 @@ public class ListRecords extends HarvesterVerb implements Resumable
 	 * @return a String containing the query portion of the http request
 	 */
 	private static URI getRequestURL(
-			String baseURL,
-			String from,
-			String until,
+			URI baseURL,
+			LocalDate from,
+			LocalDate until,
 			String set,
 			String metadataPrefix )
 	{
-		StringBuilder requestURL = new StringBuilder( baseURL );
+		StringBuilder requestURL = new StringBuilder( baseURL.toString() );
 		requestURL.append( "?verb=ListRecords" );
 		if ( from != null )
 		{
@@ -117,7 +124,7 @@ public class ListRecords extends HarvesterVerb implements Resumable
 	 * @param resumptionToken
 	 * @return
 	 */
-	private static URI getRequestURL( String baseURL, String resumptionToken )
+	private static URI getRequestURL( URI baseURL, String resumptionToken )
 	{
 		return URI.create(baseURL + "?verb=ListRecords"
 				+ "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 )
