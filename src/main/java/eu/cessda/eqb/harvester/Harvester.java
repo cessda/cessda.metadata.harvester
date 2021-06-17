@@ -35,21 +35,18 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.xml.sax.SAXException;
 
 import javax.annotation.PreDestroy;
-import javax.xml.XMLConstants;
-import javax.xml.transform.Source;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
@@ -68,18 +65,17 @@ public class Harvester implements CommandLineRunner
 
     private final HarvesterConfiguration harvesterConfiguration;
     private final HttpClient httpClient;
-    private final TransformerFactory factory;
+    private final IOUtilities ioUtilities;
     private boolean fullIsRunning = false;
     private boolean incrementalIsRunning = false;
 
     @Autowired
-    public Harvester( HarvesterConfiguration harvesterConfiguration, HttpClient httpClient )
+    public Harvester( HarvesterConfiguration harvesterConfiguration, HttpClient httpClient, IOUtilities ioUtilities )
             throws TransformerConfigurationException
     {
         this.harvesterConfiguration = harvesterConfiguration;
         this.httpClient = httpClient;
-        factory = TransformerFactory.newInstance();
-        factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
+        this.ioUtilities = ioUtilities;
     }
 
     public static void main( String[] args )
@@ -237,24 +233,10 @@ public class Harvester implements CommandLineRunner
         {
             var repo = harvesterConfiguration.getRepos().get( position );
 
-            if ( repo.getMetadataFormat() == null )
-            {
-                throw new IllegalArgumentException( "Repository " + repo.getUrl() + " has no metadata format configured." );
-            }
+            validateRepository( repo );
 
-            var baseUrl = repo.getUrl();
-            log.info( "Single harvesting {} from {}", baseUrl, fromDate );
-            for ( String set : discoverSets( repo ) )
-            {
-                try
-                {
-                    harvestSet( repo, set, fromDate );
-                }
-                catch ( HarvesterFailedException e )
-                {
-                    log.error( "Could not harvest repository: {}, set: {}: {}", baseUrl, set, e.toString() );
-                }
-            }
+            log.info( "Single harvesting {} from {}", repo.getUrl(), fromDate );
+            harvestRepository( fromDate, repo );
         }
         finally
         {
@@ -267,43 +249,70 @@ public class Harvester implements CommandLineRunner
 
         log.info( "Harvesting started from {}", fromDate );
 
-        var executor = Executors.newFixedThreadPool(harvesterConfiguration.getRepos().size());
+        var repositories = harvesterConfiguration.getRepos();
 
-        var futures = new ArrayList<CompletableFuture<Void>>();
-        for ( var repo : harvesterConfiguration.getRepos() )
+        // Validate expected parameters are present before starting the harvest
+        repositories.forEach( this::validateRepository );
+
+        var executor = Executors.newFixedThreadPool( repositories.size() );
+
+        // Start the harvest for each repository
+        var futures = repositories.stream().map( repo ->
+                CompletableFuture.runAsync( () -> harvestRepository( fromDate, repo ), executor )
+        ).collect( Collectors.toCollection( ArrayList::new ) );
+
+        try
         {
-            if (repo.getCode() == null)
-            {
-                throw new IllegalArgumentException( "Repository " + repo + " has no identifier configured." );
-            }
-
-            if ( repo.getMetadataFormat() == null )
-            {
-                throw new IllegalArgumentException( "Repository " + repo + " has no metadata format configured." );
-            }
-
-            log.info( "Harvesting repository {}", value("repo", repo ) );
-
-            var sets = discoverSets( repo );
-
-            futures.add( CompletableFuture.runAsync( () ->
-                {
-                    for ( var set : sets )
-                    {
-                        try
-                        {
-                            harvestSet( repo, set, fromDate );
-                        }
-                        catch ( HarvesterFailedException e )
-                        {
-                            log.error( "Could not harvest repository: {}, set: {}: {}", repo.getCode(), set, e.toString() );
-                        }
-                    }
-                }, executor )
-            );
+            futures.forEach( CompletableFuture::join );
         }
-        futures.forEach( CompletableFuture::join );
+        catch ( CancellationException | CompletionException e )
+        {
+            log.error("Unexpected error occurred when harvesting!", e.getCause());
+        }
+
         executor.shutdown();
+    }
+
+    /**
+     * Validate that a repository has all the required parameters.
+     * @param repo the repository to validate.
+     * @throws IllegalArgumentException if a parameter fails validation.
+     */
+    private void validateRepository( Repo repo )
+    {
+        if ( repo.getCode() == null)
+        {
+            throw new IllegalArgumentException( "Repository " + repo + " has no identifier configured." );
+        }
+
+        if ( repo.getMetadataFormat() == null )
+        {
+            throw new IllegalArgumentException( "Repository " + repo + " has no metadata format configured." );
+        }
+    }
+
+    private void harvestRepository( LocalDate fromDate, Repo repo )
+    {
+        log.info( "Harvesting repository {}", value( "repo", repo ) );
+
+        var sets = discoverSets( repo );
+
+        for ( var set : sets )
+        {
+            try
+            {
+                harvestSet( repo, set, fromDate );
+            }
+            catch ( HarvesterFailedException e )
+            {
+                log.error( "Could not harvest repository: {}, set: {}: {}: {}",
+                        value( LoggingConstants.OAI_URL, repo.getUrl()),
+                        value( LoggingConstants.OAI_SET, set),
+                        value( LoggingConstants.EXCEPTION_NAME, e.getClass().getName()),
+                        value( LoggingConstants.EXCEPTION_MESSAGE, e.getMessage())
+                );
+            }
+        }
     }
 
     /**
@@ -367,13 +376,13 @@ public class Harvester implements CommandLineRunner
         if (harvesterConfiguration.keepOAIEnvelope())
         {
             var wrappedRepositoryDirectory = harvesterConfiguration.getDir().resolve( WRAPPED_DIRECTORY_NAME );
-            createDestinationDirectory( wrappedRepositoryDirectory, repositoryDirectory );
+            ioUtilities.createDestinationDirectory( wrappedRepositoryDirectory, repositoryDirectory );
         }
 
         if (harvesterConfiguration.removeOAIEnvelope())
         {
             var unwrappedRepositoryDirectory = harvesterConfiguration.getDir().resolve( UNWRAPPED_DIRECTORY_NAME );
-            createDestinationDirectory( unwrappedRepositoryDirectory, repositoryDirectory );
+            ioUtilities.createDestinationDirectory( unwrappedRepositoryDirectory, repositoryDirectory );
         }
 
         log.debug( "{}: Set: {}: Fetching records", repo.getCode(), setspec );
@@ -393,26 +402,6 @@ public class Harvester implements CommandLineRunner
                 value(OAI_SET, setspec),
                 retrievedRecords
         );
-    }
-
-    /**
-     * Creates the destination directory for this repository.
-     * @param destinationDirectory the base directory.
-     * @param repositoryDirectory the name of the repository.
-     * @throws DirectoryCreationFailedException if the directory cannot be created.
-     */
-    private void createDestinationDirectory( Path destinationDirectory, Path repositoryDirectory ) throws DirectoryCreationFailedException
-    {
-        var outputDirectory = destinationDirectory.resolve( repositoryDirectory );
-        try
-        {
-            log.debug( "Creating destination directory: {}", outputDirectory );
-            Files.createDirectories( outputDirectory );
-        }
-        catch ( IOException e )
-        {
-            throw new DirectoryCreationFailedException( outputDirectory, e );
-        }
     }
 
     private List<String> getIdentifiersForSet( Repo repo, String set, LocalDate fromDate ) throws HarvesterFailedException
@@ -484,7 +473,7 @@ public class Harvester implements CommandLineRunner
                     if (metadata.isPresent())
                     {
                         var source = new DOMSource( metadata.orElseThrow() );
-                        writeDomSource( source, baseDirectory.resolve( UNWRAPPED_DIRECTORY_NAME ).resolve( repoDirectory ).resolve( fileName ) );
+                        ioUtilities.writeDomSource( source, baseDirectory.resolve( UNWRAPPED_DIRECTORY_NAME ).resolve( repoDirectory ).resolve( fileName ) );
                     }
                 }
 
@@ -492,7 +481,7 @@ public class Harvester implements CommandLineRunner
                 if (harvesterConfiguration.keepOAIEnvelope())
                 {
                     var source = new DOMSource( pmhRecord.getDocument() );
-                    writeDomSource( source, baseDirectory.resolve( WRAPPED_DIRECTORY_NAME ).resolve( repoDirectory ).resolve( fileName ) );
+                    ioUtilities.writeDomSource( source, baseDirectory.resolve( WRAPPED_DIRECTORY_NAME ).resolve( repoDirectory ).resolve( fileName ) );
                 }
             }
             catch ( TransformerConfigurationException e )
@@ -512,20 +501,6 @@ public class Harvester implements CommandLineRunner
         }
 
         return retrievedRecords;
-    }
-
-    /**
-     * Writes the given {@link Source} to the specified {@link Path}.
-     * @throws IOException if an IO error occurs while writing the file.
-     * @throws TransformerException if an unrecoverable error occurs whilst writing the source.
-     */
-    private void writeDomSource( Source source, Path fdest ) throws IOException, TransformerException
-    {
-        try ( var fOutputStream = Files.newOutputStream( fdest ) )
-        {
-            log.trace( "Writing to {}", fdest );
-            factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
-        }
     }
 
     /**

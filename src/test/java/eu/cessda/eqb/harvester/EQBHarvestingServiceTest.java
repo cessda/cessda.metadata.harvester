@@ -51,7 +51,7 @@ class EQBHarvestingServiceTest
 		when( httpClient.getHttpResponse( any(URL.class), any(Duration.class) ) )
 			.thenReturn( InputStream.nullInputStream() );
 
-		harvester = new Harvester( harvesterConfiguration, httpClient );
+		harvester = new Harvester( harvesterConfiguration, httpClient, new IOUtilities() );
 	}
 
 	@Test
