@@ -67,6 +67,10 @@ class HarvesterConfiguration
      */
     private boolean removeOAIEnvelope = false;
     /**
+     * Incrementally harvest
+     */
+    private boolean incremental = false;
+    /**
      * Date to harvest from.
      */
     private From from;
@@ -99,6 +103,19 @@ class HarvesterConfiguration
     public void setRemoveOAIEnvelope( boolean removeOAIEnvelope )
     {
         this.removeOAIEnvelope = removeOAIEnvelope;
+    }
+
+    /**
+     * Harvest incrementally.
+     */
+    public boolean incremental()
+    {
+        return incremental;
+    }
+
+    public void setIncremental( boolean incremental )
+    {
+        this.incremental = incremental;
     }
 
     /**
@@ -173,24 +190,26 @@ class HarvesterConfiguration
         if ( o == null || getClass() != o.getClass() ) return false;
         HarvesterConfiguration that = (HarvesterConfiguration) o;
         return keepOAIEnvelope == that.keepOAIEnvelope && removeOAIEnvelope == that.removeOAIEnvelope &&
-                timeout == that.timeout && Objects.equals( dir, that.dir ) &&
-                Objects.equals( repos, that.repos ) && Objects.equals( from, that.from );
+                incremental == that.incremental && timeout == that.timeout &&
+                Objects.equals( dir, that.dir ) && Objects.equals( repos, that.repos ) &&
+                Objects.equals( from, that.from );
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash( dir, keepOAIEnvelope, removeOAIEnvelope, repos, from, timeout );
+        return Objects.hash( dir, keepOAIEnvelope, removeOAIEnvelope, incremental, repos, from, timeout );
     }
 
     @Override
     public String toString()
     {
         return "HarvesterConfiguration{" +
-                "dir=" + dir +
+                "repos=" + repos +
+                ", dir=" + dir +
                 ", keepOAIEnvelope=" + keepOAIEnvelope +
                 ", removeOAIEnvelope=" + removeOAIEnvelope +
-                ", repos=" + repos +
+                ", incremental=" + incremental +
                 ", from=" + from +
                 ", timeout=" + timeout +
                 '}';
@@ -211,11 +230,6 @@ class HarvesterConfiguration
         public void setIncremental( LocalDate incremental )
         {
             this.incremental = incremental;
-        }
-
-        public void setIncremental( String incremental )
-        {
-            this.incremental = LocalDate.parse( incremental );
         }
 
         public LocalDate getInitial()

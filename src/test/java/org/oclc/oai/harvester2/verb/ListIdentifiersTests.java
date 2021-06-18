@@ -8,8 +8,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.oclc.oai.harvester2.verb.RecordHeadersMock.*;
 
 class ListIdentifiersTests
 {
@@ -18,7 +18,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers( new ByteArrayInputStream(
-                RecordHeadersMock.getListIdentifiersXMLResumptionEmpty().getBytes( StandardCharsets.UTF_8 )
+                getListIdentifiersXMLResumptionEmpty().getBytes( StandardCharsets.UTF_8 )
         ) );
 
         var identifiersIDs = identifiers.getIdentifiers();
@@ -33,7 +33,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers( new ByteArrayInputStream(
-                RecordHeadersMock.getListIdentifiersXMLWithResumption().getBytes( StandardCharsets.UTF_8 )
+                getListIdentifiersXMLWithResumption().getBytes( StandardCharsets.UTF_8 )
         ));
 
         assertEquals("3/6/7/ddi/null/2017-01-01/null", identifiers.getResumptionToken().orElseThrow() );
@@ -44,7 +44,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers(new ByteArrayInputStream(
-                RecordHeadersMock.getListIdentifiersXMLResumptionEmpty().getBytes( StandardCharsets.UTF_8 )
+                getListIdentifiersXMLResumptionEmpty().getBytes( StandardCharsets.UTF_8 )
         ));
 
         assertTrue( identifiers.getResumptionToken().isEmpty() );
@@ -55,7 +55,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers(new ByteArrayInputStream(
-                RecordHeadersMock.getListIdentifiersXMLWithResumptionLastList().getBytes( StandardCharsets.UTF_8 )
+                getListIdentifiersXMLWithResumptionLastList().getBytes( StandardCharsets.UTF_8 )
         ));
 
         // Then
@@ -71,7 +71,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers( new ByteArrayInputStream(
-                RecordHeadersMock.getListIdentifiersXMLWithCannotDisseminateFormatError().getBytes( StandardCharsets.UTF_8 )
+                getListIdentifiersXMLWithCannotDisseminateFormatError().getBytes( StandardCharsets.UTF_8 )
         ));
 
         // Then
@@ -79,5 +79,12 @@ class ListIdentifiersTests
 
         assertTrue( identifiersIDs.isEmpty() );
         assertTrue( identifiers.getResumptionToken().isEmpty() );
+
+        var errors = identifiers.getErrors();
+        assertFalse( errors.isEmpty() );
+
+        var error = errors.get( 0 );
+        assertEquals( OAIError.Code.cannotDisseminateFormat, error.getCode() );
+        assertTrue( error.getMessage().isEmpty() );
     }
 }

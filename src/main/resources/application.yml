@@ -1,4 +1,5 @@
 harvester:
+  incremental: true
   dir: '@documents@'
   recipient: support@cessda.eu
   from:

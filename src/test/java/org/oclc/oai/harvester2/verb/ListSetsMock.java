@@ -2,7 +2,7 @@ package org.oclc.oai.harvester2.verb;
 
 public class ListSetsMock
 {
-    static String LIST_SETS_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+    static final String LIST_SETS_XML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"\n" +
             "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
             "         xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n" +
@@ -38,7 +38,7 @@ public class ListSetsMock
             "    </ListSets>\n" +
             "</OAI-PMH>";
 
-    static String SETS_NOT_SUPPORTED_ERROR = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+    static final String SETS_NOT_SUPPORTED_ERROR = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"\n" +
             "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
             "         xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/\n" +

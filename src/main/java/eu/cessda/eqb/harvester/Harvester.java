@@ -30,8 +30,6 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.jmx.export.annotation.ManagedOperation;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.xml.sax.SAXException;
 
 import javax.annotation.PreDestroy;
@@ -39,7 +37,6 @@ import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMSource;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -65,8 +62,6 @@ public class Harvester implements CommandLineRunner
 
     private final HarvesterConfiguration harvesterConfiguration;
     private final IOUtilities ioUtilities;
-    private boolean fullIsRunning = false;
-    private boolean incrementalIsRunning = false;
 
     @Autowired
     public Harvester( HarvesterConfiguration harvesterConfiguration, IOUtilities ioUtilities )
@@ -81,106 +76,34 @@ public class Harvester implements CommandLineRunner
         new SpringApplicationBuilder( Harvester.class ).bannerMode( Banner.Mode.OFF ).run( args );
     }
 
+    /**
+     * Validate that a repository has all the required parameters.
+     * @param repo the repository to validate.
+     * @throws IllegalArgumentException if a parameter fails validation.
+     */
+    private static void validateRepository( Repo repo )
+    {
+        if ( repo.getCode() == null)
+        {
+            throw new IllegalArgumentException( "Repository " + repo + " has no identifier configured." );
+        }
+
+        if ( repo.getMetadataFormat() == null )
+        {
+            throw new IllegalArgumentException( "Repository " + repo + " has no metadata format configured." );
+        }
+    }
+
     @Override
     public void run( String... args )
     {
-        fullHarvesting();
-    }
-
-    @ManagedOperation(
-            description = "Run harvesting on several repo starting from 'harvester.from.single'. " +
-                    "Separate more than one repo with comma. Can be used to harvest an new repository, " +
-                    "after the list of repos has been cleared, and the newly added repo url is set."
-                    + "The position corresponds to the number given in the list of repos in the configuration view,"
-                    + "starting from 0. See environments tab and search for 'harvester.repos'" )
-    public String bundleHarvesting( String commaSeparatedIntegerPositionInRepoList )
-    {
-
-        String res = Arrays.stream( commaSeparatedIntegerPositionInRepoList.split( "," ) )
-                .map( String::trim ).mapToInt( Integer::parseInt )
-                .mapToObj( i -> "Repo " + i + " : " + singleHarvesting( i ) + "\n" )
-                .collect( Collectors.joining() );
-        return res + "Bundle harvesting finished from " + harvesterConfiguration.getFrom().getSingle();
-    }
-
-    @ManagedOperation(
-            description = "Run harvesting on one single repo starting from 'harvester.from.single'. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. The position corresponds to the number given in the list of repos in the configuration view, starting from 0. See environments tab and search for 'harvester.repos'" )
-    public String singleHarvesting( Integer positionInRepoList )
-    {
-
-        if ( incrementalIsRunning )
+        if ( harvesterConfiguration.incremental() )
         {
-            return "Not started. An incremental harvesting progress is already running";
+            incrementalHarvesting();
         }
-
-        incrementalIsRunning = true;
-        log.info( "Single harvesting starting from {}", harvesterConfiguration.getFrom().getSingle() );
-        try
+        else
         {
-            runSingleHarvest( harvesterConfiguration.getFrom().getSingle(), positionInRepoList );
-        }
-        finally
-        {
-            incrementalIsRunning = false;
-        }
-        log.info( "Single harvesting finished from {}", harvesterConfiguration.getFrom().getSingle() );
-        return "Single harvesting for " + positionInRepoList + "th repository started. See log section for details";
-    }
-
-    /**
-     * runs right after service startup takes place
-     */
-    @ManagedOperation(
-            description = "Run initial harvesting. Set from date with key harvester.cron.initial. Can be used to harvest an new repository, after the list of repos has been cleared, and the newly added repo url is set. Don't forget to reset the environment and update application.yml for persistent configuration" )
-    @Scheduled( initialDelayString = "${harvester.cron.initialDelay:1000}", fixedDelay = 315360000000L )
-    public void initialHarvesting()
-    {
-        LocalDate newInitial = LocalDate.now().minusDays( 2 );
-        // set initial value dynamically
-        if ( harvesterConfiguration.getFrom().getInitial() == null )
-        {
-            harvesterConfiguration.getFrom().setInitial( newInitial );
-        }
-
-        if ( incrementalIsRunning )
-        {
-            return;
-        }
-
-        log.info( "Initial harvesting starting from {}", harvesterConfiguration.getFrom().getInitial() );
-
-        try
-        {
-            runHarvest( harvesterConfiguration.getFrom().getInitial() );
-        }
-        finally
-        {
-            incrementalIsRunning = false;
-        }
-        log.info( "Initial harvesting finished from {}", harvesterConfiguration.getFrom().getInitial() );
-    }
-
-    /**
-     * runs once in a year, no incremental harvesting takes place
-     *
-     */
-    public void fullHarvesting()
-    {
-        if ( fullIsRunning )
-        {
-            return;
-        }
-
-        try
-        {
-            log.info( "Full harvesting started" );
-            fullIsRunning = true;
             runHarvest( null );
-            log.info( "Full harvesting finished" );
-        }
-        finally
-        {
-            fullIsRunning = false;
         }
     }
 
@@ -190,56 +113,17 @@ public class Harvester implements CommandLineRunner
      */
     public void incrementalHarvesting()
     {
-        LocalDate newIncFrom = LocalDate.now().minusDays( 2 );
-        String msg;
-        if ( !fullIsRunning )
-        {
-            if ( !incrementalIsRunning )
-            {
-                incrementalIsRunning = true;
-                log.info( "Incremental harvesting started from {}",
-                        harvesterConfiguration.getFrom().getIncremental() );
-                runHarvest( harvesterConfiguration.getFrom().getIncremental() );
-                log.info( "Incremental harvesting finished" );
+        var incremental = harvesterConfiguration.getFrom().getIncremental();
 
-                msg = "Incremental harvesting finished from " + harvesterConfiguration.getFrom().getIncremental();
-
-                harvesterConfiguration.getFrom().setIncremental( newIncFrom );
-                log.info( "Next incremental harvest will start from {}", newIncFrom );
-            }
-            else
-            {
-                msg = "Incremental harvesting already running.";
-            }
-            log.info( msg );
-        }
-        else
+        // If a specific incremental date is not configured default to harvesting the last week
+        if (incremental == null)
         {
-            log.info( "No incremental harvesting, as full harvesting is in progress." );
-            return;
+            incremental = LocalDate.now().minusDays( 7 );
         }
 
-        incrementalIsRunning = false;
-
-    }
-
-    public void runSingleHarvest( LocalDate fromDate, Integer position )
-    {
-
-        log.info( "Harvesting started from {} for repo {}", fromDate, position );
-        try
-        {
-            var repo = harvesterConfiguration.getRepos().get( position );
-
-            validateRepository( repo );
-
-            log.info( "Single harvesting {} from {}", repo.getUrl(), fromDate );
-            harvestRepository( fromDate, repo );
-        }
-        finally
-        {
-            incrementalIsRunning = false;
-        }
+        log.info( "Incremental harvesting started from {}", incremental );
+        runHarvest( incremental );
+        log.info( "Incremental harvesting finished" );
     }
 
     private void runHarvest( LocalDate fromDate )
@@ -250,7 +134,7 @@ public class Harvester implements CommandLineRunner
         var repositories = harvesterConfiguration.getRepos();
 
         // Validate expected parameters are present before starting the harvest
-        repositories.forEach( this::validateRepository );
+        repositories.forEach( Harvester::validateRepository );
 
         var executor = Executors.newFixedThreadPool( repositories.size() );
 
@@ -269,24 +153,6 @@ public class Harvester implements CommandLineRunner
         }
 
         executor.shutdown();
-    }
-
-    /**
-     * Validate that a repository has all the required parameters.
-     * @param repo the repository to validate.
-     * @throws IllegalArgumentException if a parameter fails validation.
-     */
-    private void validateRepository( Repo repo )
-    {
-        if ( repo.getCode() == null)
-        {
-            throw new IllegalArgumentException( "Repository " + repo + " has no identifier configured." );
-        }
-
-        if ( repo.getMetadataFormat() == null )
-        {
-            throw new IllegalArgumentException( "Repository " + repo + " has no metadata format configured." );
-        }
     }
 
     private void harvestRepository( LocalDate fromDate, Repo repo )
@@ -334,7 +200,7 @@ public class Harvester implements CommandLineRunner
         {
             try
             {
-                var unfoldedSets = getSetStrings( repo.getUrl() );
+                var unfoldedSets = getSetStrings( repo );
                 log.debug( "No. of sets: {}", unfoldedSets.size() );
                 return unfoldedSets;
             }
@@ -450,14 +316,14 @@ public class Harvester implements CommandLineRunner
                 var pmhRecord = GetRecord.instance( repo.getUrl(), currentRecord, repo.getMetadataFormat(), harvesterConfiguration.getTimeout() );
 
                 // Check for errors
-                if (pmhRecord.getErrors().getLength() != 0)
+                if (!pmhRecord.getErrors().isEmpty())
                 {
-                    var error = pmhRecord.getErrors().item( 0 );
+                    var error = pmhRecord.getErrors().get( 0 );
                     log.warn( "{}: Failed to harvest record {}: {}: {}",
-                            value(REPO_NAME, repo.getCode()),
+                            value( REPO_NAME, repo.getCode()),
                             value( OAI_RECORD, currentRecord ),
-                            value( OAI_ERROR_CODE, error.getAttributes().getNamedItem( "code" ).getTextContent() ),
-                            value( OAI_ERROR_MESSAGE, error.getTextContent() )
+                            value( OAI_ERROR_CODE, error.getCode() ),
+                            value( OAI_ERROR_MESSAGE, error.getMessage().orElse( "" ) )
                     );
                     continue;
                 }
@@ -504,11 +370,13 @@ public class Harvester implements CommandLineRunner
     /**
      * Retrieves the sets from the OAI-PMH repository using the ListSets verb.
      *
-     * @param url the URL of the repository.
+     * @param repo the repository.
      * @return a {@link Set} containing all of the sets in the remote repository.
      */
-    public Set<String> getSetStrings( final URI url ) throws IOException, SAXException, TransformerException
+    public Set<String> getSetStrings( Repo repo ) throws IOException, SAXException, TransformerException
     {
+        var url = repo.getUrl();
+
         var unfoldedSets = new HashSet<String>();
         var ls = ListSets.instance( url );
 
@@ -516,9 +384,10 @@ public class Harvester implements CommandLineRunner
         do
         {
 
-            if ( ls.getErrors().getLength() != 0 )
+            if ( !ls.getErrors().isEmpty() )
             {
-                log.error( "Invalid request {}", ls );
+                log.error( "{}: Error while retrieving the list of sets: {}", repo.getCode(), ls.getErrors() );
+                break;
             }
 
             unfoldedSets.addAll( ls.getSets() );

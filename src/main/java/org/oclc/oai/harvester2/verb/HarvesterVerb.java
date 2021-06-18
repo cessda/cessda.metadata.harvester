@@ -38,7 +38,6 @@ import org.apache.xpath.XPathAPI;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -53,6 +52,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * HarvesterVerb is the parent class for each of the OAI verbs.
@@ -171,9 +172,31 @@ public abstract class HarvesterVerb
 	 *
 	 * @return a NodeList of /oai:OAI-PMH/oai:error elements
 	 */
-	public NodeList getErrors()
+	public List<OAIError> getErrors()
 	{
-		return doc.getElementsByTagNameNS( OAI_2_0_NAMESPACE, "error" );
+		var elements = doc.getElementsByTagNameNS( OAI_2_0_NAMESPACE, "error" );
+
+		var errorList = new ArrayList<OAIError>(elements.getLength());
+
+		for ( int i = 0; i < elements.getLength(); i++ )
+		{
+			var errorElement = elements.item( i );
+
+			var codeString = errorElement.getAttributes().getNamedItem( "code" ).getTextContent();
+			var errorCode = OAIError.Code.valueOf( codeString );
+
+			// Check if the error has free text
+			if (!errorElement.getTextContent().isEmpty())
+			{
+				errorList.add( new OAIError( errorCode, errorElement.getTextContent() ) );
+			}
+			else
+			{
+				errorList.add( new OAIError( errorCode ) );
+			}
+		}
+
+		return errorList;
 	}
 
 	/**
@@ -202,4 +225,5 @@ public abstract class HarvesterVerb
 			return e.toString();
 		}
 	}
+
 }

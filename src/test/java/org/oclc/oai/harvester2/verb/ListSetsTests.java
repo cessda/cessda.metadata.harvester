@@ -47,11 +47,9 @@ class ListSetsTests
 
         var errors = listSets.getErrors();
 
-        assertEquals( 1, errors.getLength() );
+        assertEquals( 1, errors.size() );
 
-        assertEquals(
-                "noSetHierarchy",
-                errors.item( 0 ).getAttributes().getNamedItem( "code" ).getTextContent()
-        );
+        assertEquals( OAIError.Code.noSetHierarchy, errors.get( 0 ).getCode() );
+        assertEquals( "This repository does not support sets", errors.get( 0 ).getMessage().orElseThrow() );
     }
 }
