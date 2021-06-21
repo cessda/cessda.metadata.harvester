@@ -38,6 +38,7 @@ import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -57,27 +58,31 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 	/**
 	 * Client-side ListIdentifiers verb constructor
 	 *
-	 * @param baseURL the baseURL of the server to be queried
 	 * @throws SAXException the xml response is bad
 	 * @throws IOException  an I/O error occurred
 	 */
-	public ListIdentifiers( HttpClient httpClient, URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix, Duration timeout )
-			throws IOException, SAXException
+	ListIdentifiers( InputStream is ) throws IOException, SAXException
 	{
-		super( httpClient, getRequestURL( baseURL, from, until, set, metadataPrefix ), timeout );
+		super( is );
 	}
 
-	/**
-	 * Client-side ListIdentifiers verb constructor (resumptionToken version)
-	 *
-	 * @param baseURL
-	 * @param resumptionToken
-	 * @throws IOException
-	 * @throws SAXException
-	 */
-	public ListIdentifiers( HttpClient httpClient, URI baseURL, String resumptionToken, Duration timeout ) throws IOException, SAXException
+	public static ListIdentifiers instance(URI baseURL, String resumptionToken, Duration timeout) throws IOException, SAXException
 	{
-		super( httpClient, getRequestURL( baseURL, resumptionToken ), timeout );
+		var requestURL = getRequestURL( baseURL, resumptionToken );
+		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), timeout ))
+		{
+			return new ListIdentifiers( is );
+		}
+	}
+
+	public static ListIdentifiers instance(URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix, Duration timeout)
+			throws IOException, SAXException
+	{
+		var requestURL = getRequestURL( baseURL, from, until, set, metadataPrefix );
+		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), timeout ))
+		{
+			return new ListIdentifiers( is );
+		}
 	}
 
 	/**

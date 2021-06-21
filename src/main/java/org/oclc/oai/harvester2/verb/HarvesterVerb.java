@@ -34,12 +34,10 @@
 
 package org.oclc.oai.harvester2.verb;
 
-import eu.cessda.eqb.harvester.HttpClient;
 import org.apache.xpath.XPathAPI;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -51,9 +49,11 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringWriter;
-import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * HarvesterVerb is the parent class for each of the OAI verbs.
@@ -71,6 +71,9 @@ public abstract class HarvesterVerb
 	public static final String SCHEMA_LOCATION_V1_1_LIST_METADATA_FORMATS = "http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats.xsd";
 	public static final String SCHEMA_LOCATION_V1_1_LIST_RECORDS = "http://www.openarchives.org/OAI/1.1/OAI_ListRecords http://www.openarchives.org/OAI/1.1/OAI_ListRecords.xsd";
 	public static final String SCHEMA_LOCATION_V1_1_LIST_SETS = "http://www.openarchives.org/OAI/1.1/OAI_ListSets http://www.openarchives.org/OAI/1.1/OAI_ListSets.xsd";
+
+	/** Default HTTP Timeout */
+	protected static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds( 10 );
 
 	private static final Element namespaceElement;
 	private static final DocumentBuilderFactory factory;
@@ -114,32 +117,16 @@ public abstract class HarvesterVerb
 	// Instance variables
 	private final Document doc;
 	private final String schemaLocation;
-	private final URI requestURL;
 
 	/**
-	 * Performs the OAI request with the default timeout of 10 seconds.
-	 *
-	 * @param requestURL the URL to request
-	 * @throws IOException
-	 * @throws SAXException
+	 * Instance a {@link HarvesterVerb} from an {@link InputStream}
+	 * @param in the input stream representing the source document.
+	 * @throws IOException if an IO error occurs.
+	 * @throws SAXException if an error occurs when parsing the stream.
 	 */
-	protected HarvesterVerb( HttpClient httpClient, URI requestURL ) throws IOException, SAXException
+	protected HarvesterVerb( InputStream in ) throws IOException, SAXException
 	{
-		this(httpClient, requestURL, Duration.ofSeconds( 10 ) );
-	}
-
-	/**
-	 * Performs the OAI request.
-	 *
-	 * @param requestURL the URL where the OAI-PMH resource is located.
-	 * @throws IOException
-	 * @throws SAXException
-	 */
-	protected HarvesterVerb( HttpClient httpClient, URI requestURL, Duration timeout ) throws IOException, SAXException
-	{
-		this.requestURL = requestURL;
-
-		try ( var in = httpClient.getHttpResponse( this.requestURL.toURL(), timeout ) )
+		try
 		{
 			doc = factory.newDocumentBuilder().parse( in );
 		}
@@ -185,17 +172,31 @@ public abstract class HarvesterVerb
 	 *
 	 * @return a NodeList of /oai:OAI-PMH/oai:error elements
 	 */
-	public NodeList getErrors()
+	public List<OAIError> getErrors()
 	{
-		return doc.getElementsByTagNameNS( OAI_2_0_NAMESPACE, "error" );
-	}
+		var elements = doc.getElementsByTagNameNS( OAI_2_0_NAMESPACE, "error" );
 
-	/**
-	 * Get the OAI request URL for this response.
-	 */
-	public URI getRequestURL()
-	{
-		return requestURL;
+		var errorList = new ArrayList<OAIError>(elements.getLength());
+
+		for ( int i = 0; i < elements.getLength(); i++ )
+		{
+			var errorElement = elements.item( i );
+
+			var codeString = errorElement.getAttributes().getNamedItem( "code" ).getTextContent();
+			var errorCode = OAIError.Code.valueOf( codeString );
+
+			// Check if the error has free text
+			if (!errorElement.getTextContent().isEmpty())
+			{
+				errorList.add( new OAIError( errorCode, errorElement.getTextContent() ) );
+			}
+			else
+			{
+				errorList.add( new OAIError( errorCode ) );
+			}
+		}
+
+		return errorList;
 	}
 
 	/**
@@ -224,4 +225,5 @@ public abstract class HarvesterVerb
 			return e.toString();
 		}
 	}
+
 }

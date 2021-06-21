@@ -37,8 +37,8 @@ package org.oclc.oai.harvester2.verb;
 import eu.cessda.eqb.harvester.HttpClient;
 import org.xml.sax.SAXException;
 
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Objects;
@@ -53,8 +53,6 @@ public class ListMetadataFormats extends HarvesterVerb
 	/**
 	 * Client-side ListMetadataFormats verb constructor
 	 *
-	 * @param baseURL
-	 *            the baseURL of the server to be queried
 	 * @throws MalformedURLException
 	 *             the baseURL is bad
 	 * @throws SAXException
@@ -62,22 +60,28 @@ public class ListMetadataFormats extends HarvesterVerb
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	public ListMetadataFormats( HttpClient httpClient, URI baseURL ) throws IOException, SAXException, TransformerException
+	ListMetadataFormats( InputStream in ) throws IOException, SAXException
 	{
-		super( httpClient, getRequestURL( baseURL, null ) );
+		super( in );
 	}
 
-	/**
-	 * Client-side ListMetadataFormats verb constructor (identifier version)
-	 *
-	 * @param baseURL
-	 * @param identifier
-	 * @throws IOException
-	 * @throws SAXException
-	 */
-	public ListMetadataFormats( HttpClient httpClient, URI baseURL, String identifier ) throws IOException, SAXException
+	public static ListMetadataFormats instance( URI baseURL ) throws IOException, SAXException
 	{
-		super( httpClient, getRequestURL( baseURL, Objects.requireNonNull(identifier, "identifier cannot be null") ) );
+		var requestURL = getRequestURL( baseURL, null );
+		try (var in = HttpClient.getHttpResponse( requestURL.toURL() , DEFAULT_TIMEOUT ))
+		{
+			return new ListMetadataFormats( in );
+		}
+	}
+
+	public static ListMetadataFormats instance( URI baseURL, String identifier ) throws IOException, SAXException
+	{
+		Objects.requireNonNull(identifier, "identifier cannot be null");
+		var requestURL = getRequestURL( baseURL, identifier );
+		try (var in = HttpClient.getHttpResponse( requestURL.toURL() , DEFAULT_TIMEOUT ))
+		{
+			return new ListMetadataFormats( in );
+		}
 	}
 
 	/**
