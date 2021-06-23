@@ -35,6 +35,7 @@
 package org.oclc.oai.harvester2.verb;
 
 import eu.cessda.eqb.harvester.HttpClient;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -86,6 +87,11 @@ public class ListRecords extends HarvesterVerb implements Resumable
 			return new ListRecords( is );
 		}
 	}
+
+	public NodeList getRecords()
+    {
+        return getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "record" );
+    }
 
 	/**
 	 * Construct the query portion of the http request
