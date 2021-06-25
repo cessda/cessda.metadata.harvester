@@ -52,7 +52,7 @@ spring:
       auto-registration: true
       period: 5000
 harvester:
-  metadataFormat: ddi_c
+  metadataPrefixes: ddi_c
   dir: '@documents@'
   recipient: support@cessda.eu
   timeout: 100

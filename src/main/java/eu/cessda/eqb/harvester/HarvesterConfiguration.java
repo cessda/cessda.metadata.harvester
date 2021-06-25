@@ -53,7 +53,7 @@ class HarvesterConfiguration
     /**
      * List of repositories to harvest.
      */
-    private final List<Repo> repos = new ArrayList<>();
+    private final ArrayList<Repo> repos = new ArrayList<>();
     /**
      * The output directory of the harvester.
      */
@@ -218,9 +218,7 @@ class HarvesterConfiguration
     public static class From
     {
         private LocalDate incremental;
-        private LocalDate initial;
         private LocalDate full;
-        private LocalDate single;
 
         public LocalDate getIncremental()
         {
@@ -230,16 +228,6 @@ class HarvesterConfiguration
         public void setIncremental( LocalDate incremental )
         {
             this.incremental = incremental;
-        }
-
-        public LocalDate getInitial()
-        {
-            return initial;
-        }
-
-        public void setInitial( LocalDate initial )
-        {
-            this.initial = initial;
         }
 
         public LocalDate getFull()
@@ -252,16 +240,6 @@ class HarvesterConfiguration
             this.full = full;
         }
 
-        public LocalDate getSingle()
-        {
-            return single;
-        }
-
-        public void setSingle( LocalDate single )
-        {
-            this.single = single;
-        }
-
         @Override
         public boolean equals( Object o )
         {
@@ -269,15 +247,13 @@ class HarvesterConfiguration
             if ( o == null || getClass() != o.getClass() ) return false;
             From from = (From) o;
             return Objects.equals( incremental, from.incremental ) &&
-                    Objects.equals( initial, from.initial ) &&
-                    Objects.equals( full, from.full ) &&
-                    Objects.equals( single, from.single );
+                    Objects.equals( full, from.full );
         }
 
         @Override
         public int hashCode()
         {
-            return Objects.hash( incremental, initial, full, single );
+            return Objects.hash( incremental, full );
         }
 
         @Override
@@ -285,9 +261,7 @@ class HarvesterConfiguration
         {
             return "From{" +
                     "incremental='" + incremental + '\'' +
-                    ", initial='" + initial + '\'' +
                     ", full='" + full + '\'' +
-                    ", single='" + single + '\'' +
                     '}';
         }
     }

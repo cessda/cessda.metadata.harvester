@@ -172,9 +172,9 @@ public class ListMetadataFormats extends HarvesterVerb
 
         public MetadataFormat( String metadataPrefix, URI schema, URI metadataNamespace )
         {
-            this.metadataPrefix = metadataPrefix;
-            this.schema = schema;
-            this.metadataNamespace = metadataNamespace;
+            this.metadataPrefix = Objects.requireNonNull( metadataPrefix );
+            this.schema = Objects.requireNonNull( schema );
+            this.metadataNamespace = Objects.requireNonNull( metadataNamespace );
         }
 
         public String getMetadataPrefix()

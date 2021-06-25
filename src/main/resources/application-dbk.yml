@@ -56,7 +56,7 @@ spring:
       auto-registration: true
       period: 5000
 harvester:
-  metadataFormat: oai_ddi32
+  metadataPrefixes: oai_ddi32
   dir: '@documents@'
   recipient: support@cessda.eu
   timeout: 60

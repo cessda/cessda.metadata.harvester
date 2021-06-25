@@ -38,13 +38,11 @@ import eu.cessda.eqb.harvester.HttpClient;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.time.Duration;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 /**
@@ -54,6 +52,12 @@ import java.util.Optional;
  */
 public class GetRecord extends HarvesterVerb
 {
+    /**
+	 * Construct a new {@link GetRecord} from an {@link InputStream}.
+	 * @param in the input stream to parse.
+	 * @throws IOException if an IO error occurs when reading the input stream.
+	 * @throws SAXException if an error occurs when parsing the XML.
+	 */
 	GetRecord( InputStream in ) throws IOException, SAXException
 	{
 		super(in);
@@ -81,34 +85,17 @@ public class GetRecord extends HarvesterVerb
 	}
 
 	/**
-	 * Get the oai:identifier from the oai:header
+	 * Get the oai:record header.
 	 *
-	 * @return identifier
 	 */
-	public String getIdentifier()
+	public RecordHeader getHeader()
 	{
-		try
-		{
-			if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
-			{
-				return getSingleString( "/oai20:OAI-PMH/oai20:GetRecord/oai20:record/oai20:header/oai20:identifier" );
-			}
-			else if ( SCHEMA_LOCATION_V1_1_GET_RECORD.equals( getSchemaLocation() ) )
-			{
-				return getSingleString( "/oai11_GetRecord:GetRecord/oai11_GetRecord:record/oai11_GetRecord:header/oai11_GetRecord:identifier" );
-			}
-			else
-			{
-				throw new NoSuchElementException( getSchemaLocation() );
-			}
-		}
-		catch ( TransformerException e )
-		{
-			throw new IllegalStateException( e );
-		}
-	}
+        var recordHeader = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "header" );
+        var headerNode = recordHeader.item( 0 );
+        return getRecordHeader( headerNode );
+    }
 
-	/**
+    /**
 	 * Gets the metadata of the OAI-PMH response.
 	 *
 	 * @return the metadata section of the document, or an empty optional if metadata was not returned.
@@ -139,4 +126,5 @@ public class GetRecord extends HarvesterVerb
 				+ "&metadataPrefix=" + metadataPrefix
 		);
 	}
+
 }

@@ -66,6 +66,14 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 		super( is );
 	}
 
+	/**
+	 * Construct a new instance of {@link ListIdentifiers} using a resumption token.
+	 * @param baseURL the URL of the repository.
+	 * @param resumptionToken the resumption token.
+	 * @param timeout HTTP timeout.
+	 * @throws IOException if an IO error occurs.
+	 * @throws SAXException if an error occurs when parsing the XML.
+	 */
 	public static ListIdentifiers instance(URI baseURL, String resumptionToken, Duration timeout) throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, resumptionToken );
@@ -75,6 +83,17 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 		}
 	}
 
+	/**
+	 * Construct a new instance of {@link ListIdentifiers}.
+	 * @param baseURL the URL of the repository.
+	 * @param from the date to harvest from. Set to {@code null} to harvest from the beginning.
+	 * @param until to date to harvest to. Set to {@code null} for no limit.
+	 * @param set the set to harvest.
+	 * @param metadataPrefix the metadata prefix to use.
+	 * @param timeout HTTP timeout.
+	 * @throws IOException if an IO error occurs.
+	 * @throws SAXException if an error occurs when parsing the XML.
+	 */
 	public static ListIdentifiers instance(URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix, Duration timeout)
 			throws IOException, SAXException
 	{
@@ -114,13 +133,13 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 	/**
 	 * Returns a list of identifiers found in the response. The returned list is unmodifiable.
 	 */
-	public List<String> getIdentifiers()
+	public List<RecordHeader> getIdentifiers()
 	{
-		var identifiersIDs = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "identifier" );
-		var records = new ArrayList<String>(identifiersIDs.getLength());
-		for ( int i = 0; i < identifiersIDs.getLength(); i++ )
+		var recordHeaders = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "header" );
+		var records = new ArrayList<RecordHeader>(recordHeaders.getLength());
+		for ( int i = 0; i < recordHeaders.getLength(); i++ )
 		{
-			var identifier = identifiersIDs.item( i ).getTextContent();
+			var identifier = HarvesterVerb.getRecordHeader( recordHeaders.item( i ) );
 			records.add(identifier);
 		}
 		return Collections.unmodifiableList(records);

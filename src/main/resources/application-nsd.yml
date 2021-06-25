@@ -55,7 +55,7 @@ spring:
       auto-registration: true
       period: 5000
 harvester:
-  metadataFormat: oai_ddi32
+  metadataPrefixes: oai_ddi32
   dir: '@documents@'
   recipient: support@cessda.eu
   timeout: 60s
@@ -69,17 +69,17 @@ harvester:
     full: 00 31 12 * * ?
   repos:
     - url: https://colectica.nsd.no/oai/request
-      metadataFormat: oai_ddi32
-      set: 30ea0200-7121-4f01-8d21-a931a182b86d
+      metadataPrefixes: oai_ddi32
+      sets: 30ea0200-7121-4f01-8d21-a931a182b86d
     - url: https://colectica.nsd.no/oai/request
-      metadataFormat: oai_ddi32
-      set: 4bd6eef6-99df-40e6-9b11-5b8f64e5cb23
+      metadataPrefixes: oai_ddi32
+      sets: 4bd6eef6-99df-40e6-9b11-5b8f64e5cb23
     - url: https://colectica.nsd.no/oai/request
-      metadataFormat: oai_ddi32
-      set: a1b8a30e-2f35-4056-8467-40e7ed0e7379
+      metadataPrefixes: oai_ddi32
+      sets: a1b8a30e-2f35-4056-8467-40e7ed0e7379
     - url: https://colectica.nsd.no/oai/request
-      metadataFormat: oai_ddi32
-      set: f433e43d-29a4-4c25-9610-9dd9819a0519
+      metadataPrefixes: oai_ddi32
+      sets: f433e43d-29a4-4c25-9610-9dd9819a0519
     - url: https://colectica.nsd.no/oai/request
-      metadataFormat: oai_ddi32
-      set: a1bb19bd-a24a-4443-8728-a6ad80eb42b8
+      metadataPrefixes: oai_ddi32
+      sets: a1bb19bd-a24a-4443-8728-a6ad80eb42b8

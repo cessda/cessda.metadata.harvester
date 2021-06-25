@@ -46,7 +46,7 @@ logging:
     de.codecentric.boot.admin.services: WARN
 harvester:
   removeOAIEnvelope: false
-  metadataFormat: oai_wgl
+  metadataPrefixes: oai_wgl
   dir:  ${user.home}${file.separator}lopen
   recipient: support@cessda.eu
   timeout: 60
@@ -75,7 +75,7 @@ harvester:
     dataProvider: Heidelberg-MA-GNM
     metaDataProvider: Heidelberg-MA-GNM
   - url: https://books.ub.uni-heidelberg.de/index.php/propylaeum/oai
-    set: propylaeum:byzanzoo
+    sets: propylaeum:byzanzoo
     dataProvider: Heidelberg-Propyl-Byz
     metaDataProvider: Heidelberg-Propyl-Byz
   - url: https://journals.ub.uni-heidelberg.de/index.php/jahrb-rgzm/oai
@@ -88,19 +88,19 @@ harvester:
     dataProvider: IFZ
     metaDataProvider: IFZ
   - url: http://www.die-bonn.de/oai/default.aspx
-    set: oadie
+    sets: oadie
     dataProvider: DIE
     metaDataProvider: DIE
   - url: http://archiv.ub.uni-heidelberg.de/artdok/cgi/oai2
-    set: WGL
+    sets: WGL
     dataProvider: GNM 
     metaDataProvider: GNM 
   - url: https://digital.herder-institut.de/publications/oai
-    set: wglsubject
+    sets: wglsubject
     dataProvider: HI
     metaDataProvider: HI 
   - url: https://ids-pub.bsz-bw.de/oai
-    set: WglSubject
+    sets: WglSubject
     dataProvider:  IDS
     metaDataProvider: IDS
   - url: https://www.psycharchives.org/oai/request
@@ -113,7 +113,7 @@ harvester:
     dataProvider: Pedocs
     metaDataProvider: Pedocs
   - url: https://www.ssoar.info/OAIHandler/wgl
-    set: WGL
+    sets: WGL
     dataProvider: SSOAR 
     metaDataProvider: SSOAR
   - url: https://oar.tib.eu/oai/oaiwgl
@@ -123,63 +123,63 @@ harvester:
     dataProvider: ZB MED
     metaDataProvider: ZB MED
   - url: https://zeitgeschichte-digital.de/doks/oai
-    set: open_access
+    sets: open_access
     dataProvider: Zentrum für Zeithistorische Forschung(ZZF)
     metaDataProvider: Zentrum für Zeithistorische Forschung(ZZF)
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_157390
+    sets: col_10419_157390
     dataProvider: ECONSTOR 157390
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_48632
+    sets: col_10419_48632
     dataProvider: ECONSTOR 48632
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_48633
+    sets: col_10419_48633
     dataProvider: ECONSTOR 48633
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_48634
+    sets: col_10419_48634
     dataProvider: ECONSTOR 48634
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_48635
+    sets: col_10419_48635
     dataProvider: ECONSTOR 48635
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_48636
+    sets: col_10419_48636
     dataProvider: ECONSTOR 48636
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_48637
+    sets: col_10419_48637
     dataProvider: ECONSTOR 48637
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_213320
+    sets: col_10419_213320
     dataProvider: ECONSTOR 213320
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_213349
+    sets: col_10419_213349
     dataProvider: ECONSTOR 213349
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_48638
+    sets: col_10419_48638
     dataProvider: ECONSTOR 48638
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_48639
+    sets: col_10419_48639
     dataProvider: ECONSTOR 48639
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_8
+    sets: col_10419_8
     dataProvider: ECONSTOR 10419 8
     metaDataProvider: ECONSTOR
   - url: http://www.econstor.eu/oai/request
-    set: col_10419_59810
+    sets: col_10419_59810
     dataProvider: ECONSTOR 59810
     metaDataProvider: ECONSTOR
   - url: http://pub.zbw.eu/dspace-oai/request
-    set: open_access
+    sets: open_access
     dataProvider: ECONSTOR-Set-open_access
     metaDataProvider: zbw
   - url: https://journals.ub.uni-heidelberg.de/index.php/ak/oai
