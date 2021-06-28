@@ -42,7 +42,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,14 +69,13 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 	 * Construct a new instance of {@link ListIdentifiers} using a resumption token.
 	 * @param baseURL the URL of the repository.
 	 * @param resumptionToken the resumption token.
-	 * @param timeout HTTP timeout.
 	 * @throws IOException if an IO error occurs.
 	 * @throws SAXException if an error occurs when parsing the XML.
 	 */
-	public static ListIdentifiers instance(URI baseURL, String resumptionToken, Duration timeout) throws IOException, SAXException
+	public static ListIdentifiers instance( HttpClient httpClient, URI baseURL, String resumptionToken ) throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, resumptionToken );
-		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), timeout ))
+		try (var is = httpClient.getHttpResponse( requestURL ))
 		{
 			return new ListIdentifiers( is );
 		}
@@ -90,15 +88,14 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 	 * @param until to date to harvest to. Set to {@code null} for no limit.
 	 * @param set the set to harvest.
 	 * @param metadataPrefix the metadata prefix to use.
-	 * @param timeout HTTP timeout.
 	 * @throws IOException if an IO error occurs.
 	 * @throws SAXException if an error occurs when parsing the XML.
 	 */
-	public static ListIdentifiers instance(URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix, Duration timeout)
+	public static ListIdentifiers instance( HttpClient httpClient, URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix )
 			throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, from, until, set, metadataPrefix );
-		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), timeout ))
+		try (var is = httpClient.getHttpResponse( requestURL ))
 		{
 			return new ListIdentifiers( is );
 		}

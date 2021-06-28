@@ -75,10 +75,10 @@ public class ListMetadataFormats extends HarvesterVerb
      * @throws IOException if an IO error occurs.
      * @throws SAXException if an error occurs when parsing the XML.
      */
-	public static ListMetadataFormats instance( URI baseURL ) throws IOException, SAXException
+	public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL ) throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, null );
-		try (var in = HttpClient.getHttpResponse( requestURL.toURL() , DEFAULT_TIMEOUT ))
+		try (var in = httpClient.getHttpResponse( requestURL ))
 		{
 			return new ListMetadataFormats( in );
 		}
@@ -91,17 +91,17 @@ public class ListMetadataFormats extends HarvesterVerb
      * @throws IOException if an IO error occurs.
      * @throws SAXException if an error occurs when parsing the XML.
      */
-	public static ListMetadataFormats instance( URI baseURL, String identifier ) throws IOException, SAXException
+	public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL, String identifier ) throws IOException, SAXException
 	{
 		Objects.requireNonNull(identifier, "identifier cannot be null");
 		var requestURL = getRequestURL( baseURL, identifier );
-		try (var in = HttpClient.getHttpResponse( requestURL.toURL() , DEFAULT_TIMEOUT ))
+		try (var in = httpClient.getHttpResponse( requestURL ))
 		{
 			return new ListMetadataFormats( in );
 		}
 	}
 
-	List<MetadataFormat> getMetadataFormats() throws URISyntaxException
+	public List<MetadataFormat> getMetadataFormats() throws URISyntaxException
     {
         var metadataFormats = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "metadataFormat" );
 

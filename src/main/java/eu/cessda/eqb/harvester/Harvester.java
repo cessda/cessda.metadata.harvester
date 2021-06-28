@@ -61,13 +61,15 @@ public class Harvester implements CommandLineRunner
     private static final String WRAPPED_DIRECTORY_NAME = "wrapped";
     private static final String UNWRAPPED_DIRECTORY_NAME = "unwrapped";
 
+    private final HttpClient httpClient;
     private final HarvesterConfiguration harvesterConfiguration;
     private final IOUtilities ioUtilities;
 
     @Autowired
-    public Harvester( HarvesterConfiguration harvesterConfiguration, IOUtilities ioUtilities )
+    public Harvester( HttpClient httpClient, HarvesterConfiguration harvesterConfiguration, IOUtilities ioUtilities )
             throws TransformerConfigurationException
     {
+        this.httpClient = httpClient;
         this.harvesterConfiguration = harvesterConfiguration;
         this.ioUtilities = ioUtilities;
     }
@@ -203,7 +205,7 @@ public class Harvester implements CommandLineRunner
             try
             {
                 var unfoldedSets = new HashSet<String>();
-                var ls = ListSets.instance( repo.getUrl() );
+                var ls = ListSets.instance( httpClient, repo.getUrl() );
 
                 Optional<String> resumptionToken;
                 do
@@ -219,7 +221,7 @@ public class Harvester implements CommandLineRunner
                     resumptionToken = ls.getResumptionToken();
                     if ( resumptionToken.isPresent() )
                     {
-                        ls =  ListSets.instance( repo.getUrl(), resumptionToken.orElseThrow() );
+                        ls =  ListSets.instance( httpClient, repo.getUrl(), resumptionToken.orElseThrow() );
                     }
                 }
                 while ( resumptionToken.isPresent() );
@@ -302,7 +304,7 @@ public class Harvester implements CommandLineRunner
         try
         {
             final var records = new ArrayList<RecordHeader>();
-            var li = ListIdentifiers.instance( repo.getUrl(), fromDate, null, set, metadataFormat, harvesterConfiguration.getTimeout() );
+            var li = ListIdentifiers.instance( httpClient, repo.getUrl(), fromDate, null, set, metadataFormat );
 
             Optional<String> resumptionToken;
 
@@ -317,7 +319,7 @@ public class Harvester implements CommandLineRunner
                 if (resumptionToken.isPresent())
                 {
                     log.trace( "recurse: url {}\ttoken: {}", repo.getUrl(), resumptionToken );
-                    li = ListIdentifiers.instance( repo.getUrl(), resumptionToken.orElseThrow(), harvesterConfiguration.getTimeout() );
+                    li = ListIdentifiers.instance( httpClient, repo.getUrl(), resumptionToken.orElseThrow() );
                 }
             }
             while ( resumptionToken.isPresent() );
@@ -341,7 +343,7 @@ public class Harvester implements CommandLineRunner
             try
             {
                 log.debug( "Harvesting {} from {}", currentRecord, repo.getUrl() );
-                var pmhRecord = GetRecord.instance( repo.getUrl(), currentRecord.getIdentifier(), metadataFormat, harvesterConfiguration.getTimeout() );
+                var pmhRecord = GetRecord.instance( httpClient, repo.getUrl(), currentRecord.getIdentifier(), metadataFormat );
 
                 // Check for errors
                 if (!pmhRecord.getErrors().isEmpty())

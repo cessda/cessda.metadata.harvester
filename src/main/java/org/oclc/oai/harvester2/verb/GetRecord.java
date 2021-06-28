@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.time.Duration;
 import java.util.Optional;
 
 /**
@@ -75,10 +74,10 @@ public class GetRecord extends HarvesterVerb
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	public static GetRecord instance( URI baseURL, String identifier, String metadataPrefix, Duration timeout ) throws IOException, SAXException
+	public static GetRecord instance( HttpClient httpClient, URI baseURL, String identifier, String metadataPrefix ) throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, identifier, metadataPrefix );
-		try (var in = HttpClient.getHttpResponse( requestURL.toURL(), timeout ))
+		try (var in = httpClient.getHttpResponse( requestURL ))
 		{
 			return new GetRecord( in );
 		}

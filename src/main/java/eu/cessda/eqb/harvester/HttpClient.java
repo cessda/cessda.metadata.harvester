@@ -1,140 +1,70 @@
 package eu.cessda.eqb.harvester;
 
+import com.github.mizosoft.methanol.Methanol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URI;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.InflaterInputStream;
-import java.util.zip.ZipInputStream;
 
-import static java.lang.Math.toIntExact;
-import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
+import static java.io.InputStream.nullInputStream;
+import static java.net.http.HttpClient.Redirect.NORMAL;
 
+@Component
 public class HttpClient
 {
-    private HttpClient() {}
-
-    // Constants used by the HTTP client
-    private static final String RETRY_AFTER = "Retry-After";
-
     // Logger
     private static final Logger log = LoggerFactory.getLogger( HttpClient.class );
 
-    private static IOException handleHTTPResponseErrors( HttpURLConnection con, int responseCode )
+    private final Methanol client;
+
+    public HttpClient(HarvesterConfiguration harvesterConfiguration)
     {
-        IOException exception;
-        try ( var stream = decodeHttpInputStream( con ) )
-        {
-            exception = new IOException( String.format( "Server returned %d, body: %s",
-                    responseCode,
-                    new String( stream.readAllBytes(), StandardCharsets.UTF_8 )
-            ) );
-        }
-        catch ( IOException e )
-        {
-            // Make sure the response code is not lost if an IO error occurs
-            exception = new IOException( String.format( "Server returned %d", responseCode ), e );
-        }
-        return exception;
+        // TK added default timeout for dataverses taking too long to respond / stall
+        this.client = Methanol.newBuilder()
+            .autoAcceptEncoding( true )
+            .followRedirects( NORMAL )
+            .userAgent( "OAIHarvester/2.0" )
+            .connectTimeout( harvesterConfiguration.getTimeout() )
+            .build();
     }
 
-    private static InputStream decodeHttpInputStream( HttpURLConnection con ) throws IOException
+    public InputStream getHttpResponse( URI requestURL ) throws IOException
     {
-        String contentEncoding = con.getHeaderField( "Content-Encoding" );
-        log.trace( "contentEncoding={}", contentEncoding );
-
-        final InputStream inputStream;
-        if ( con.getResponseCode() < 400 )
-        {
-            inputStream = con.getInputStream();
-        }
-        else
-        {
-            inputStream = con.getErrorStream();
-        }
-
-        if ( contentEncoding == null )
-        {
-            return inputStream;
-        }
-
-        switch ( contentEncoding )
-        {
-            case "compress":
-                ZipInputStream zis = new ZipInputStream( inputStream );
-                zis.getNextEntry();
-                return zis;
-            case "gzip":
-                return new GZIPInputStream( inputStream );
-            case "deflate":
-                return new InflaterInputStream( inputStream );
-            default:
-                return inputStream;
-        }
-    }
-
-    public static InputStream getHttpResponse( URL requestURL, Duration timeout ) throws IOException
-    {
-        HttpURLConnection con;
         int responseCode;
-        int retries = 0;
 
-        while ( true )
+        var httpRequest = HttpRequest.newBuilder( requestURL ).GET().build();
+
+        try
         {
-            con = (HttpURLConnection) requestURL.openConnection();
-            con.setRequestProperty( "User-Agent", "OAIHarvester/2.0" );
-            con.setRequestProperty( "Accept-Encoding", "compress, gzip, identity" );
+            var response = client.send( httpRequest, HttpResponse.BodyHandlers.ofInputStream() );
 
-            // TK added default timeout for dataverses taking too long to respond / stall
-            log.trace( "Timeout : {} seconds", timeout );
-            con.setConnectTimeout( toIntExact( timeout.toMillis() ) );
-            con.setReadTimeout( toIntExact( timeout.toMillis() ) );
-
-            responseCode = con.getResponseCode();
+            responseCode = response.statusCode();
             log.trace( "responseCode={}", responseCode );
 
-            if ( responseCode == HTTP_UNAVAILABLE && retries++ < 3 )
-            {
-                long retrySeconds = con.getHeaderFieldInt( RETRY_AFTER, -1 );
-                if ( retrySeconds == -1 )
-                {
-                    long now = Instant.now().toEpochMilli();
-                    long retryDate = con.getHeaderFieldDate( RETRY_AFTER, now );
-                    retrySeconds = retryDate - now;
-                }
-                if ( retrySeconds > 0 )
-                {
-                    log.debug( "Server response: Retry-After={}", con.getHeaderField( RETRY_AFTER ) );
-                    try
-                    {
-                        TimeUnit.SECONDS.sleep( retrySeconds );
-                    }
-                    catch ( InterruptedException ex )
-                    {
-                        Thread.currentThread().interrupt();
-                        return InputStream.nullInputStream();
-                    }
-                }
-            }
-            else
-            {
-                break;
-            }
-        }
 
-        if ( responseCode >= 400 )
+            if ( responseCode >= 400 )
+            {
+                try ( var stream = response.body() )
+                {
+                    throw new IOException( String.format( "Server returned %d, body: %s",
+                        responseCode,
+                        new String( stream.readAllBytes(), StandardCharsets.UTF_8 )
+                    ) );
+                }
+            }
+
+            return response.body();
+        }
+        catch ( InterruptedException e )
         {
-            throw handleHTTPResponseErrors( con, responseCode );
+            Thread.currentThread().interrupt();
+            return nullInputStream();
         }
-
-        return decodeHttpInputStream( con );
     }
 }

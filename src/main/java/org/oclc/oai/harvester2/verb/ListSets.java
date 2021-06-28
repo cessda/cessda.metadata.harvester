@@ -66,19 +66,19 @@ public class ListSets extends HarvesterVerb implements Resumable
 		super( is );
 	}
 
-	public static ListSets instance(URI baseURL) throws IOException, SAXException
+	public static ListSets instance( HttpClient httpClient,  URI baseURL) throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL );
-		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), DEFAULT_TIMEOUT ))
+		try (var is = httpClient.getHttpResponse( requestURL ))
 		{
 			return new ListSets( is );
 		}
 	}
 
-	public static ListSets instance(URI baseURL, String resumptionToken) throws IOException, SAXException
+	public static ListSets instance(HttpClient httpClient, URI baseURL, String resumptionToken) throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, resumptionToken );
-		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), DEFAULT_TIMEOUT ))
+		try (var is = httpClient.getHttpResponse( requestURL ))
 		{
 			return new ListSets( is );
 		}

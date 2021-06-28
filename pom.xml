@@ -56,6 +56,13 @@
 			<version>5.2</version>
 		</dependency>
 
+		<!-- HTTP Client -->
+		<dependency>
+			<groupId>com.github.mizosoft.methanol</groupId>
+			<artifactId>methanol</artifactId>
+			<version>1.6.0</version>
+		</dependency>
+
 		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>org.junit.vintage</groupId>
