@@ -1,13 +1,16 @@
 package eu.cessda.eqb.harvester;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-public class Repo
+public class Repo implements Serializable
 {
+    private static final long serialVersionUID = 3176537038193526776L;
+
     private String code;
     private URI url;
     private final HashSet<String> sets = new HashSet<>();

@@ -62,7 +62,7 @@ java -jar cessda.eqb.oaiharvester.jar --harvester.dir=/example/output/directory
 | harvester.from.full|controls the `from` parameter when performing full harvesting |
 | harvester.keepOAIEnvelope   | if true, will cause the OAI-PMH response to be written "as is" |
 | harvester.removeOAIEnvelope | if true, will remove the OAI-PMH header from the response before writing |
-| harvester.repos             | a list of repositories; each with a code, url, metadata prefixes and optionally a list of sets |
+| harvester.repos             | a list of repositories; each with a code, url, metadata prefixes and optionally a list of repositoryClient |
 
 
 #### Define a list of repositories to be harvested

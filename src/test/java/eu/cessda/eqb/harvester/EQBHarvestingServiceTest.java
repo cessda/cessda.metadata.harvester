@@ -36,7 +36,7 @@ class EQBHarvestingServiceTest
         var httpClient = mock( HttpClient.class );
         when( httpClient.getHttpResponse( any(URI.class) ) ).thenReturn( nullInputStream() );
 
-        harvester = new Harvester( httpClient, harvesterConfiguration, new IOUtilities() );
+        harvester = new Harvester( httpClient, harvesterConfiguration, new IOUtilities(), new RepositoryClient( httpClient ) );
 	}
 
 	@Test

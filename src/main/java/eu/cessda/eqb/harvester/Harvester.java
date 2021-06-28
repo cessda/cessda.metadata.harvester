@@ -20,8 +20,6 @@
 package eu.cessda.eqb.harvester;
 
 import org.oclc.oai.harvester2.verb.GetRecord;
-import org.oclc.oai.harvester2.verb.ListIdentifiers;
-import org.oclc.oai.harvester2.verb.ListSets;
 import org.oclc.oai.harvester2.verb.RecordHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +39,8 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -64,14 +63,16 @@ public class Harvester implements CommandLineRunner
     private final HttpClient httpClient;
     private final HarvesterConfiguration harvesterConfiguration;
     private final IOUtilities ioUtilities;
+    private final RepositoryClient repositoryClient;
 
     @Autowired
-    public Harvester( HttpClient httpClient, HarvesterConfiguration harvesterConfiguration, IOUtilities ioUtilities )
+    public Harvester( HttpClient httpClient, HarvesterConfiguration harvesterConfiguration, IOUtilities ioUtilities, RepositoryClient repositoryClient )
             throws TransformerConfigurationException
     {
         this.httpClient = httpClient;
         this.harvesterConfiguration = harvesterConfiguration;
         this.ioUtilities = ioUtilities;
+        this.repositoryClient = repositoryClient;
     }
 
     public static void main( String[] args )
@@ -163,7 +164,7 @@ public class Harvester implements CommandLineRunner
     {
         log.info( "Harvesting repository {}", value( "repo", repo ) );
 
-        var sets = discoverSets( repo );
+        var sets = repositoryClient.discoverSets( repo );
 
         for ( var set : sets )
         {
@@ -180,65 +181,6 @@ public class Harvester implements CommandLineRunner
                         value( LoggingConstants.EXCEPTION_MESSAGE, e.getMessage())
                 );
             }
-        }
-    }
-
-    /**
-     * Discover sets from the remote repository.
-     * <ol>
-     *     <li>If the repository already has sets configured, these are returned.</li>
-     *     <li>If set discovery is enabled, the repository is enquired using the {@code ListSets} verb.</li>
-     *     <li>Otherwise, a {@link Set} containing {@code null} will be returned.</li>
-     * </ol>
-     *
-     * @param repo the repository to get sets for
-     * @return a {@link Set} of setSpecs
-     */
-    private Set<String> discoverSets( Repo repo )
-    {
-        if ( !repo.getSets().isEmpty() )
-        {
-            return repo.getSets();
-        }
-        else if ( repo.discoverSets() )
-        {
-            try
-            {
-                var unfoldedSets = new HashSet<String>();
-                var ls = ListSets.instance( httpClient, repo.getUrl() );
-
-                Optional<String> resumptionToken;
-                do
-                {
-                    if ( !ls.getErrors().isEmpty() )
-                    {
-                        log.error( "{}: Error while retrieving the list of sets: {}", repo.getCode(), ls.getErrors() );
-                        break;
-                    }
-
-                    unfoldedSets.addAll( ls.getSets() );
-
-                    resumptionToken = ls.getResumptionToken();
-                    if ( resumptionToken.isPresent() )
-                    {
-                        ls =  ListSets.instance( httpClient, repo.getUrl(), resumptionToken.orElseThrow() );
-                    }
-                }
-                while ( resumptionToken.isPresent() );
-
-                log.debug( "No. of sets: {}", unfoldedSets.size() );
-                return unfoldedSets;
-            }
-            catch ( IOException | SAXException e )
-            {
-                log.warn( "Failed to discover sets from {}: set set=all: {}", repo.getCode(), e.toString() );
-                // set set=all in case of no sets found
-                return Collections.singleton( null );
-            }
-        }
-        else
-        {
-            return Collections.singleton( null );
         }
     }
 
@@ -280,7 +222,7 @@ public class Harvester implements CommandLineRunner
 
             log.debug( "{}: Set: {}: Prefix: {} Fetching records", repo.getCode(), setspec, metadataPrefix );
 
-            var recordIdentifiers = getIdentifiersForSet( repo, setspec, metadataPrefix, fromDate );
+            var recordIdentifiers = repositoryClient.retrieveRecordHeaders( repo, setspec, metadataPrefix, fromDate );
 
             log.info( "{}: Set: {}: Retrieved {} record headers.",
                     value( REPO_NAME, repo.getCode() ),
@@ -288,7 +230,7 @@ public class Harvester implements CommandLineRunner
                     recordIdentifiers.size()
             );
 
-            retrievedRecords += writeToLocalFileSystem( recordIdentifiers, repo, metadataPrefix, repositoryDirectory );
+            retrievedRecords += harvestRecords( recordIdentifiers, repo, metadataPrefix, repositoryDirectory );
         }
 
         log.info( "{}: Set: {}: Retrieved {} records.",
@@ -298,41 +240,7 @@ public class Harvester implements CommandLineRunner
         );
     }
 
-    private List<RecordHeader> getIdentifiersForSet( Repo repo, String set, String metadataFormat, LocalDate fromDate ) throws HarvesterFailedException
-    {
-        log.trace( "URL: {}, set: {}", repo.getUrl(), set );
-        try
-        {
-            final var records = new ArrayList<RecordHeader>();
-            var li = ListIdentifiers.instance( httpClient, repo.getUrl(), fromDate, null, set, metadataFormat );
-
-            Optional<String> resumptionToken;
-
-            do
-            {
-                // add to list of records to fetch
-                records.addAll( li.getIdentifiers() );
-
-                // need to continue looping?
-                resumptionToken = li.getResumptionToken();
-
-                if (resumptionToken.isPresent())
-                {
-                    log.trace( "recurse: url {}\ttoken: {}", repo.getUrl(), resumptionToken );
-                    li = ListIdentifiers.instance( httpClient, repo.getUrl(), resumptionToken.orElseThrow() );
-                }
-            }
-            while ( resumptionToken.isPresent() );
-
-            return records;
-        }
-        catch ( IOException | SAXException e )
-        {
-            throw new HarvesterFailedException( repo.getCode() + ": Fetching identifiers failed: " + e, e );
-        }
-    }
-
-    private int writeToLocalFileSystem( Collection<RecordHeader> records, Repo repo, String metadataFormat, Path repoDirectory )
+    private int harvestRecords( Collection<RecordHeader> records, Repo repo, String metadataFormat, Path repoDirectory )
     {
         int retrievedRecords = 0;
 
@@ -377,11 +285,6 @@ public class Harvester implements CommandLineRunner
                     var source = new DOMSource( pmhRecord.getDocument() );
                     ioUtilities.writeDomSource( source, harvesterConfiguration.getDir().resolve( WRAPPED_DIRECTORY_NAME ).resolve( repoDirectory ).resolve( fileName ) );
                 }
-            }
-            catch ( TransformerConfigurationException e )
-            {
-                // This is not recoverable
-                throw new IllegalStateException( e );
             }
             catch ( IOException | SAXException | TransformerException e1 )
             {
