@@ -22,9 +22,9 @@
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,11 +52,11 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -82,9 +82,8 @@ public abstract class HarvesterVerb
 	public static final String SCHEMA_LOCATION_V1_1_LIST_RECORDS = "http://www.openarchives.org/OAI/1.1/OAI_ListRecords http://www.openarchives.org/OAI/1.1/OAI_ListRecords.xsd";
 	public static final String SCHEMA_LOCATION_V1_1_LIST_SETS = "http://www.openarchives.org/OAI/1.1/OAI_ListSets http://www.openarchives.org/OAI/1.1/OAI_ListSets.xsd";
 
-	/** Default HTTP Timeout */
-	protected static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds( 10 );
-    protected static final DateTimeFormatter OAI_DATE_TIME_PARSER = new DateTimeFormatterBuilder()
+    /** A formatter that supports all the date formats returned by OAI-PMH repositories. */
+    protected static final DateTimeFormatter OAI_DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
         .append( ISO_LOCAL_DATE )
         .appendOptional( new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
@@ -168,6 +167,7 @@ public abstract class HarvesterVerb
     /**
      * Construct a {@link RecordHeader} from a header node
      * @param headerNode the node to convert.
+     * @throws DateTimeParseException if the datestamp element is not valid.
      */
     protected static RecordHeader getRecordHeader( Node headerNode )
     {
@@ -187,7 +187,7 @@ public abstract class HarvesterVerb
                     break;
 
                 case "datestamp":
-                    datestamp = OAI_DATE_TIME_PARSER.parseBest( node.getTextContent(), OffsetDateTime::from, LocalDate::from );
+                    datestamp = OAI_DATE_TIME_FORMATTER.parseBest( node.getTextContent(), OffsetDateTime::from, LocalDate::from );
                     break;
 
                 case "setSpec":

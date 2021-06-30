@@ -1,15 +1,20 @@
 package org.oclc.oai.harvester2.verb;
 
+import eu.cessda.eqb.harvester.HttpClient;
 import org.junit.jupiter.api.Test;
 import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
 import java.util.stream.Collectors;
 
+import static java.net.URLEncoder.encode;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.oclc.oai.harvester2.verb.RecordHeadersMock.*;
 
 class ListIdentifiersTests
@@ -19,7 +24,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers( new ByteArrayInputStream(
-                getListIdentifiersXMLResumptionEmpty().getBytes( StandardCharsets.UTF_8 )
+                getListIdentifiersXMLResumptionEmpty().getBytes( UTF_8 )
         ) );
 
         var identifiersIDs = identifiers.getIdentifiers();
@@ -35,7 +40,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers( new ByteArrayInputStream(
-                getListIdentifiersXMLWithResumption().getBytes( StandardCharsets.UTF_8 )
+                getListIdentifiersXMLWithResumption().getBytes( UTF_8 )
         ));
 
         assertEquals("3/6/7/ddi/null/2017-01-01/null", identifiers.getResumptionToken().orElseThrow() );
@@ -46,7 +51,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers(new ByteArrayInputStream(
-                getListIdentifiersXMLResumptionEmpty().getBytes( StandardCharsets.UTF_8 )
+                getListIdentifiersXMLResumptionEmpty().getBytes( UTF_8 )
         ));
 
         assertTrue( identifiers.getResumptionToken().isEmpty() );
@@ -57,7 +62,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers(new ByteArrayInputStream(
-                getListIdentifiersXMLWithResumptionLastList().getBytes( StandardCharsets.UTF_8 )
+                getListIdentifiersXMLWithResumptionLastList().getBytes( UTF_8 )
         ));
 
         // Then
@@ -73,7 +78,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers( new ByteArrayInputStream(
-                getListIdentifiersXMLWithCannotDisseminateFormatError().getBytes( StandardCharsets.UTF_8 )
+                getListIdentifiersXMLWithCannotDisseminateFormatError().getBytes( UTF_8 )
         ));
 
         // Then
@@ -88,5 +93,26 @@ class ListIdentifiersTests
         var error = errors.get( 0 );
         assertEquals( OAIError.Code.cannotDisseminateFormat, error.getCode() );
         assertTrue( error.getMessage().isEmpty() );
+    }
+
+    @Test
+    void shouldConstructFromResumptionToken() throws IOException, SAXException
+    {
+        var httpClient = mock( HttpClient.class );
+
+        // When
+        var resumptionToken = "3/6/7/ddi/null/2017-01-01/null";
+        when( httpClient.getHttpResponse(
+            URI.create("http://localhost:4556/?verb=ListIdentifiers&resumptionToken=" + encode( resumptionToken, UTF_8 ) ) )
+        ).thenReturn( new ByteArrayInputStream(
+            getListIdentifiersXMLResumptionTokenNotMockedForInvalid().getBytes( UTF_8 )
+        ));
+
+        // Then
+        var listIdentifiers = ListIdentifiers.instance(
+            httpClient, URI.create("http://localhost:4556/"), resumptionToken
+        );
+
+        assertEquals(resumptionToken, listIdentifiers.getResumptionToken().orElseThrow());
     }
 }

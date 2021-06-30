@@ -46,6 +46,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class represents an ListIdentifiers response on either the server or on the client
@@ -74,6 +75,7 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 	 */
 	public static ListIdentifiers instance( HttpClient httpClient, URI baseURL, String resumptionToken ) throws IOException, SAXException
 	{
+        Objects.requireNonNull( resumptionToken, "resumptionToken cannot be null" );
 		var requestURL = getRequestURL( baseURL, resumptionToken );
 		try (var is = httpClient.getHttpResponse( requestURL ))
 		{
