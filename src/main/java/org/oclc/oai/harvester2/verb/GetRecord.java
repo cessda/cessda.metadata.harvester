@@ -35,7 +35,7 @@
 package org.oclc.oai.harvester2.verb;
 
 import eu.cessda.eqb.harvester.HttpClient;
-import org.w3c.dom.Node;
+import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import javax.xml.transform.TransformerException;
@@ -113,18 +113,20 @@ public class GetRecord extends HarvesterVerb
 	 *
 	 * @return the metadata section of the document, or an empty optional if metadata was not returned.
 	 */
-	public Optional<Node> getMetadata()
+	public Optional<Element> getMetadata()
 	{
 		var metadataElements = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "metadata" );
 
 		// If a record is deleted, then the metadata section will not be present
-		if (metadataElements.getLength() > 0)
-		{
-			var metadataChildNodes = metadataElements.item( 0 ).getChildNodes();
-			return Optional.ofNullable( metadataChildNodes.item( 0 ) );
-		}
-
-		return Optional.empty();
+        for ( int i = 0; i < metadataElements.getLength(); i++ )
+        {
+            var metadataNode = metadataElements.item( i );
+            if ( metadataNode instanceof Element )
+            {
+                return Optional.of( (Element) metadataNode );
+            }
+        }
+        return Optional.empty();
 	}
 
 	/**
