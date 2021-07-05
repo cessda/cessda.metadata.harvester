@@ -120,11 +120,14 @@ public class GetRecord extends HarvesterVerb
 		// If a record is deleted, then the metadata section will not be present
         for ( int i = 0; i < metadataElements.getLength(); i++ )
         {
-            var metadataNode = metadataElements.item( i );
-            if ( metadataNode instanceof Element )
-            {
-                return Optional.of( (Element) metadataNode );
-            }
+            var metadataNodes = metadataElements.item( i ).getChildNodes();
+			for ( int j = 0; j < metadataNodes.getLength(); j++ )
+			{
+				if ( metadataNodes.item( j ) instanceof Element )
+				{
+					return Optional.of( (Element) metadataNodes.item( j ) );
+				}
+			}
         }
         return Optional.empty();
 	}
