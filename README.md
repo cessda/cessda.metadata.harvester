@@ -52,14 +52,12 @@ java -jar cessda.eqb.oaiharvester.jar --harvester.dir=/example/output/directory
 
 ### Control the harvesting process
 
-| property                       | effect                    |
-| -------------------------------|---------------------------|
-| harvester.dir|directory where harvested files will be downloaded to|
-| harvester.timeout| seconds to wait until a request is considered erroneous|
-| harvester.from.single|controls the `from` parameter when harvesting a single repository|
-| harvester.from.intitial|controls the `from` parameter when performing the initial harvesting after application startup|
-| harvester.from.incremental|controls the `from` parameter when performing incremental harvesting as defined in the cron expression `harvester.cron.incremental`|
-| harvester.from.full|controls the `from` parameter when performing full harvesting |
+| property                    | effect                    |
+| ----------------------------|---------------------------|
+| harvester.dir               | directory where harvested files will be written to |
+| harvester.timeout           | seconds to wait until a request is cancelled |
+| harvester.from.incremental  | controls the `from` parameter when performing incremental harvesting |
+| harvester.from.full         | controls the `from` parameter when performing full harvesting |
 | harvester.keepOAIEnvelope   | if true, will cause the OAI-PMH response to be written "as is" |
 | harvester.removeOAIEnvelope | if true, will remove the OAI-PMH header from the response before writing |
 | harvester.repos             | a list of repositories; each with a code, url, metadata prefixes and optionally a list of sets |
@@ -72,8 +70,10 @@ The following configuration will harvest the set `discipline:social-science` of 
 ```yml
 harvester:
   repos:
-  - url: https://snd.gu.se/en/oai-pmh?verb=ListIdentifiers&set=discipline:social-science
+  - url: https://snd.gu.se/en/oai-pmh
+    code: SND
     metadataFormat: ddi_3_2
+    set: social-science
 ```
 
 #### Metadata Prefixes

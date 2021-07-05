@@ -104,13 +104,18 @@ public class GetRecord extends HarvesterVerb
 		var metadataElements = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "metadata" );
 
 		// If a record is deleted, then the metadata section will not be present
-		if (metadataElements.getLength() > 0)
-		{
-			var metadataChildNodes = metadataElements.item( 0 ).getChildNodes();
-			return Optional.ofNullable( (Element) metadataChildNodes.item( 0 ) );
-		}
-
-		return Optional.empty();
+        for ( int i = 0; i < metadataElements.getLength(); i++ )
+        {
+            var metadataNodes = metadataElements.item( i ).getChildNodes();
+			for ( int j = 0; j < metadataNodes.getLength(); j++ )
+			{
+				if ( metadataNodes.item( j ) instanceof Element )
+				{
+					return Optional.of( (Element) metadataNodes.item( j ) );
+				}
+			}
+        }
+        return Optional.empty();
 	}
 
 	/**
