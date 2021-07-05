@@ -5,12 +5,14 @@ import org.oclc.oai.harvester2.verb.ListSets;
 import org.oclc.oai.harvester2.verb.RecordHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 
+@Component
 class RepositoryClient
 {
     private static final Logger log = LoggerFactory.getLogger( RepositoryClient.class );
