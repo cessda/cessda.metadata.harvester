@@ -1,14 +1,17 @@
 package eu.cessda.eqb.harvester;
 
 import java.net.URI;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class Repo
 {
     private String code;
     private URI url;
-    private String set;
-    private String metadataFormat;
+    private final HashSet<String> sets = new HashSet<>();
+    private final HashSet<String> metadataPrefixes = new HashSet<>();
     private boolean discoverSets;
 
     public String getCode()
@@ -31,24 +34,28 @@ public class Repo
         this.url = url;
     }
 
-    public String getSet()
+    public Set<String> getSets()
     {
-        return set;
+        return sets;
     }
 
-    public void setSet( String set )
+    public void setSets( Collection<String> sets )
     {
-        this.set = set;
+        Objects.requireNonNull( sets, "sets must not be null" );
+        this.sets.clear();
+        this.sets.addAll( sets );
     }
 
-    public String getMetadataFormat()
+    public Set<String> getMetadataPrefixes()
     {
-        return metadataFormat;
+        return metadataPrefixes;
     }
 
-    public void setMetadataFormat( String metadataFormat )
+    public void setMetadataPrefixes( Collection<String> metadataPrefixes )
     {
-        this.metadataFormat = metadataFormat;
+        Objects.requireNonNull( metadataPrefixes, "metadataFormats must not be null" );
+        this.metadataPrefixes.clear();
+        this.metadataPrefixes.addAll( metadataPrefixes );
     }
 
     public boolean discoverSets()
@@ -70,14 +77,14 @@ public class Repo
         return discoverSets == repo.discoverSets &&
                 Objects.equals( code, repo.code ) &&
                 Objects.equals( url, repo.url ) &&
-                Objects.equals( set, repo.set ) &&
-                Objects.equals( metadataFormat, repo.metadataFormat );
+                sets.equals( repo.sets ) &&
+                metadataPrefixes.equals( repo.metadataPrefixes );
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash( code, url, set, metadataFormat, discoverSets );
+        return Objects.hash( code, url, sets, metadataPrefixes, discoverSets );
     }
 
     @Override
@@ -86,8 +93,8 @@ public class Repo
         return "Repo{" +
                 "code='" + code + '\'' +
                 ", url=" + url +
-                ", set='" + set + '\'' +
-                ", metadataFormat='" + metadataFormat + '\'' +
+                ", sets='" + sets + '\'' +
+                ", metadataPrefixes='" + metadataPrefixes + '\'' +
                 ", discoverSets=" + discoverSets +
                 '}';
     }

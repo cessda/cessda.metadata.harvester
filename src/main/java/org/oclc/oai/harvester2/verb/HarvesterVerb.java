@@ -22,9 +22,9 @@
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -38,6 +38,7 @@ import org.apache.xpath.XPathAPI;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 import javax.xml.XMLConstants;
@@ -51,9 +52,18 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.time.Duration;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static java.time.format.DateTimeFormatter.ISO_OFFSET_TIME;
 
 /**
  * HarvesterVerb is the parent class for each of the OAI verbs.
@@ -72,10 +82,17 @@ public abstract class HarvesterVerb
 	public static final String SCHEMA_LOCATION_V1_1_LIST_RECORDS = "http://www.openarchives.org/OAI/1.1/OAI_ListRecords http://www.openarchives.org/OAI/1.1/OAI_ListRecords.xsd";
 	public static final String SCHEMA_LOCATION_V1_1_LIST_SETS = "http://www.openarchives.org/OAI/1.1/OAI_ListSets http://www.openarchives.org/OAI/1.1/OAI_ListSets.xsd";
 
-	/** Default HTTP Timeout */
-	protected static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds( 10 );
+    /** A formatter that supports all the date formats returned by OAI-PMH repositories. */
+    protected static final DateTimeFormatter OAI_DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
+        .append( ISO_LOCAL_DATE )
+        .appendOptional( new DateTimeFormatterBuilder()
+            .parseCaseInsensitive()
+            .appendLiteral( "T" )
+            .append( ISO_OFFSET_TIME )
+            .toFormatter()
+        ).toFormatter();
 
-	private static final Element namespaceElement;
+    private static final Element namespaceElement;
 	private static final DocumentBuilderFactory factory;
 	private static final TransformerFactory xformFactory = TransformerFactory.newInstance();
 
@@ -147,7 +164,49 @@ public abstract class HarvesterVerb
 		this.schemaLocation = schemaLocationTemp;
 	}
 
-	/**
+    /**
+     * Construct a {@link RecordHeader} from a header node
+     * @param headerNode the node to convert.
+     * @throws DateTimeParseException if the datestamp element is not valid.
+     */
+    protected static RecordHeader getRecordHeader( Node headerNode )
+    {
+        String identifier = null;
+        TemporalAccessor datestamp = null;
+        var sets = new HashSet<String>();
+        RecordHeader.Status status = null;
+
+        var childNodes = headerNode.getChildNodes();
+
+        for ( int i = 0; i < childNodes.getLength(); i++ )
+        {
+            var node = childNodes.item( i );
+            switch ( node.getNodeName() ) {
+                case "identifier":
+                    identifier = node.getTextContent();
+                    break;
+
+                case "datestamp":
+                    datestamp = OAI_DATE_TIME_FORMATTER.parseBest( node.getTextContent(), OffsetDateTime::from, LocalDate::from );
+                    break;
+
+                case "setSpec":
+                    sets.add( node.getTextContent() );
+                    break;
+
+                case "status":
+                    status = RecordHeader.Status.valueOf( node.getTextContent() );
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        return new RecordHeader( identifier, datestamp, sets, status );
+    }
+
+    /**
 	 * Get the OAI response as a DOM object
 	 *
 	 * @return the DOM for the OAI response

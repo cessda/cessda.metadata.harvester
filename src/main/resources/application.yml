@@ -11,5 +11,5 @@ harvester:
   repos:
   - url: https://dbkapps.gesis.org/dbkoai3/
     code: GESIS-DBK
-    set: DBK
-    metadataFormat: oai_ddi32
+    sets: DBK
+    metadataPrefixes: oai_ddi32

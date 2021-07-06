@@ -60,12 +60,12 @@ java -jar cessda.eqb.oaiharvester.jar --harvester.dir=/example/output/directory
 | harvester.from.full         | controls the `from` parameter when performing full harvesting |
 | harvester.keepOAIEnvelope   | if true, will cause the OAI-PMH response to be written "as is" |
 | harvester.removeOAIEnvelope | if true, will remove the OAI-PMH header from the response before writing |
-| harvester.repos             | a list of repositories, with a code, url, metadata format and optionally a setName |
+| harvester.repos             | a list of repositories; each with a code, url, metadata prefixes and optionally a list of sets |
 
 
 #### Define a list of repositories to be harvested
 
-The following configuration will harvest the set `discipline:social-science` of the oai server `https://snd.gu.se/en/oai-pmh` with the metadata format `ddi_3_2`.
+The following configuration will harvest the set `discipline:social-science` of the oai server `https://snd.gu.se/en/oai-pmh` with the metadata prefix `ddi_3_2`.
 
 ```yml
 harvester:
@@ -76,27 +76,21 @@ harvester:
     set: social-science
 ```
 
-#### metadataPrefix
+#### Metadata Prefixes
 
-Please be aware, that to harvest different metadata standards (i.e. want to use different metadataPrefix parameters), you need to define repositories multiple times with a separate metadata format for each definition.
+OAI-PMH supports the concepts of different forms of metadata for the same record. This is handled with metadata prefixes.
 
-Running these lines will lead to all repositories defined in the configuration to be harvested three times, once with `dc`, once with `ddi` and once with `ddi_3_2`.
+Multiple metadata formats can be harvested from each repository. The example below will harvest `https://snd.gu.se/en/oai-pmh` using the metadata prefixes `dc`, `ddi` and `ddi_3_2`.
 
 ```yaml
 harvester:
   repos:
   - url: https://snd.gu.se/en/oai-pmh
     code: SND
-    metadataFormat: dc
-  - url: https://snd.gu.se/en/oai-pmh
-    code: SND
-    metadataFormat: ddi
-  - url: https://snd.gu.se/en/oai-pmh
-    code: SND
-    metadataFormat: ddi_3_2
+    metadataPrefixes: ["dc", "ddi", "ddi_3_2"]
 ```
 
-Failing to configure the metadata format for a repository will cause the harvest to fail.
+Failing to configure any metadata prefixes for a repository will cause the harvest to fail.
 
 ## Getting started as developer
 
@@ -105,10 +99,8 @@ Failing to configure the metadata format for a repository will cause the harvest
 ```bash
 # Execute all tests locally with default config
 mvn clean test
-# Run the app locally with default config and pre-populated database
+# Run the app locally with default config
 mvn clean spring-boot:run
-# Browse to http://localhost:8080 
-# Stop the app with Ctrl+C
 ```
 
 * Create and run service environment with docker-compose

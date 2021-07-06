@@ -35,6 +35,7 @@
 package org.oclc.oai.harvester2.verb;
 
 import eu.cessda.eqb.harvester.HttpClient;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -43,7 +44,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.LocalDate;
 
 /**
@@ -68,24 +68,29 @@ public class ListRecords extends HarvesterVerb implements Resumable
 		super( is );
 	}
 
-	public static ListRecords instance(URI baseURL, String resumptionToken, Duration timeout) throws IOException, SAXException
+	public static ListRecords instance( HttpClient httpClient, URI baseURL, String resumptionToken ) throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, resumptionToken );
-		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), timeout ))
+		try (var is = httpClient.getHttpResponse( requestURL ))
 		{
 			return new ListRecords( is );
 		}
 	}
 
-	public static ListRecords instance( URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix, Duration timeout)
+	public static ListRecords instance( HttpClient httpClient, URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix )
 			throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, from, until, set, metadataPrefix );
-		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), timeout ))
+		try (var is = httpClient.getHttpResponse( requestURL ))
 		{
 			return new ListRecords( is );
 		}
 	}
+
+	public NodeList getRecords()
+    {
+        return getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "record" );
+    }
 
 	/**
 	 * Construct the query portion of the http request

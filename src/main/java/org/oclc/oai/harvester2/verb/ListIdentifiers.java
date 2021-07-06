@@ -42,11 +42,11 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class represents an ListIdentifiers response on either the server or on the client
@@ -66,20 +66,38 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 		super( is );
 	}
 
-	public static ListIdentifiers instance(URI baseURL, String resumptionToken, Duration timeout) throws IOException, SAXException
+	/**
+	 * Construct a new instance of {@link ListIdentifiers} using a resumption token.
+	 * @param baseURL the URL of the repository.
+	 * @param resumptionToken the resumption token.
+	 * @throws IOException if an IO error occurs.
+	 * @throws SAXException if an error occurs when parsing the XML.
+	 */
+	public static ListIdentifiers instance( HttpClient httpClient, URI baseURL, String resumptionToken ) throws IOException, SAXException
 	{
+        Objects.requireNonNull( resumptionToken, "resumptionToken cannot be null" );
 		var requestURL = getRequestURL( baseURL, resumptionToken );
-		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), timeout ))
+		try (var is = httpClient.getHttpResponse( requestURL ))
 		{
 			return new ListIdentifiers( is );
 		}
 	}
 
-	public static ListIdentifiers instance(URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix, Duration timeout)
+	/**
+	 * Construct a new instance of {@link ListIdentifiers}.
+	 * @param baseURL the URL of the repository.
+	 * @param from the date to harvest from. Set to {@code null} to harvest from the beginning.
+	 * @param until to date to harvest to. Set to {@code null} for no limit.
+	 * @param set the set to harvest.
+	 * @param metadataPrefix the metadata prefix to use.
+	 * @throws IOException if an IO error occurs.
+	 * @throws SAXException if an error occurs when parsing the XML.
+	 */
+	public static ListIdentifiers instance( HttpClient httpClient, URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix )
 			throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, from, until, set, metadataPrefix );
-		try (var is = HttpClient.getHttpResponse( requestURL.toURL(), timeout ))
+		try (var is = httpClient.getHttpResponse( requestURL ))
 		{
 			return new ListIdentifiers( is );
 		}
@@ -114,13 +132,13 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 	/**
 	 * Returns a list of identifiers found in the response. The returned list is unmodifiable.
 	 */
-	public List<String> getIdentifiers()
+	public List<RecordHeader> getIdentifiers()
 	{
-		var identifiersIDs = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "identifier" );
-		var records = new ArrayList<String>(identifiersIDs.getLength());
-		for ( int i = 0; i < identifiersIDs.getLength(); i++ )
+		var recordHeaders = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "header" );
+		var records = new ArrayList<RecordHeader>(recordHeaders.getLength());
+		for ( int i = 0; i < recordHeaders.getLength(); i++ )
 		{
-			var identifier = identifiersIDs.item( i ).getTextContent();
+			var identifier = HarvesterVerb.getRecordHeader( recordHeaders.item( i ) );
 			records.add(identifier);
 		}
 		return Collections.unmodifiableList(records);
