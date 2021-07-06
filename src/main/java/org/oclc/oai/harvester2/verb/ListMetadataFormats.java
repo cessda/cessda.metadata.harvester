@@ -35,7 +35,6 @@
 package org.oclc.oai.harvester2.verb;
 
 import eu.cessda.eqb.harvester.HttpClient;
-import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -101,6 +100,10 @@ public class ListMetadataFormats extends HarvesterVerb
 		}
 	}
 
+    /**
+     * Gets a list of metadata formats.
+     * @throws URISyntaxException if the schema or metadataNamespace elements cannot be parsed as a {@link URI}.
+     */
 	public List<MetadataFormat> getMetadataFormats() throws URISyntaxException
     {
         var metadataFormats = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "metadataFormat" );
@@ -109,9 +112,7 @@ public class ListMetadataFormats extends HarvesterVerb
 
         for ( int i = 0; i < metadataFormats.getLength(); i++ )
         {
-            var element = (Element) metadataFormats.item( i );
-
-            var childNodes = element.getChildNodes();
+            var childNodes = metadataFormats.item( i ).getChildNodes();
 
             String metadataPrefix = null;
             URI schema = null;
@@ -140,7 +141,7 @@ public class ListMetadataFormats extends HarvesterVerb
                 }
             }
 
-            list.add( new MetadataFormat( metadataPrefix,  schema, metadataNamespace ) );
+            list.add( new MetadataFormat( metadataPrefix, schema, metadataNamespace ) );
         }
 
         return list;
