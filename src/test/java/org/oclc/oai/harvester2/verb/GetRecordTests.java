@@ -11,7 +11,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class GetRecordTests
+class GetRecordTests
 {
     //language=XML
     private static final String GET_RECORD_RESPONSE = "<?xml version=\"1.0\" encoding=\"UTF-8\"?> \n" +
@@ -57,6 +57,26 @@ public class GetRecordTests
         " </GetRecord>\n" +
         "</OAI-PMH>";
 
+    //language=XML
+    private static final String DELETED_RECORD = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
+        "<?xml-stylesheet type='text/xsl' href='oai2.xsl' ?>\n" +
+        "<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\"\n" +
+        "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
+        "         xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/\n" +
+        " http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n" +
+        "  <responseDate>2018-01-18T17:11:52Z</responseDate>\n" +
+        "  <request verb=\"GetRecord\" identifier=\"1031\" metadataPrefix=\"ddi\">https://oai.ukdataservice.ac.uk:8443/oai/provider</request>\n" +
+        "  <GetRecord>\n" +
+        "    <record>\n" +
+        "      <header status=\"deleted\">\n" +
+        "        <identifier>1031</identifier>\n" +
+        "        <datestamp>2017-05-02T08:31:32Z</datestamp>\n" +
+        "        <setSpec>DataCollections</setSpec>\n" +
+        "      </header>\n" +
+        "    </record>\n" +
+        "  </GetRecord>\n" +
+        "</OAI-PMH>";
+
     @Test
     void shouldReturnARecordHeader() throws IOException, SAXException
     {
@@ -75,5 +95,17 @@ public class GetRecordTests
             ),
             header
         );
+    }
+
+    @Test
+    void shouldHandleADeletedRecord() throws IOException, SAXException
+    {
+        var deletedRecord = new GetRecord(
+            new ByteArrayInputStream( DELETED_RECORD.getBytes( StandardCharsets.UTF_8 ) )
+        );
+
+        var header = deletedRecord.getHeader();
+
+        assertEquals( RecordHeader.Status.deleted, header.getStatus().orElseThrow() );
     }
 }

@@ -174,7 +174,14 @@ public abstract class HarvesterVerb
         String identifier = null;
         TemporalAccessor datestamp = null;
         var sets = new HashSet<String>();
+
+        // Get the status attribute on the header node
         RecordHeader.Status status = null;
+        var namedItem = headerNode.getAttributes().getNamedItem( "status" );
+        if ( namedItem != null )
+        {
+            status = RecordHeader.Status.valueOf( namedItem.getTextContent() );
+        }
 
         var childNodes = headerNode.getChildNodes();
 
@@ -192,10 +199,6 @@ public abstract class HarvesterVerb
 
                 case "setSpec":
                     sets.add( node.getTextContent() );
-                    break;
-
-                case "status":
-                    status = RecordHeader.Status.valueOf( node.getTextContent() );
                     break;
 
                 default:

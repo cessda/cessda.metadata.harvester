@@ -37,6 +37,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMSource;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -272,10 +273,20 @@ public class Harvester implements CommandLineRunner
                 if (harvesterConfiguration.removeOAIEnvelope())
                 {
                     var metadata = pmhRecord.getMetadata();
+                    var destinationFile = harvesterConfiguration.getDir()
+                        .resolve( UNWRAPPED_DIRECTORY_NAME )
+                        .resolve( repoDirectory )
+                        .resolve( fileName );
+
                     if (metadata.isPresent())
                     {
                         var source = new DOMSource( metadata.orElseThrow() );
-                        ioUtilities.writeDomSource( source, harvesterConfiguration.getDir().resolve( UNWRAPPED_DIRECTORY_NAME ).resolve( repoDirectory ).resolve( fileName ) );
+                        ioUtilities.writeDomSource( source, destinationFile );
+                    }
+                    else if (currentRecord.getStatus().filter( RecordHeader.Status.deleted::equals ).isPresent())
+                    {
+                        // Delete the unwrapped XML
+                        Files.deleteIfExists(destinationFile);
                     }
                 }
 
