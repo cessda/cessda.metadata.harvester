@@ -22,6 +22,13 @@ public class RecordHeader
     private final Set<String> sets;
     private final Status status;
 
+    /**
+     * Construct a new instance of a {@link RecordHeader}.
+     * @param identifier the OAI-PMH identifier.
+     * @param datestamp the datestamp.
+     * @param sets the sets.
+     * @param status the status, or {@code null} if there is no status.
+     */
     public RecordHeader( String identifier, TemporalAccessor datestamp, Set<String> sets, Status status )
     {
         this.identifier = Objects.requireNonNull( identifier );

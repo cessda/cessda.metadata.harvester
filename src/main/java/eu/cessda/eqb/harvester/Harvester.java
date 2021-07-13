@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -326,7 +327,7 @@ public class Harvester implements CommandLineRunner
 
             return records;
         }
-        catch ( IOException | SAXException e )
+        catch ( IOException | SAXException | DateTimeParseException e )
         {
             throw new HarvesterFailedException( repo.getCode() + ": Fetching identifiers failed: " + e, e );
         }
