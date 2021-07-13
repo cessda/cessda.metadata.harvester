@@ -131,6 +131,8 @@ public class ListIdentifiers extends HarvesterVerb implements Resumable
 
 	/**
 	 * Returns a list of identifiers found in the response. The returned list is unmodifiable.
+     *
+     * @throws java.time.format.DateTimeParseException if the datestamp element is not valid.
 	 */
 	public List<RecordHeader> getIdentifiers()
 	{

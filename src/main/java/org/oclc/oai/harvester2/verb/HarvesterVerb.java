@@ -187,7 +187,10 @@ public abstract class HarvesterVerb
                     break;
 
                 case "datestamp":
-                    datestamp = OAI_DATE_TIME_FORMATTER.parseBest( node.getTextContent(), OffsetDateTime::from, LocalDate::from );
+                    // NSD returns invalid ISO dates such as 2020-09-02T15:12:07+0000.
+                    // This corrects the dates before parsing by replacing +0000 with Z.
+                    var datestampString = node.getTextContent().replace( "+0000", "Z" );
+                    datestamp = OAI_DATE_TIME_FORMATTER.parseBest( datestampString, OffsetDateTime::from, LocalDate::from );
                     break;
 
                 case "setSpec":

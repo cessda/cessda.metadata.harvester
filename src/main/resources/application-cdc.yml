@@ -13,9 +13,6 @@ harvester:
   timeout: 100s
   keepOAIEnvelope: true
   removeOAIEnvelope: true
-  from:
-    incremental: '2017-02-28'
-    full: '1901-01-01'
   repos:
     - url: https://oai.ukdataservice.ac.uk:8443/oai/provider
       code: UKDS
