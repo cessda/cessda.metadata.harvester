@@ -110,6 +110,7 @@ public class GetRecord extends HarvesterVerb
             var metadataNodes = metadataElements.item( i ).getChildNodes();
 			for ( int j = 0; j < metadataNodes.getLength(); j++ )
 			{
+			    // Select the first element within the metadata element
 				if ( metadataNodes.item( j ) instanceof Element )
                 {
 					return Optional.of( (Element) metadataNodes.item( j ) );
