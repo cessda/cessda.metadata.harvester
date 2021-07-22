@@ -7,6 +7,9 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * A configuration of a remote repository.
+ */
 public class Repo implements Serializable
 {
     private static final long serialVersionUID = 3176537038193526776L;
@@ -17,31 +20,49 @@ public class Repo implements Serializable
     private final HashSet<String> metadataPrefixes = new HashSet<>();
     private boolean discoverSets;
 
+    /**
+     * Gets the friendly name of the repository.
+     */
     public String getCode()
     {
         return code;
     }
 
+    /**
+     * Sets the friendly name of the repository.
+     */
     public void setCode( String code )
     {
         this.code = code;
     }
 
+    /**
+     * Gets the URL of the repository endpoint.
+     */
     public URI getUrl()
     {
         return url;
     }
 
+    /**
+     * Sets the URL of the repository endpoint.
+     */
     public void setUrl( URI url )
     {
         this.url = url;
     }
 
+    /**
+     * Gets the sets to harvest from the repository.
+     */
     public Set<String> getSets()
     {
         return sets;
     }
 
+    /**
+     * Sets the sets to harvest from the repository.
+     */
     public void setSets( Collection<String> sets )
     {
         Objects.requireNonNull( sets, "sets must not be null" );
@@ -49,11 +70,17 @@ public class Repo implements Serializable
         this.sets.addAll( sets );
     }
 
+    /**
+     * Gets the metadata prefixes to harvest from the repository
+     */
     public Set<String> getMetadataPrefixes()
     {
         return metadataPrefixes;
     }
 
+    /**
+     * Sets the metadata prefixes to harvest from the repository
+     */
     public void setMetadataPrefixes( Collection<String> metadataPrefixes )
     {
         Objects.requireNonNull( metadataPrefixes, "metadataFormats must not be null" );
@@ -61,11 +88,17 @@ public class Repo implements Serializable
         this.metadataPrefixes.addAll( metadataPrefixes );
     }
 
+    /**
+     * If true, the repository should be queried for the sets contained.
+     */
     public boolean discoverSets()
     {
         return discoverSets;
     }
 
+    /**
+     * Sets if the repository should be queried for its sets.
+     */
     public void setDiscoverSets( boolean discoverSets )
     {
         this.discoverSets = discoverSets;

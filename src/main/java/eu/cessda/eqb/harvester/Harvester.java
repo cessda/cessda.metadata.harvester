@@ -39,7 +39,6 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CancellationException;
@@ -131,6 +130,11 @@ public class Harvester implements CommandLineRunner
         log.info( "Incremental harvesting finished" );
     }
 
+    /**
+     * Runs the harvest.
+     *
+     * @param fromDate the date to harvest from. If set to {@code null}, no date restrictions will be applied.
+     */
     private void runHarvest( LocalDate fromDate )
     {
 
