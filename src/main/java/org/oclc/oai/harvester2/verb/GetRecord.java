@@ -22,9 +22,9 @@
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,6 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.Optional;
 
@@ -62,21 +61,23 @@ public class GetRecord extends HarvesterVerb
 		super(in);
 	}
 
-	/**
-	 * Client-side GetRecord verb constructor
-	 *
-	 * @param baseURL
-	 *            the baseURL of the server to be queried
-	 * @throws MalformedURLException
-	 *             the baseURL is bad
-	 * @throws SAXException
-	 *             the xml response is bad
-	 * @throws IOException
-	 *             an I/O error occurred
-	 */
+    /**
+     * Query a OAI-PMH repository for a record using the GetRecord verb.
+     *
+     * @param httpClient the HTTP client to use.
+     * @param baseURL the baseURL of the server to be queried.
+     * @param identifier the record identifier.
+     * @param metadataPrefix the metadata prefix of the record to retrieve.
+     * @throws IOException if an IO error occurred.
+     * @throws SAXException if the XML could not be parsed.
+     */
 	public static GetRecord instance( HttpClient httpClient, URI baseURL, String identifier, String metadataPrefix ) throws IOException, SAXException
 	{
-		var requestURL = getRequestURL( baseURL, identifier, metadataPrefix );
+        var requestURL = URI.create( baseURL + "?verb=GetRecord"
+            + "&identifier=" + identifier
+            + "&metadataPrefix=" + metadataPrefix
+        );
+
 		try (var in = httpClient.getHttpResponse( requestURL ))
 		{
 			return new GetRecord( in );
@@ -111,25 +112,12 @@ public class GetRecord extends HarvesterVerb
 			{
 			    // Select the first element within the metadata element
 				if ( metadataNodes.item( j ) instanceof Element )
-				{
+                {
 					return Optional.of( (Element) metadataNodes.item( j ) );
 				}
-			}
+            }
         }
         return Optional.empty();
-	}
-
-	/**
-	 * Construct the query portion of the http request
-	 *
-	 * @return a String containing the query portion of the http request
-	 */
-	private static URI getRequestURL( URI baseURL, String identifier, String metadataPrefix )
-	{
-		return URI.create(baseURL + "?verb=GetRecord"
-				+ "&identifier=" + identifier
-				+ "&metadataPrefix=" + metadataPrefix
-		);
 	}
 
 }
