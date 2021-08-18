@@ -37,15 +37,14 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMSource;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 import static eu.cessda.eqb.harvester.LoggingConstants.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -151,15 +150,15 @@ public class Harvester implements CommandLineRunner
         // Start the harvest for each repository
         var futures = repositories.stream().map( repo ->
                 CompletableFuture.runAsync( () -> harvestRepository( fromDate, repo ), executor )
-        ).collect( Collectors.toCollection( ArrayList::new ) );
+        ).toArray(CompletableFuture[]::new);
 
         try
         {
-            futures.forEach( CompletableFuture::join );
+            CompletableFuture.allOf( futures ).join();
         }
         catch ( CancellationException | CompletionException e )
         {
-            log.error("Unexpected error occurred when harvesting!", e.getCause());
+            log.error("Unexpected error occurred when harvesting!", e);
         }
 
         executor.shutdown();
@@ -286,10 +285,20 @@ public class Harvester implements CommandLineRunner
                 if (harvesterConfiguration.removeOAIEnvelope())
                 {
                     var metadata = pmhRecord.getMetadata();
+                    var destinationFile = harvesterConfiguration.getDir()
+                        .resolve( UNWRAPPED_DIRECTORY_NAME )
+                        .resolve( repoDirectory )
+                        .resolve( fileName );
+
                     if (metadata.isPresent())
                     {
                         var source = new DOMSource( metadata.orElseThrow() );
-                        ioUtilities.writeDomSource( source, harvesterConfiguration.getDir().resolve( UNWRAPPED_DIRECTORY_NAME ).resolve( repoDirectory ).resolve( fileName ) );
+                        ioUtilities.writeDomSource( source, destinationFile );
+                    }
+                    else if (currentRecord.getStatus().filter( RecordHeader.Status.deleted::equals ).isPresent())
+                    {
+                        // Delete the unwrapped XML
+                        Files.deleteIfExists(destinationFile);
                     }
                 }
 

@@ -10,6 +10,7 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 
 /**
@@ -126,7 +127,7 @@ class RepositoryClient
 
             return records;
         }
-        catch ( IOException | SAXException e )
+        catch ( IOException | SAXException | DateTimeParseException e )
         {
             throw new RecordHeaderException( repo, set, e );
         }
