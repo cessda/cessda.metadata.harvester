@@ -116,11 +116,17 @@ public class Harvester implements CommandLineRunner
      */
     public void incrementalHarvesting()
     {
-        var incremental = harvesterConfiguration.getFrom().getIncremental();
+        var from = harvesterConfiguration.getFrom();
 
-        // If a specific incremental date is not configured default to harvesting the last week
-        if (incremental == null)
+        final LocalDate incremental;
+
+        if ( from != null && from.getIncremental() != null )
         {
+            incremental = from.getIncremental();
+        }
+        else
+        {
+            // If a specific incremental date is not configured default to harvesting the last week
             incremental = LocalDate.now().minusDays( 7 );
         }
 
@@ -305,8 +311,12 @@ public class Harvester implements CommandLineRunner
                 // Keep envelope
                 if (harvesterConfiguration.keepOAIEnvelope())
                 {
+                    var destinationFile = harvesterConfiguration.getDir()
+                        .resolve( WRAPPED_DIRECTORY_NAME )
+                        .resolve( repoDirectory )
+                        .resolve( fileName );
                     var source = new DOMSource( pmhRecord.getDocument() );
-                    ioUtilities.writeDomSource( source, harvesterConfiguration.getDir().resolve( WRAPPED_DIRECTORY_NAME ).resolve( repoDirectory ).resolve( fileName ) );
+                    ioUtilities.writeDomSource( source, destinationFile );
                 }
             }
             catch ( IOException | SAXException | TransformerException e1 )
