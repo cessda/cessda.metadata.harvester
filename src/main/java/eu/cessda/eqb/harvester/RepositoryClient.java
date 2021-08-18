@@ -13,6 +13,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
+/**
+ * Holds methods used to access OAI-PMH repositories
+ */
 @Component
 class RepositoryClient
 {
@@ -20,6 +23,9 @@ class RepositoryClient
 
     private final HttpClient httpClient;
 
+    /**
+     * Create a new instance of a {@link RepositoryClient}.
+     */
     RepositoryClient( HttpClient httpClient)
     {
         this.httpClient = httpClient;

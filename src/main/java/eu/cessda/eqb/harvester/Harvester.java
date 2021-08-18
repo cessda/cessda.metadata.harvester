@@ -40,7 +40,6 @@ import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -130,6 +129,11 @@ public class Harvester implements CommandLineRunner
         log.info( "Incremental harvesting finished" );
     }
 
+    /**
+     * Runs the harvest.
+     *
+     * @param fromDate the date to harvest from. If set to {@code null}, no date restrictions will be applied.
+     */
     private void runHarvest( LocalDate fromDate )
     {
 
@@ -240,6 +244,15 @@ public class Harvester implements CommandLineRunner
         );
     }
 
+    /**
+     * Harvest the collection of {@link RecordHeader}s from the remote repository.
+     *
+     * @param records        the collection of records to harvest.
+     * @param repo           the repository to harvest.
+     * @param metadataFormat the metadata prefix to harvest.
+     * @param repoDirectory  the destination directory of the harvest.
+     * @return the number of records successfully harvested.
+     */
     private int harvestRecords( Collection<RecordHeader> records, Repo repo, String metadataFormat, Path repoDirectory )
     {
         int retrievedRecords = 0;
