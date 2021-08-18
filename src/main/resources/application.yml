@@ -2,9 +2,6 @@ harvester:
   incremental: true
   dir: '@documents@'
   recipient: support@cessda.eu
-  from:
-    single: '1800-01-01'
-    incremental: '2017-02-28'
   cron:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
