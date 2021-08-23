@@ -30,7 +30,7 @@ public class HttpClient
             .autoAcceptEncoding( true )
             .followRedirects( NORMAL )
             .userAgent( "OAIHarvester/2.0" )
-            .connectTimeout( harvesterConfiguration.getTimeout() )
+            .requestTimeout( harvesterConfiguration.getTimeout() )
             .build();
     }
 

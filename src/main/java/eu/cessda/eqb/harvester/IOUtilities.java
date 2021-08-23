@@ -52,13 +52,13 @@ public class IOUtilities
      * @throws IOException if an IO error occurs while writing the file.
      * @throws TransformerException if an unrecoverable error occurs whilst writing the source.
      * @param source the XML source.
-     * @param fdest the {@link Path} to write to.
+     * @param destination the {@link Path} to write to.
      */
-    void writeDomSource( Source source, Path fdest ) throws IOException, TransformerException
+    void writeDomSource( Source source, Path destination ) throws IOException, TransformerException
     {
-        try ( var fOutputStream = Files.newOutputStream( fdest ) )
+        try ( var fOutputStream = Files.newOutputStream( destination ) )
         {
-            log.trace( "Writing to {}", fdest );
+            log.trace( "Writing to {}", destination );
             factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
         }
     }
