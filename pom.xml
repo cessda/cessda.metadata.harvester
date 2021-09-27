@@ -155,7 +155,7 @@
 				</executions>
 				<configuration>
 					<verbose>false</verbose>
-					<useNativeGit>true</useNativeGit>
+					<useNativeGit>false</useNativeGit>
 					<failOnNoGitDirectory>false</failOnNoGitDirectory>
 					<dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
 					<generateGitPropertiesFile>true</generateGitPropertiesFile>
