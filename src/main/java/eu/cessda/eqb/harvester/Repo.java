@@ -1,5 +1,6 @@
 package eu.cessda.eqb.harvester;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Collection;
@@ -12,6 +13,7 @@ import java.util.Set;
  */
 public class Repo implements Serializable
 {
+    @Serial
     private static final long serialVersionUID = 3176537038193526776L;
 
     private String code;

@@ -14,26 +14,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ListMetadataFormatsTests
 {
     //language=XML
-    private static final String LIST_METADATA_FORMATS_RESPONSE = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-        "<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\" \n" +
-        "         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-        "         xsi:schemaLocation=\"http://www.openarchives.org/OAI/2.0/\n" +
-        "         http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd\">\n" +
-        "  <responseDate>2002-06-08T15:19:13Z</responseDate>\n" +
-        "  <request verb=\"ListMetadataFormats\">http://memory.loc.gov/cgi-bin/oai</request>\n" +
-        "  <ListMetadataFormats>\n" +
-        "   <metadataFormat>\n" +
-        "    <metadataPrefix>oai_dc</metadataPrefix>\n" +
-        "    <schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</schema>\n" +
-        "    <metadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</metadataNamespace>\n" +
-        "   </metadataFormat>\n" +
-        "   <metadataFormat>\n" +
-        "    <metadataPrefix>oai_marc</metadataPrefix>\n" +
-        "    <schema>http://www.openarchives.org/OAI/1.1/oai_marc.xsd</schema>\n" +
-        "    <metadataNamespace>http://www.openarchives.org/OAI/1.1/oai_marc</metadataNamespace>\n" +
-        "   </metadataFormat>\n" +
-        "  </ListMetadataFormats>\n" +
-        "</OAI-PMH>";
+    private static final String LIST_METADATA_FORMATS_RESPONSE = """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"\s
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
+                 http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+          <responseDate>2002-06-08T15:19:13Z</responseDate>
+          <request verb="ListMetadataFormats">http://memory.loc.gov/cgi-bin/oai</request>
+          <ListMetadataFormats>
+           <metadataFormat>
+            <metadataPrefix>oai_dc</metadataPrefix>
+            <schema>http://www.openarchives.org/OAI/2.0/oai_dc.xsd</schema>
+            <metadataNamespace>http://www.openarchives.org/OAI/2.0/oai_dc/</metadataNamespace>
+           </metadataFormat>
+           <metadataFormat>
+            <metadataPrefix>oai_marc</metadataPrefix>
+            <schema>http://www.openarchives.org/OAI/1.1/oai_marc.xsd</schema>
+            <metadataNamespace>http://www.openarchives.org/OAI/1.1/oai_marc</metadataNamespace>
+           </metadataFormat>
+          </ListMetadataFormats>
+        </OAI-PMH>""";
 
     @Test
     void shouldReturnAListOfMetadataFormats() throws IOException, SAXException, URISyntaxException

@@ -21,7 +21,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<java.version>11</java.version>
+		<java.version>17</java.version>
 		<gesis.repository.visibility>public</gesis.repository.visibility>
 		<image_tag>cessda/${project.artifactId}:${project.version}</image_tag>
 		<code-generation-comment>This file is generated, all changes will be overridden</code-generation-comment>

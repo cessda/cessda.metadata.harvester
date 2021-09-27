@@ -1,5 +1,6 @@
 package eu.cessda.eqb.harvester;
 
+import java.io.Serial;
 import java.nio.file.Path;
 
 /**
@@ -7,6 +8,7 @@ import java.nio.file.Path;
  */
 class DirectoryCreationFailedException extends HarvesterFailedException
 {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private final Path directory;

@@ -188,24 +188,16 @@ public abstract class HarvesterVerb
         for ( int i = 0; i < childNodes.getLength(); i++ )
         {
             var node = childNodes.item( i );
-            switch ( node.getNodeName() ) {
-                case "identifier":
-                    identifier = node.getTextContent();
-                    break;
-
-                case "datestamp":
+            switch ( node.getNodeName() )
+            {
+                case "identifier" -> identifier = node.getTextContent();
+                case "datestamp" -> {
                     // NSD returns invalid ISO dates such as 2020-09-02T15:12:07+0000.
                     // This corrects the dates before parsing by replacing +0000 with Z.
                     var datestampString = node.getTextContent().replace( "+0000", "Z" );
                     datestamp = OAI_DATE_TIME_FORMATTER.parseBest( datestampString, OffsetDateTime::from, LocalDate::from );
-                    break;
-
-                case "setSpec":
-                    sets.add( node.getTextContent() );
-                    break;
-
-                default:
-                    break;
+                }
+                case "setSpec" -> sets.add( node.getTextContent() );
             }
         }
 
