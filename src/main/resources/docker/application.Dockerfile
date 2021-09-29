@@ -2,7 +2,7 @@
 # @code-generation-comment@
 #
 
-FROM openjdk:17
+FROM openjdk:17-bullseye
 
 WORKDIR /@project.artifactId@/
 
