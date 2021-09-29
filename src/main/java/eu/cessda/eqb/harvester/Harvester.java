@@ -32,7 +32,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.xml.sax.SAXException;
 
 import javax.annotation.PreDestroy;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMSource;
 import java.io.IOException;
@@ -66,7 +65,6 @@ public class Harvester implements CommandLineRunner
 
     @Autowired
     public Harvester( HttpClient httpClient, HarvesterConfiguration harvesterConfiguration, IOUtilities ioUtilities, RepositoryClient repositoryClient )
-            throws TransformerConfigurationException
     {
         this.httpClient = httpClient;
         this.harvesterConfiguration = harvesterConfiguration;
@@ -265,12 +263,12 @@ public class Harvester implements CommandLineRunner
 
         for ( var currentRecord : records )
         {
-            var fileName = URLEncoder.encode( currentRecord.getIdentifier(), UTF_8 ) + ".xml";
+            var fileName = URLEncoder.encode( currentRecord.identifier(), UTF_8 ) + ".xml";
 
             try
             {
                 log.debug( "Harvesting {} from {}", currentRecord, repo.getUrl() );
-                var pmhRecord = GetRecord.instance( httpClient, repo.getUrl(), currentRecord.getIdentifier(), metadataFormat );
+                var pmhRecord = GetRecord.instance( httpClient, repo.getUrl(), currentRecord.identifier(), metadataFormat );
 
                 // Check for errors
                 if (!pmhRecord.getErrors().isEmpty())
@@ -278,7 +276,7 @@ public class Harvester implements CommandLineRunner
                     var error = pmhRecord.getErrors().get( 0 );
                     log.warn( "{}: Failed to harvest record {}: {}: {}",
                             value( REPO_NAME, repo.getCode()),
-                            value( OAI_RECORD, currentRecord.getIdentifier() ),
+                            value( OAI_RECORD, currentRecord.identifier() ),
                             value( OAI_ERROR_CODE, error.getCode() ),
                             value( OAI_ERROR_MESSAGE, error.getMessage().orElse( "" ) )
                     );
@@ -301,7 +299,7 @@ public class Harvester implements CommandLineRunner
                         var source = new DOMSource( metadata.orElseThrow() );
                         ioUtilities.writeDomSource( source, destinationFile );
                     }
-                    else if (currentRecord.getStatus().filter( RecordHeader.Status.deleted::equals ).isPresent())
+                    else if (RecordHeader.Status.deleted.equals( currentRecord.status() ))
                     {
                         // Delete the unwrapped XML
                         Files.deleteIfExists(destinationFile);
@@ -323,7 +321,7 @@ public class Harvester implements CommandLineRunner
             {
                 log.warn( "{}: Failed to harvest record {} from {}: {}: {}",
                         value( REPO_NAME, repo.getCode()),
-                        value( LoggingConstants.OAI_RECORD, currentRecord.getIdentifier()),
+                        value( LoggingConstants.OAI_RECORD, currentRecord.identifier()),
                         value( LoggingConstants.OAI_URL, repo.getUrl()),
                         value( LoggingConstants.EXCEPTION_NAME, e1.getClass().getName()),
                         value( LoggingConstants.EXCEPTION_MESSAGE, e1.getMessage())

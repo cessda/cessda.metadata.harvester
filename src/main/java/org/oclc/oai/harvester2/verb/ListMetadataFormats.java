@@ -124,20 +124,12 @@ public class ListMetadataFormats extends HarvesterVerb
 
                 switch ( node.getNodeName() )
                 {
-                    case "metadataPrefix":
-                        metadataPrefix = node.getTextContent();
-                        break;
-
-                    case "schema":
-                        schema = new URI( node.getTextContent() );
-                        break;
-
-                    case "metadataNamespace":
-                        metadataNamespace = new URI( node.getTextContent() );
-                        break;
-
-                    default:
-                        break;
+                    case "metadataPrefix" -> metadataPrefix = node.getTextContent();
+                    case "schema" -> schema = new URI( node.getTextContent() );
+                    case "metadataNamespace" -> metadataNamespace = new URI( node.getTextContent() );
+                    default -> {
+                        // Unexpected node name - do nothing.
+                    }
                 }
             }
 
@@ -165,59 +157,13 @@ public class ListMetadataFormats extends HarvesterVerb
 		return URI.create(requestURL.toString());
 	}
 
-	public static class MetadataFormat
+    public record MetadataFormat(String metadataPrefix, URI schema, URI metadataNamespace)
     {
-	    private final String metadataPrefix;
-	    private final URI schema;
-	    private final URI metadataNamespace;
-
         public MetadataFormat( String metadataPrefix, URI schema, URI metadataNamespace )
         {
             this.metadataPrefix = Objects.requireNonNull( metadataPrefix );
             this.schema = Objects.requireNonNull( schema );
             this.metadataNamespace = Objects.requireNonNull( metadataNamespace );
-        }
-
-        public String getMetadataPrefix()
-        {
-            return metadataPrefix;
-        }
-
-        public URI getSchema()
-        {
-            return schema;
-        }
-
-        public URI getMetadataNamespace()
-        {
-            return metadataNamespace;
-        }
-
-        @Override
-        public boolean equals( Object o )
-        {
-            if ( this == o ) return true;
-            if ( o == null || getClass() != o.getClass() ) return false;
-            MetadataFormat that = (MetadataFormat) o;
-            return metadataPrefix.equals( that.metadataPrefix ) &&
-                schema.equals( that.schema ) &&
-                metadataNamespace.equals( that.metadataNamespace );
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Objects.hash( metadataPrefix, schema, metadataNamespace );
-        }
-
-        @Override
-        public String toString()
-        {
-            return "MetadataFormat{" +
-                "metadataPrefix='" + metadataPrefix + '\'' +
-                ", schema=" + schema +
-                ", metadataNamespace=" + metadataNamespace +
-                '}';
         }
     }
 }

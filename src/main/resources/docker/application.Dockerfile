@@ -2,7 +2,7 @@
 # @code-generation-comment@
 #
 
-FROM openjdk:11-jre
+FROM openjdk:17
 
 WORKDIR /@project.artifactId@/
 

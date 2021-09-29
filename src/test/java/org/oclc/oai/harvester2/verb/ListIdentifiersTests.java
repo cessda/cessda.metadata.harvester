@@ -21,31 +21,32 @@ import static org.oclc.oai.harvester2.verb.RecordHeadersMock.*;
 class ListIdentifiersTests
 {
     //language=XML
-    private static final String NSD_DATE_FORMAT_RESPONSE = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
-        "<OAI-PMH xmlns=\"http://www.openarchives.org/OAI/2.0/\">\n" +
-        "    <responseDate>2021-07-04T00:00:29.482Z</responseDate>\n" +
-        "    <request verb=\"ListIdentifiers\" metadataPrefix=\"oai_ddi\">http://129.177.90.182/</request>\n" +
-        "    <ListIdentifiers>\n" +
-        "        <header>\n" +
-        "            <identifier>http://nsddata.nsd.uib.no:80/obj/fStudy/NSD2200-2</identifier>\n" +
-        "            <datestamp>2020-09-02T15:12:03+0000</datestamp>\n" +
-        "        </header>\n" +
-        "    </ListIdentifiers>\n" +
-        "</OAI-PMH>";
+    private static final String NSD_DATE_FORMAT_RESPONSE = """
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/">
+            <responseDate>2021-07-04T00:00:29.482Z</responseDate>
+            <request verb="ListIdentifiers" metadataPrefix="oai_ddi">http://129.177.90.182/</request>
+            <ListIdentifiers>
+                <header>
+                    <identifier>http://nsddata.nsd.uib.no:80/obj/fStudy/NSD2200-2</identifier>
+                    <datestamp>2020-09-02T15:12:03+0000</datestamp>
+                </header>
+            </ListIdentifiers>
+        </OAI-PMH>""";
 
     @Test
     void shouldReturnRecordHeaders() throws IOException, SAXException
     {
         // Given
         var identifiers = new ListIdentifiers( new ByteArrayInputStream(
-                getListIdentifiersXMLResumptionEmpty().getBytes( UTF_8 )
+                GET_LIST_IDENTIFIERS_XML_RESUMPTION_EMPTY.getBytes( UTF_8 )
         ) );
 
         var identifiersIDs = identifiers.getIdentifiers();
 
         assertEquals( 3, identifiersIDs.size());
 
-        assertThat( identifiersIDs.stream().map( RecordHeader::getIdentifier ).collect( Collectors.toList()) )
+        assertThat( identifiersIDs.stream().map( RecordHeader::identifier ).collect( Collectors.toList()) )
             .containsExactlyInAnyOrder( "850229", "850232", "850235" );
     }
 
@@ -54,7 +55,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers( new ByteArrayInputStream(
-                getListIdentifiersXMLWithResumption().getBytes( UTF_8 )
+                GET_LIST_IDENTIFIERS_XML_WITH_RESUMPTION.getBytes( UTF_8 )
         ));
 
         assertEquals("3/6/7/ddi/null/2017-01-01/null", identifiers.getResumptionToken().orElseThrow() );
@@ -65,7 +66,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers(new ByteArrayInputStream(
-                getListIdentifiersXMLResumptionEmpty().getBytes( UTF_8 )
+                GET_LIST_IDENTIFIERS_XML_RESUMPTION_EMPTY.getBytes( UTF_8 )
         ));
 
         assertTrue( identifiers.getResumptionToken().isEmpty() );
@@ -76,7 +77,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers(new ByteArrayInputStream(
-                getListIdentifiersXMLWithResumptionLastList().getBytes( UTF_8 )
+                GET_LIST_IDENTIFIERS_XML_WITH_RESUMPTION_LAST_LIST.getBytes( UTF_8 )
         ));
 
         // Then
@@ -84,7 +85,7 @@ class ListIdentifiersTests
 
         assertEquals( 1, identifiersIDs.size());
 
-        assertEquals( "998", identifiersIDs.get( 0 ).getIdentifier() );
+        assertEquals( "998", identifiersIDs.get( 0 ).identifier() );
     }
 
     @Test
@@ -92,7 +93,7 @@ class ListIdentifiersTests
     {
         // Given
         var identifiers = new ListIdentifiers( new ByteArrayInputStream(
-                getListIdentifiersXMLWithCannotDisseminateFormatError().getBytes( UTF_8 )
+                GET_LIST_IDENTIFIERS_XML_WITH_CANNOT_DISSEMINATE_FORMAT_ERROR.getBytes( UTF_8 )
         ));
 
         // Then
@@ -119,7 +120,7 @@ class ListIdentifiersTests
         when( httpClient.getHttpResponse(
             URI.create("http://localhost:4556/?verb=ListIdentifiers&resumptionToken=" + encode( resumptionToken, UTF_8 ) ) )
         ).thenReturn( new ByteArrayInputStream(
-            getListIdentifiersXMLResumptionTokenNotMockedForInvalid().getBytes( UTF_8 )
+            GET_LIST_IDENTIFIERS_XML_RESUMPTION_TOKEN_NOT_MOCKED_FOR_INVALID.getBytes( UTF_8 )
         ));
 
         // Then
@@ -144,7 +145,7 @@ class ListIdentifiersTests
         var firstIdentifer = identifiersIDs.get( 0 );
 
         // Assert the header has the expected content
-        assertEquals( "http://nsddata.nsd.uib.no:80/obj/fStudy/NSD2200-2", firstIdentifer.getIdentifier() );
-        assertEquals( OffsetDateTime.parse( "2020-09-02T15:12:03Z" ), firstIdentifer.getDatestamp() );
+        assertEquals( "http://nsddata.nsd.uib.no:80/obj/fStudy/NSD2200-2", firstIdentifer.identifier() );
+        assertEquals( OffsetDateTime.parse( "2020-09-02T15:12:03Z" ), firstIdentifer.datestamp() );
     }
 }
