@@ -26,7 +26,7 @@ harvester:
     - url: http://services.fsd.uta.fi/v0/oai
       code: FSD
       metadataPrefixes: oai_ddi25
-    - url: https://dbkapps.gesis.org/dbkoai3
+    - url: https://dbkapps.gesis.org/dbkoai
       code: GESIS
       metadataPrefixes: oai_ddi25
     - url: https://snd.gu.se/en/oai-pmh
