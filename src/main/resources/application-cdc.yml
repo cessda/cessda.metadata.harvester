@@ -14,14 +14,23 @@ harvester:
   keepOAIEnvelope: true
   removeOAIEnvelope: true
   repos:
-    - url: https://oai.ukdataservice.ac.uk:8443/oai/provider
-      code: UKDS
-      metadataPrefixes: ddi
-    - url: https://kuha.sa.dk/v0/oai
-      code: DNA
+    - url: https://www.adp.fdv.uni-lj.si/v0/oai
+      code: ADP
       metadataPrefixes: oai_ddi25
     - url: http://194.117.18.18:6003/v0/oai
       code: APIS
+      metadataPrefixes: oai_ddi25
+    - url: https://data2.aussda.at/oai
+      code: AUSSDA
+      metadataPrefixes: oai_ddi
+    - url: http://nesstar.soc.cas.cz/oai-pmh/
+      code: CSDA
+      metadataPrefixes: oai_ddi 
+    - url: https://easy.dans.knaw.nl/oai/
+      code: DANS
+      metadataPrefixes: ["oai_ddi25_en", "oai_ddi25_nl"]
+    - url: https://kuha.sa.dk/v0/oai
+      code: DNA
       metadataPrefixes: oai_ddi25
     - url: http://services.fsd.uta.fi/v0/oai
       code: FSD
@@ -29,32 +38,28 @@ harvester:
     - url: https://dbkapps.gesis.org/dbkoai
       code: GESIS
       metadataPrefixes: oai_ddi25
-    - url: https://snd.gu.se/en/oai-pmh
-      code: SND
-      metadataPrefixes: oai_ddi25
-      sets: subject:social-sciences
-    - url: https://easy.dans.knaw.nl/oai/
-      code: DANS
-      metadataPrefixes: ["oai_ddi25_en", "oai_ddi25_nl"]
-    - url: https://data2.aussda.at/oai
-      code: AUSSDA
-      metadataPrefixes: oai_ddi
-    - url: https://www.adp.fdv.uni-lj.si/v0/oai
-      code: ADP
-      metadataPrefixes: oai_ddi25
     - url: https://oai-pmh.nsd.no/oai-pmh/
       code: NSD
       metadataPrefixes: oai_ddi
     - url: https://data.sciencespo.fr/oai
       code: ProgedoSciencesPo
       metadataPrefixes: oai_ddi
+    - url: https://147.213.4.44:6003/v0/oai
+      code: SASD
+      metadataPrefixes: oai_ddi25
+    - url: https://snd.gu.se/en/oai-pmh 
+      code: SND
+      metadataPrefixes: oai_ddi25
+      sets: subject:social-sciences
+    - url: https://www.sodha.be/oai
+      code: SODHA
+      metadataPrefixes: oai_ddi
     - url: https://datacatalogue.sodanet.gr/oai
       code: SoDaNet
       metadataPrefixes: oai_ddi
-      sets: CESSDA
+    - url: https://oai.ukdataservice.ac.uk:8443/oai/provider
+      code: UKDS
+      metadataPrefixes: ddi
     - url: http://nesstar.unidata.unimib.it/oai-pmh/
       code: UniData
       metadataPrefixes: oai_ddi
-    - url: http://nesstar.soc.cas.cz/oai-pmh/
-      metadataPrefixes: oai_ddi
-      code: CSDA
