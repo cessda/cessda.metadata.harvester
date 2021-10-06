@@ -52,7 +52,7 @@ import java.util.List;
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class ListSets extends HarvesterVerb implements Resumable
+public final class ListSets extends HarvesterVerb implements Resumable
 {
 	/**
 	 * Client-side ListSets verb constructor

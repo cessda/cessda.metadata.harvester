@@ -48,7 +48,7 @@ import java.util.Optional;
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class GetRecord extends HarvesterVerb
+public final class GetRecord extends HarvesterVerb
 {
     /**
 	 * Construct a new {@link GetRecord} from an {@link InputStream}.

@@ -51,7 +51,7 @@ import java.util.Objects;
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class ListMetadataFormats extends HarvesterVerb
+public final class ListMetadataFormats extends HarvesterVerb
 {
 	/**
 	 * Client-side ListMetadataFormats verb constructor
