@@ -60,6 +60,6 @@ harvester:
     - url: https://oai.ukdataservice.ac.uk:8443/oai/provider
       code: UKDS
       metadataPrefixes: ddi
-    - url: http://nesstar.unidata.unimib.it/oai-pmh/
+    - url: http://oai.unidata.unimib.it/v0/oai
       code: UniData
-      metadataPrefixes: oai_ddi
+      metadataPrefixes: oai_ddi25
