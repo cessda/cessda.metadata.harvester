@@ -44,7 +44,7 @@ harvester:
     - url: https://data.sciencespo.fr/oai
       code: ProgedoSciencesPo
       metadataPrefixes: oai_ddi
-    - url: https://147.213.4.44:6003/v0/oai
+    - url: http://147.213.4.44:6003/v0/oai
       code: SASD
       metadataPrefixes: oai_ddi25
     - url: https://snd.gu.se/en/oai-pmh 
