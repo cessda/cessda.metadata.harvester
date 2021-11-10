@@ -70,7 +70,7 @@ import static java.time.format.DateTimeFormatter.ISO_OFFSET_TIME;
  *
  * @author Jefffrey A. Young, OCLC Online Computer Library Center
  */
-public abstract class HarvesterVerb
+public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIdentifiers, ListMetadataFormats, ListRecords, ListSets
 {
 	/* Primary OAI namespaces */
 	protected static final String OAI_2_0_NAMESPACE = "http://www.openarchives.org/OAI/2.0/";
@@ -85,12 +85,10 @@ public abstract class HarvesterVerb
     /** A formatter that supports all the date formats returned by OAI-PMH repositories. */
     protected static final DateTimeFormatter OAI_DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
         .append( ISO_LOCAL_DATE )
-        .appendOptional( new DateTimeFormatterBuilder()
-            .parseCaseInsensitive()
-            .appendLiteral( "T" )
-            .append( ISO_OFFSET_TIME )
-            .toFormatter()
-        ).toFormatter();
+        .optionalStart()
+        .appendLiteral( 'T' )
+        .append( ISO_OFFSET_TIME )
+        .toFormatter();
 
     private static final Element namespaceElement;
 	private static final DocumentBuilderFactory factory;
@@ -198,6 +196,9 @@ public abstract class HarvesterVerb
                     datestamp = OAI_DATE_TIME_FORMATTER.parseBest( datestampString, OffsetDateTime::from, LocalDate::from );
                 }
                 case "setSpec" -> sets.add( node.getTextContent() );
+                default -> {
+                    // Unknown node name, do nothing.
+                }
             }
         }
 

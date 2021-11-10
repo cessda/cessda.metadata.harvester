@@ -53,7 +53,7 @@ import java.util.Objects;
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class ListIdentifiers extends HarvesterVerb implements Resumable
+public final class ListIdentifiers extends HarvesterVerb implements Resumable
 {
 	/**
 	 * Client-side ListIdentifiers verb constructor

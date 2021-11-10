@@ -48,7 +48,7 @@ import java.util.NoSuchElementException;
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class Identify extends HarvesterVerb
+public final class Identify extends HarvesterVerb
 {
 	/**
 	 * Client-side Identify verb constructor

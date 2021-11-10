@@ -51,7 +51,7 @@ import java.time.LocalDate;
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public class ListRecords extends HarvesterVerb implements Resumable
+public final class ListRecords extends HarvesterVerb implements Resumable
 {
 	/**
 	 * Client-side ListRecords verb constructor
@@ -97,14 +97,9 @@ public class ListRecords extends HarvesterVerb implements Resumable
 	 *
 	 * @return a String containing the query portion of the http request
 	 */
-	private static URI getRequestURL(
-			URI baseURL,
-			LocalDate from,
-			LocalDate until,
-			String set,
-			String metadataPrefix )
+	private static URI getRequestURL( URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix )
 	{
-		StringBuilder requestURL = new StringBuilder( baseURL.toString() );
+		var requestURL = new StringBuilder( baseURL.toString() );
 		requestURL.append( "?verb=ListRecords" );
 		if ( from != null )
 		{
