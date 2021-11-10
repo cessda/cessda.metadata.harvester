@@ -39,7 +39,6 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -55,11 +54,11 @@ import java.util.List;
 public final class ListSets extends HarvesterVerb implements Resumable
 {
 	/**
-	 * Client-side ListSets verb constructor
+	 * Client-side ListSets verb constructor.
 	 *
-	 * @param baseURL the baseURL of the server to be queried
-	 * @throws MalformedURLException the baseURL is bad
-	 * @throws IOException           an I/O error occurred
+	 * @param is the input stream to construct from.
+	 * @throws SAXException if an error occurs parsing the XML.
+	 * @throws IOException          if an I/O error occurred.
 	 */
 	ListSets( InputStream is ) throws IOException, SAXException
 	{
@@ -99,10 +98,9 @@ public final class ListSets extends HarvesterVerb implements Resumable
 	}
 
 	/**
-	 * Generate a ListSets request for the given baseURL
+	 * Generate a ListSets URI for the given baseURL
 	 *
-	 * @param baseURL
-	 * @return
+	 * @param baseURL the base URL of the OAI-PMH repository.
 	 */
 	private static URI getRequestURL( URI baseURL )
 	{
@@ -112,9 +110,8 @@ public final class ListSets extends HarvesterVerb implements Resumable
 	/**
 	 * Construct the query portion of the http request (resumptionToken version)
 	 *
-	 * @param baseURL
-	 * @param resumptionToken
-	 * @return
+	 * @param baseURL the base URL of the OAI-PMH repository.
+	 * @param resumptionToken the resumption token.
 	 */
 	private static URI getRequestURL( URI baseURL, String resumptionToken )
 	{

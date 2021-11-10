@@ -85,12 +85,10 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
     /** A formatter that supports all the date formats returned by OAI-PMH repositories. */
     protected static final DateTimeFormatter OAI_DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
         .append( ISO_LOCAL_DATE )
-        .appendOptional( new DateTimeFormatterBuilder()
-            .parseCaseInsensitive()
-            .appendLiteral( "T" )
-            .append( ISO_OFFSET_TIME )
-            .toFormatter()
-        ).toFormatter();
+        .optionalStart()
+        .appendLiteral( 'T' )
+        .append( ISO_OFFSET_TIME )
+        .toFormatter();
 
     private static final Element namespaceElement;
 	private static final DocumentBuilderFactory factory;
