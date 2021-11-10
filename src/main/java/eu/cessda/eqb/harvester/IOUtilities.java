@@ -1,5 +1,6 @@
 package eu.cessda.eqb.harvester;
 
+import org.oclc.oai.harvester2.verb.RecordHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -11,8 +12,16 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.file.DirectoryIteratorException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Component
 public class IOUtilities
@@ -60,6 +69,41 @@ public class IOUtilities
         {
             log.trace( "Writing to {}", destination );
             factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
+        }
+    }
+
+    /**
+     * Remove any records that are present in the destination directory, but are not declared in the repository.
+     * @param repo the source repository.
+     * @param records the list of records harvested from the repository.
+     * @param destinationPath the destination path.
+     */
+    void deleteOrphanedRecords( Repo repo, Collection<RecordHeader> records, Path destinationPath )
+    {
+        try ( var stream = Files.newDirectoryStream( destinationPath ) )
+        {
+            // Collect encountered identifiers to a HashSet, this will be used for comparisons
+            var recordIdentifiers = records.stream().map( RecordHeader::identifier )
+                .map( identifier -> URLEncoder.encode( identifier, UTF_8 ) + ".xml" )
+                .collect( Collectors.toCollection( HashSet::new ) );
+
+            // Select records not discovered by the repository
+            StreamSupport.stream( stream.spliterator(), false )
+                .filter( fileName -> !recordIdentifiers.contains( fileName.getFileName().toString() ) )
+                // Delete the records.
+                .forEach( path -> {
+                    try
+                    {
+                        Files.delete( path );
+                        log.debug( "{}: Deleted {}", repo.getCode(), path );
+                    } catch ( IOException e ) {
+                        log.warn( "{}: Couldn't delete {}: {}", repo.getCode(), path, e.toString() );
+                    }
+                } );
+        }
+        catch ( DirectoryIteratorException | IOException e )
+        {
+            log.warn( "{}: Couldn't clean up: {}", repo.getCode(), e.toString() );
         }
     }
 }
