@@ -16,7 +16,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -89,6 +88,7 @@ public class IOUtilities
      * @param records the list of records harvested from the repository.
      * @param destinationPath the destination path.
      */
+    @SuppressWarnings( "java:S1141" )
     static void deleteOrphanedRecords( Repo repo, Collection<RecordHeader> records, Path destinationPath )
     {
         try ( var stream = Files.newDirectoryStream( destinationPath ) )
@@ -99,18 +99,22 @@ public class IOUtilities
                 .collect( Collectors.toCollection( HashSet::new ) );
 
             // Select records not discovered by the repository
-            StreamSupport.stream( stream.spliterator(), false )
-                .filter( fileName -> !recordIdentifiers.contains( fileName.getFileName().toString() ) )
-                // Delete the records.
-                .forEach( path -> {
+            for ( var fileName : stream )
+            {
+                if ( !recordIdentifiers.contains( fileName.getFileName().toString() ) )
+                {
                     try
                     {
-                        Files.delete( path );
-                        log.debug( "{}: Deleted {}", repo.getCode(), path );
-                    } catch ( IOException e ) {
-                        log.warn( "{}: Couldn't delete {}: {}", repo.getCode(), path, e.toString() );
+                        // Delete the records.
+                        Files.delete( fileName );
+                        log.debug( "{}: Deleted {}", repo.getCode(), fileName );
                     }
-                } );
+                    catch ( IOException e )
+                    {
+                        log.warn( "{}: Couldn't delete {}: {}", repo.getCode(), fileName, e.toString() );
+                    }
+                }
+            }
         }
         catch ( DirectoryIteratorException | IOException e )
         {
