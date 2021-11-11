@@ -6,10 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.xml.XMLConstants;
-import javax.xml.transform.Source;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -28,27 +25,34 @@ public class IOUtilities
 {
     private static final Logger log = LoggerFactory.getLogger( IOUtilities.class );
 
-    private final TransformerFactory factory;
-
-    public IOUtilities() throws TransformerConfigurationException
-    {
-        factory = TransformerFactory.newInstance();
-        factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
-    }
+    @SuppressWarnings( "java:S5164" ) // This application is not a server application.
+    private final ThreadLocal<Transformer> transformerThreadLocal = ThreadLocal.withInitial( () -> {
+        try
+        {
+            var factory = TransformerFactory.newInstance();
+            factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
+            return factory.newTransformer();
+        }
+        catch ( TransformerConfigurationException e )
+        {
+            throw new IllegalStateException(e);
+        }
+    } );
 
     /**
      * Creates the destination directory for this repository.
      * @param destinationDirectory the base directory.
      * @param repositoryDirectory the name of the repository.
      * @throws DirectoryCreationFailedException if the directory cannot be created.
+     * @return the created directory.
      */
-    void createDestinationDirectory( Path destinationDirectory, Path repositoryDirectory ) throws DirectoryCreationFailedException
+    static Path createDestinationDirectory( Path destinationDirectory, Path repositoryDirectory ) throws DirectoryCreationFailedException
     {
         var outputDirectory = destinationDirectory.resolve( repositoryDirectory );
         try
         {
             log.debug( "Creating destination directory: {}", outputDirectory );
-            Files.createDirectories( outputDirectory );
+            return Files.createDirectories( outputDirectory );
         }
         catch ( IOException e )
         {
@@ -65,10 +69,17 @@ public class IOUtilities
      */
     void writeDomSource( Source source, Path destination ) throws IOException, TransformerException
     {
+        var transformer = transformerThreadLocal.get();
+
         try ( var fOutputStream = Files.newOutputStream( destination ) )
         {
             log.trace( "Writing to {}", destination );
-            factory.newTransformer().transform( source, new StreamResult( fOutputStream ) );
+            transformer.transform( source, new StreamResult( fOutputStream ) );
+        }
+        finally
+        {
+            // Always reset the transformer before returning.
+            transformer.reset();
         }
     }
 
@@ -78,7 +89,7 @@ public class IOUtilities
      * @param records the list of records harvested from the repository.
      * @param destinationPath the destination path.
      */
-    void deleteOrphanedRecords( Repo repo, Collection<RecordHeader> records, Path destinationPath )
+    static void deleteOrphanedRecords( Repo repo, Collection<RecordHeader> records, Path destinationPath )
     {
         try ( var stream = Files.newDirectoryStream( destinationPath ) )
         {

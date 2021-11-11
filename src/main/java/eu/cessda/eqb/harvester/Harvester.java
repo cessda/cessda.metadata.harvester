@@ -219,13 +219,13 @@ public class Harvester implements CommandLineRunner
             if ( harvesterConfiguration.keepOAIEnvelope() )
             {
                 var wrappedDirectory = harvesterConfiguration.getDir().resolve( WRAPPED_DIRECTORY_NAME );
-                ioUtilities.createDestinationDirectory( wrappedDirectory, repositoryDirectory );
+                IOUtilities.createDestinationDirectory( wrappedDirectory, repositoryDirectory );
             }
 
             if ( harvesterConfiguration.removeOAIEnvelope() )
             {
                 var unwrappedDirectory = harvesterConfiguration.getDir().resolve( UNWRAPPED_DIRECTORY_NAME );
-                ioUtilities.createDestinationDirectory( unwrappedDirectory, repositoryDirectory );
+                IOUtilities.createDestinationDirectory( unwrappedDirectory, repositoryDirectory );
             }
 
             log.debug( "{}: Set: {}: Prefix: {} Fetching records.", repo.getCode(), setspec, metadataPrefix );
@@ -335,8 +335,8 @@ public class Harvester implements CommandLineRunner
         if (!harvesterConfiguration.incremental())
         {
             log.info( "{}: Removing orphaned records.", value( REPO_NAME, repo.getCode()));
-            ioUtilities.deleteOrphanedRecords( repo, records, unwrappedDirectory );
-            ioUtilities.deleteOrphanedRecords( repo, records, wrappedDirectory );
+            IOUtilities.deleteOrphanedRecords( repo, records, unwrappedDirectory );
+            IOUtilities.deleteOrphanedRecords( repo, records, wrappedDirectory );
         }
 
         return retrievedRecords;
