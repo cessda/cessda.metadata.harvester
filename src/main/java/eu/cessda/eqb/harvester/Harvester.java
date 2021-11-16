@@ -219,16 +219,16 @@ public class Harvester implements CommandLineRunner
             if ( harvesterConfiguration.keepOAIEnvelope() )
             {
                 var wrappedDirectory = harvesterConfiguration.getDir().resolve( WRAPPED_DIRECTORY_NAME );
-                ioUtilities.createDestinationDirectory( wrappedDirectory, repositoryDirectory );
+                IOUtilities.createDestinationDirectory( wrappedDirectory, repositoryDirectory );
             }
 
             if ( harvesterConfiguration.removeOAIEnvelope() )
             {
                 var unwrappedDirectory = harvesterConfiguration.getDir().resolve( UNWRAPPED_DIRECTORY_NAME );
-                ioUtilities.createDestinationDirectory( unwrappedDirectory, repositoryDirectory );
+                IOUtilities.createDestinationDirectory( unwrappedDirectory, repositoryDirectory );
             }
 
-            log.debug( "{}: Set: {}: Prefix: {} Fetching records", repo.getCode(), setspec, metadataPrefix );
+            log.debug( "{}: Set: {}: Prefix: {} Fetching records.", repo.getCode(), setspec, metadataPrefix );
 
             var recordIdentifiers = repositoryClient.retrieveRecordHeaders( repo, setspec, metadataPrefix, fromDate );
 
@@ -261,6 +261,14 @@ public class Harvester implements CommandLineRunner
     {
         int retrievedRecords = 0;
 
+        // Destination directories
+        var unwrappedDirectory = harvesterConfiguration.getDir()
+            .resolve( UNWRAPPED_DIRECTORY_NAME )
+            .resolve( repoDirectory );
+        var wrappedDirectory = harvesterConfiguration.getDir()
+            .resolve( Harvester.WRAPPED_DIRECTORY_NAME )
+            .resolve( repoDirectory );
+
         for ( var currentRecord : records )
         {
             var fileName = URLEncoder.encode( currentRecord.identifier(), UTF_8 ) + ".xml";
@@ -289,10 +297,7 @@ public class Harvester implements CommandLineRunner
                 if (harvesterConfiguration.removeOAIEnvelope())
                 {
                     var metadata = pmhRecord.getMetadata();
-                    var destinationFile = harvesterConfiguration.getDir()
-                        .resolve( UNWRAPPED_DIRECTORY_NAME )
-                        .resolve( repoDirectory )
-                        .resolve( fileName );
+                    var destinationFile = unwrappedDirectory.resolve( fileName );
 
                     if (metadata.isPresent())
                     {
@@ -309,10 +314,7 @@ public class Harvester implements CommandLineRunner
                 // Keep envelope
                 if (harvesterConfiguration.keepOAIEnvelope())
                 {
-                    var destinationFile = harvesterConfiguration.getDir()
-                        .resolve( WRAPPED_DIRECTORY_NAME )
-                        .resolve( repoDirectory )
-                        .resolve( fileName );
+                    var destinationFile = wrappedDirectory.resolve( fileName );
                     var source = new DOMSource( pmhRecord.getDocument() );
                     ioUtilities.writeDomSource( source, destinationFile );
                 }
@@ -327,6 +329,14 @@ public class Harvester implements CommandLineRunner
                         value( LoggingConstants.EXCEPTION_MESSAGE, e1.getMessage())
                 );
             }
+        }
+
+        // Clean up - this should only run on full harvests.
+        if (!harvesterConfiguration.incremental())
+        {
+            log.info( "{}: Removing orphaned records.", value( REPO_NAME, repo.getCode()));
+            IOUtilities.deleteOrphanedRecords( repo, records, unwrappedDirectory );
+            IOUtilities.deleteOrphanedRecords( repo, records, wrappedDirectory );
         }
 
         return retrievedRecords;
