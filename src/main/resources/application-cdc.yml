@@ -51,6 +51,10 @@ harvester:
       code: SND
       metadataPrefixes: oai_ddi25
       sets: subject:social-sciences
+      # DDI 3.2 - for EQB
+    - url: https://snd.gu.se/en/oai-pmh
+      code: SND
+      metadataPrefixes: ddi_3_2
     - url: https://www.sodha.be/oai
       code: SODHA
       metadataPrefixes: oai_ddi
