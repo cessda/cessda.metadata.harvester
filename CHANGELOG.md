@@ -13,11 +13,12 @@
 * Log OAI-PMH errors ([#14](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/14))
 * Output both wrapped and unwrapped metadata records ([#14](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/14))
 * Added JSON logging support ([#12](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/12))
-* Handle records marked as deleted in an OAI-PMH repository ([#18](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/))
+* Handle records marked as deleted in an OAI-PMH repository ([#18](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/18))
+* Delete orphaned records, which are records present locally but are not advertised in the source repository, after full runs ([#25](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/25))
 
 ### Fixed
 
-* Handle the NSD/NESSTAR date format ([#19](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/19))
+* Correctly handle the NSD/NESSTAR date format ([#19](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/19))
 
 ### Changed
 
