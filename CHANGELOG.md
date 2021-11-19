@@ -2,7 +2,40 @@
 
 ## [Unreleased]
 
+## [2.0.0] 2021-06-23
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5711128.svg)](https://doi.org/10.5281/zenodo.5711128)
+
+### Added
+
+* The harvester can now accept configuring repositories with different metadata prefixes ([#11](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/11))
+* Added the ability to harvest each repository in parallel ([#11](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/11))
+* Log OAI-PMH errors ([#14](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/14))
+* Output both wrapped and unwrapped metadata records ([#14](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/14))
+* Added JSON logging support ([#12](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/12))
+* Handle records marked as deleted in an OAI-PMH repository ([#18](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/18))
+* Delete orphaned records, which are records present locally but are not advertised in the source repository, after full runs ([#25](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/25))
+
+### Fixed
+
+* Correctly handle the NSD/NESSTAR date format ([#19](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/19))
+
+### Changed
+
+* Set discovery is now disabled by default ([#11](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/11))
+* The harvester now exits after completion of a harvest
+* Use the Java 11 HTTP client to perform HTTP requests ([#17](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/17))
+* Improved the test coverage of the harvester ([#16](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/16))
+* Updated OpenJDK to 17 ([#21](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/21))
+
+### Removed
+
+* Removed support for sending email notifications when errors are encountered
+* Removed internal scheduling support
+* Removed Spring Boot Admin support
+
 ## [1.0.1]
+
 ### Added
 * License header in Java source files
 * Added tests
