@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [2.0.0] 2021-06-23
+## [2.0.0] 2021-11-25
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5711128.svg)](https://doi.org/10.5281/zenodo.5711128)
 
