@@ -30,9 +30,10 @@ harvester:
     - url: https://easy.dans.knaw.nl/oai/
       code: DANS
       metadataPrefixes: ["oai_ddi25_en", "oai_ddi25_nl"]
+    # Changed metadata prefix. See #388
     - url: https://kuha.sa.dk/v0/oai
       code: DNA
-      metadataPrefixes: oai_ddi25
+      metadataPrefixes: ddi_c
     - url: http://services.fsd.uta.fi/v0/oai
       code: FSD
       metadataPrefixes: oai_ddi25
@@ -45,9 +46,10 @@ harvester:
     - url: https://data.sciencespo.fr/oai
       code: ProgedoSciencesPo
       metadataPrefixes: oai_ddi
+    # Changed metadata prefix. See #388
     - url: http://147.213.4.44:6003/v0/oai
       code: SASD
-      metadataPrefixes: oai_ddi25
+      metadataPrefixes: ddi_c
     - url: https://snd.gu.se/en/oai-pmh 
       code: SND
       metadataPrefixes: oai_ddi25
