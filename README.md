@@ -43,7 +43,7 @@ java -jar oaiharvester.jar --spring.profiles.active=ukda
 ## Configuration
 
 The following properties are related to the harvesting process and extend the standard spring boot properties.
-Each of them can be overwritten in the command line such as 
+Each of them can be overwritten in the command line such as
 
 
 ```bash

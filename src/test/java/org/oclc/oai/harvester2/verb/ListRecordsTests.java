@@ -1,12 +1,16 @@
 package org.oclc.oai.harvester2.verb;
 
+import eu.cessda.eqb.harvester.HttpClient;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -95,5 +99,21 @@ class ListRecordsTests
             "deleted",
             deletedHeader.getAttributes().getNamedItem( "status" ).getTextContent()
         );
+    }
+
+    @Test
+    void shouldHandleResumptionToken() throws IOException, SAXException
+    {
+        // When
+        var token = UUID.randomUUID();
+        var baseURL = URI.create( "http://localhost:8012/oai" );
+
+        var httpClient = Mockito.mock( HttpClient.class );
+        Mockito.when( httpClient.getHttpResponse(  URI.create(baseURL + "?verb=ListRecords&resumptionToken=" + token ) ) )
+            .thenReturn( new ByteArrayInputStream( LIST_RECORDS_RESPONSE.getBytes( StandardCharsets.UTF_8 ) ) );
+
+        // Then
+        var recordList = ListRecords.instance( httpClient, baseURL, token.toString() );
+        assertEquals( 2, recordList.getRecords().getLength() );
     }
 }

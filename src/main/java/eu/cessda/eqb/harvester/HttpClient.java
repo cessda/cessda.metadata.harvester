@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 
 import static java.io.InputStream.nullInputStream;
 import static java.net.http.HttpClient.Redirect.NORMAL;
@@ -50,13 +49,7 @@ public class HttpClient
 
             if ( responseCode >= 400 )
             {
-                try ( var stream = response.body() )
-                {
-                    throw new IOException( String.format( "Server returned %d, body: %s",
-                        responseCode,
-                        new String( stream.readAllBytes(), StandardCharsets.UTF_8 )
-                    ) );
-                }
+                throw new HTTPException( requestURL, response.statusCode() );
             }
 
             return response.body();

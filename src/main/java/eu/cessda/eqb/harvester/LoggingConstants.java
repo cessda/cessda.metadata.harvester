@@ -9,7 +9,7 @@ import net.logstash.logback.encoder.LogstashEncoder;
 
 import static org.slf4j.Logger.ROOT_LOGGER_NAME;
 
-class LoggingConstants extends ContextAwareBase implements Configurator
+public class LoggingConstants extends ContextAwareBase implements Configurator
 {
     static final String REPO_NAME = "repo_name";
     static final String OAI_RECORD = "oai_record";
@@ -20,7 +20,7 @@ class LoggingConstants extends ContextAwareBase implements Configurator
     static final String EXCEPTION_MESSAGE = "exception_message";
     static final String EXCEPTION_NAME = "exception_name";
 
-    private LoggingConstants() {}
+    public LoggingConstants() {}
 
     @Override
     public void configure( LoggerContext loggerContext )
