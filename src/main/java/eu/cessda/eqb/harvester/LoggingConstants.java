@@ -19,6 +19,8 @@ public class LoggingConstants extends ContextAwareBase implements Configurator
     static final String OAI_SET = "oai_set";
     static final String EXCEPTION_MESSAGE = "exception_message";
     static final String EXCEPTION_NAME = "exception_name";
+    static final String RETRIEVED_RECORDS = "retrieved_records";
+    static final String RETRIEVED_RECORD_HEADERS = "retrieved_record_headers";
 
     public LoggingConstants() {}
 

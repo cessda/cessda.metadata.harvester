@@ -235,16 +235,16 @@ public class Harvester implements CommandLineRunner
             log.info( "{}: Set: {}: Retrieved {} record headers.",
                     value( REPO_NAME, repo.getCode() ),
                     value( OAI_SET, setspec ),
-                    recordIdentifiers.size()
+                    value( RETRIEVED_RECORD_HEADERS, recordIdentifiers.size())
             );
 
             retrievedRecords += harvestRecords( recordIdentifiers, repo, metadataPrefix, repositoryDirectory );
         }
 
         log.info( "{}: Set: {}: Retrieved {} records.",
-                value(OAI_RECORD, repo.getCode()),
-                value(OAI_SET, setspec),
-                retrievedRecords
+                value( OAI_RECORD, repo.getCode() ),
+                value( OAI_SET, setspec ),
+                value( RETRIEVED_RECORDS, retrievedRecords )
         );
     }
 
