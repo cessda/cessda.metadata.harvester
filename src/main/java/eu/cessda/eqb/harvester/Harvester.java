@@ -23,6 +23,7 @@ import org.oclc.oai.harvester2.verb.GetRecord;
 import org.oclc.oai.harvester2.verb.RecordHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner;
 import org.springframework.boot.CommandLineRunner;
@@ -39,6 +40,7 @@ import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -140,6 +142,7 @@ public class Harvester implements CommandLineRunner
      */
     private void runHarvest( LocalDate fromDate )
     {
+        var runId = OffsetDateTime.now().toString();
 
         log.info( "Harvesting started from {}", fromDate );
 
@@ -153,7 +156,11 @@ public class Harvester implements CommandLineRunner
 
         // Start the harvest for each repository
         var futures = repositories.stream().map( repo ->
-                CompletableFuture.runAsync( () -> harvestRepository( fromDate, repo ), executor )
+                CompletableFuture.runAsync( () -> {
+                    MDC.put( HARVESTER_RUN, runId );
+                    harvestRepository( fromDate, repo );
+                    MDC.remove( HARVESTER_RUN );
+                }, executor )
         ).toArray(CompletableFuture[]::new);
 
         try
@@ -162,7 +169,9 @@ public class Harvester implements CommandLineRunner
         }
         catch ( CancellationException | CompletionException e )
         {
+            MDC.put( HARVESTER_RUN, runId );
             log.error("Unexpected error occurred when harvesting!", e);
+            MDC.remove( HARVESTER_RUN );
         }
 
         executor.shutdown();

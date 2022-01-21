@@ -11,6 +11,7 @@ import static org.slf4j.Logger.ROOT_LOGGER_NAME;
 
 public class LoggingConstants extends ContextAwareBase implements Configurator
 {
+    static final String HARVESTER_RUN = "harvester_run_id";
     static final String REPO_NAME = "repo_name";
     static final String OAI_RECORD = "oai_record";
     static final String OAI_ERROR_CODE = "oai_error_code";
