@@ -45,9 +45,10 @@ harvester:
     - url: https://oai-pmh.nsd.no/oai-pmh/
       code: NSD
       metadataPrefixes: oai_ddi
-    - url: https://data.sciencespo.fr/oai
+       # Changed URL and metadata prefix (see #403)
+    - url: https://data.progedo.fr/oai
       code: ProgedoSciencesPo
-      metadataPrefixes: oai_ddi
+      metadataPrefixes: oai_ddi25
     # Changed metadata prefix. See #388
     - url: http://147.213.4.44:6003/v0/oai
       code: SASD
