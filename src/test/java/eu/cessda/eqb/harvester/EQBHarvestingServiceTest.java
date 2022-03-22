@@ -2,7 +2,6 @@ package eu.cessda.eqb.harvester;
 
 import org.junit.jupiter.api.Test;
 
-import javax.xml.transform.TransformerConfigurationException;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -21,16 +20,21 @@ class EQBHarvestingServiceTest
 {
 	private final Harvester harvester;
 
-	public EQBHarvestingServiceTest() throws TransformerConfigurationException, IOException
+	public EQBHarvestingServiceTest() throws IOException
     {
 		var harvesterConfiguration = new HarvesterConfiguration();
 		harvesterConfiguration.setDir( Path.of("data2") );
 		harvesterConfiguration.setFrom( new HarvesterConfiguration.From() );
 		harvesterConfiguration.setTimeout( Duration.ofSeconds( 10 ) );
-		var repo = new Repo();
-		repo.setCode( "TEST" );
-		repo.setUrl( URI.create( "http://localhost:8080/v0/oai?set=study_group:paihde" ) );
-		repo.setMetadataPrefixes( Collections.singleton("oai_ddi") );
+		var repo = new Repo(
+            Collections.singleton(new Repo.MetadataFormat(null,"oai_ddi", "DDI_2_5", URI.create( "https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml" ) ) ),
+            "TEST",
+            null,
+            URI.create( "http://localhost:8080/v0/oai?set=study_group:paihde" ),
+            false,
+            "en",
+            "BASIC"
+        );
 		harvesterConfiguration.getRepos().add( repo );
 
         var httpClient = mock( HttpClient.class );

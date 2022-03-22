@@ -6,7 +6,7 @@ import java.nio.file.Path;
 /**
  * Thrown when creating the output directory fails.
  */
-class DirectoryCreationFailedException extends HarvesterFailedException
+class DirectoryCreationFailedException extends Exception
 {
     @Serial
     private static final long serialVersionUID = 1L;

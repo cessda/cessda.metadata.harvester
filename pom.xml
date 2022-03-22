@@ -6,7 +6,7 @@
 
 	<groupId>eu.cessda.eqb</groupId>
 	<artifactId>oaiharvester</artifactId>
-	<version>2.0.0-SNAPSHOT</version>
+	<version>3.0.0-SNAPSHOT</version>
 	<name>CESSDA Euro Question Bank: Metadata Harvester</name>
 	<description>
 		A microservice for harvesting metadata made available by third parties by using the Open Archives
