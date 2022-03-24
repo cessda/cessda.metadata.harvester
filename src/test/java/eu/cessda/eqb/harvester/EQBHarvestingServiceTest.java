@@ -24,7 +24,7 @@ class EQBHarvestingServiceTest
     {
 		var harvesterConfiguration = new HarvesterConfiguration();
 		harvesterConfiguration.setDir( Path.of("data2") );
-		harvesterConfiguration.setFrom( new HarvesterConfiguration.From() );
+		harvesterConfiguration.setFrom( new HarvesterConfiguration.From(null) );
 		harvesterConfiguration.setTimeout( Duration.ofSeconds( 10 ) );
 		var repo = new Repo(
             Collections.singleton(new Repo.MetadataFormat(null,"oai_ddi", "DDI_2_5", URI.create( "https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml" ) ) ),

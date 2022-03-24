@@ -1,5 +1,6 @@
 package eu.cessda.eqb.harvester;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.util.Set;
 
@@ -21,7 +22,7 @@ public record Repo(
     boolean discoverSets,
     String defaultLanguage,
     String validationGate
-)
+) implements Serializable
 {
-    record MetadataFormat(String setSpec, String metadataPrefix, String ddiVersion, URI validationProfile) {}
+    record MetadataFormat(String setSpec, String metadataPrefix, String ddiVersion, URI validationProfile) implements Serializable {}
 }

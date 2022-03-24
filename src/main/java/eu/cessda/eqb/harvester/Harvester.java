@@ -120,9 +120,9 @@ public class Harvester implements CommandLineRunner
 
         final LocalDate incremental;
 
-        if ( from != null && from.getIncremental() != null )
+        if ( from != null && from.incremental() != null )
         {
-            incremental = from.getIncremental();
+            incremental = from.incremental();
         }
         else
         {

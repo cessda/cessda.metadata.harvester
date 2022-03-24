@@ -1,5 +1,6 @@
 package eu.cessda.eqb.harvester;
 
+import java.io.Serial;
 import java.util.Optional;
 
 /**
@@ -7,6 +8,7 @@ import java.util.Optional;
  */
 public class RecordHeaderException extends Exception
 {
+    @Serial
     private static final long serialVersionUID = 5629333665262898326L;
 
     private final Repo repo;

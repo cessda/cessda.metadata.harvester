@@ -1,15 +1,6 @@
 package eu.cessda.eqb.harvester;
 
-import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.Configurator;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.ConsoleAppender;
-import ch.qos.logback.core.spi.ContextAwareBase;
-import net.logstash.logback.encoder.LogstashEncoder;
-
-import static org.slf4j.Logger.ROOT_LOGGER_NAME;
-
-public class LoggingConstants extends ContextAwareBase implements Configurator
+public class LoggingConstants
 {
     static final String HARVESTER_RUN = "harvester_run_id";
     static final String REPO_NAME = "repo_name";
@@ -23,22 +14,5 @@ public class LoggingConstants extends ContextAwareBase implements Configurator
     static final String RETRIEVED_RECORDS = "retrieved_records";
     static final String RETRIEVED_RECORD_HEADERS = "retrieved_record_headers";
 
-    public LoggingConstants() {}
-
-    @Override
-    public void configure( LoggerContext loggerContext )
-    {
-        var consoleAppender = new ConsoleAppender<ILoggingEvent>();
-        consoleAppender.setContext( loggerContext );
-
-        var jsonEncoder = new LogstashEncoder();
-        jsonEncoder.setContext( loggerContext );
-        jsonEncoder.start();
-
-        consoleAppender.setEncoder( jsonEncoder );
-        consoleAppender.start();
-
-        var rootLogger = loggerContext.getLogger( ROOT_LOGGER_NAME );
-        rootLogger.addAppender(consoleAppender);
-    }
+    private LoggingConstants() {}
 }
