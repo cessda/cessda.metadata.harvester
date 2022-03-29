@@ -45,9 +45,11 @@ harvester:
     - url: https://oai-pmh.nsd.no/oai-pmh/
       code: NSD
       metadataPrefixes: oai_ddi
-    - url: https://data.sciencespo.fr/oai
-      code: ProgedoSciencesPo
-      metadataPrefixes: oai_ddi   
+    # Temporarily excluded, has same content as ProgedoCDSP
+    #- url: https://data.sciencespo.fr/oai
+    #  code: ProgedoSciencesPo
+    #  metadataPrefixes: oai_ddi
+    #  sets: CDSP   
     # Added endpoint (see #403)
     - url: https://data.progedo.fr/oai
       code: ProgedoCDSP
@@ -67,6 +69,7 @@ harvester:
     - url: https://www.sodha.be/oai
       code: SODHA
       metadataPrefixes: oai_ddi
+      sets: SODHA_CDC
     - url: https://datacatalogue.sodanet.gr/oai
       code: SoDaNet
       metadataPrefixes: oai_ddi
