@@ -69,7 +69,6 @@ harvester:
     - url: https://dbkapps.gesis.org/dbkoai
       code: GESIS
       validationGate: BASIC
-      discoverSets: true
       metadataPrefixes:
         - metadataPrefix: oai_ddi25
           ddiVersion: DDI_2_5
@@ -81,9 +80,14 @@ harvester:
         - metadataPrefix: oai_ddi
           ddiVersion: NESSTAR
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-1.2.2/latest/profile.xml
-       # Changed URL and metadata prefix (see #403)
+    # Temporarily excluded, has same content as ProgedoCDSP
+    #- url: https://data.sciencespo.fr/oai
+    #  code: ProgedoSciencesPo
+    #  metadataPrefixes: oai_ddi
+    #  sets: CDSP
+    # Added endpoint (see #403)
     - url: https://data.progedo.fr/oai
-      code: ProgedoSciencesPo
+      code: ProgedoCDSP
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi25
@@ -119,6 +123,7 @@ harvester:
       metadataPrefixes:
         - metadataPrefix: oai_ddi
           ddiVersion: DDI_2_5
+          setSpec: SODHA_CDC
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://datacatalogue.sodanet.gr/oai
       code: SoDaNet
