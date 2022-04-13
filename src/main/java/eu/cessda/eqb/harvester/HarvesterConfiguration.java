@@ -215,60 +215,11 @@ class HarvesterConfiguration
                 '}';
     }
 
-    public static class From
-    {
-        private LocalDate incremental;
-        private LocalDate full;
-
-        public LocalDate getIncremental()
-        {
-            return incremental;
-        }
-
-        public void setIncremental( LocalDate incremental )
-        {
-            this.incremental = incremental;
-        }
-
-        public LocalDate getFull()
-        {
-            return full;
-        }
-
-        public void setFull( LocalDate full )
-        {
-            this.full = full;
-        }
-
-        @Override
-        public boolean equals( Object o )
-        {
-            if ( this == o ) return true;
-            if ( o == null || getClass() != o.getClass() ) return false;
-            From from = (From) o;
-            return Objects.equals( incremental, from.incremental ) &&
-                    Objects.equals( full, from.full );
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return Objects.hash( incremental, full );
-        }
-
-        @Override
-        public String toString()
-        {
-            return "From{" +
-                    "incremental='" + incremental + '\'' +
-                    ", full='" + full + '\'' +
-                    '}';
-        }
-    }
+    record From(LocalDate incremental) {}
 
     @Component
     @ConfigurationPropertiesBinding
-    public static class LocalDateConverter implements Converter<String, LocalDate>
+    public static final class LocalDateConverter implements Converter<String, LocalDate>
     {
         @Override
         public LocalDate convert( String s )

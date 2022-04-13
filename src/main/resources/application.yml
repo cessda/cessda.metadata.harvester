@@ -2,11 +2,19 @@ harvester:
   incremental: true
   dir: '@documents@'
   recipient: support@cessda.eu
-  cron:
-    incremental: 0 0 */2 * * *
-    full: 00 31 12 * * ?
   repos:
   - url: https://dbkapps.gesis.org/dbkoai3/
     code: GESIS-DBK
     sets: DBK
-    metadataPrefixes: oai_ddi32
+    metadataPrefixes:
+      - metadataPrefix: oai_ddi32
+        ddiVersion: 2_5
+  - url: https://oai.ukdataservice.ac.uk:8443/oai/provider
+    code: UKDS
+    name: "UK Data Service"
+    defaultLanguage: "en"
+    validationGate: BASIC
+    metadataPrefixes:
+      - metadataPrefix: ddi
+        ddiVersion: DDI_2_5
+        cmvProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml

@@ -84,7 +84,7 @@ class IOUtilitiesTests
         var mockRecordHeaders = Arrays.stream( filesToKeep )
             .mapToObj( i -> new RecordHeader( String.valueOf( i ), LocalDate.now(), Collections.emptySet(), null ) )
             .toList();
-        IOUtilities.deleteOrphanedRecords( new Repo(), mockRecordHeaders, tempDir );
+        IOUtilities.deleteOrphanedRecords( new Repo( null, "TEST", null, null, false, null, null), mockRecordHeaders, tempDir );
 
         // Check that the directory is in the expected state
         for ( var file : fileNameIntArray )

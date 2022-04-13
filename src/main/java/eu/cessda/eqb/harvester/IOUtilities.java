@@ -1,5 +1,6 @@
 package eu.cessda.eqb.harvester;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.oclc.oai.harvester2.verb.RecordHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -60,6 +60,34 @@ public class IOUtilities
     }
 
     /**
+     * Create metadata describing the repository in the given directory. The filename created is metadata.json.
+     * @param directory the directory to write to.
+     * @param repository the repository to write metadata for.
+     * @param metadataFormat the metadata format for this harvest.
+     */
+    static void createMetadata( Path directory, Repo repository, Repo.MetadataFormat metadataFormat ) throws MetadataCreationFailedException
+    {
+        var metadata = new SharedRepositoryModel(
+            repository.code(),
+            repository.name(),
+            repository.url(),
+            metadataFormat.setSpec(),
+            metadataFormat.metadataPrefix(),
+            metadataFormat.ddiVersion(),
+            metadataFormat.validationProfile(),
+            repository.validationGate(),
+            repository.defaultLanguage()
+        );
+
+        try (var outputStream = Files.newOutputStream( directory.resolve( "pipeline.json" ) ) ) {
+            var objectMapper = new ObjectMapper();
+            objectMapper.writeValue( outputStream, metadata );
+        } catch ( IOException e ) {
+            throw new MetadataCreationFailedException(e);
+        }
+    }
+
+    /**
      * Writes the given {@link Source} to the specified {@link Path}.
      * @throws IOException if an IO error occurs while writing the file.
      * @throws TransformerException if an unrecoverable error occurs whilst writing the source.
@@ -85,40 +113,43 @@ public class IOUtilities
     /**
      * Remove any records that are present in the destination directory, but are not declared in the repository.
      * @param repo the source repository.
-     * @param records the list of records harvested from the repository.
+     * @param recordHeaders the list of records harvested from the repository.
      * @param destinationPath the destination path.
      */
     @SuppressWarnings( "java:S1141" )
-    static void deleteOrphanedRecords( Repo repo, Collection<RecordHeader> records, Path destinationPath )
+    static void deleteOrphanedRecords( Repo repo, Collection<RecordHeader> recordHeaders, Path destinationPath )
     {
         try ( var stream = Files.newDirectoryStream( destinationPath ) )
         {
             // Collect encountered identifiers to a HashSet, this will be used for comparisons
-            var recordIdentifiers = records.stream().map( RecordHeader::identifier )
-                .map( identifier -> URLEncoder.encode( identifier, UTF_8 ) + ".xml" )
-                .collect( Collectors.toCollection( HashSet::new ) );
+            var recordIdentifiers = new HashSet<String>( (int) (recordHeaders.size() / 0.75F), 0.75F );
+            for ( var recordHeader : recordHeaders )
+            {
+                var identifier = recordHeader.identifier();
+                recordIdentifiers.add( URLEncoder.encode( identifier, UTF_8 ) + ".xml" );
+            }
 
             // Select records not discovered by the repository
             for ( var fileName : stream )
             {
-                if ( !recordIdentifiers.contains( fileName.getFileName().toString() ) )
+                if ( !fileName.getFileName().toString().equals( "pipeline.json" )  && !recordIdentifiers.contains( fileName.getFileName().toString() ) )
                 {
                     try
                     {
                         // Delete the records.
                         Files.delete( fileName );
-                        log.debug( "{}: Deleted {}", repo.getCode(), fileName );
+                        log.debug( "{}: Deleted {}", repo.code(), fileName );
                     }
                     catch ( IOException e )
                     {
-                        log.warn( "{}: Couldn't delete {}: {}", repo.getCode(), fileName, e.toString() );
+                        log.warn( "{}: Couldn't delete {}: {}", repo.code(), fileName, e.toString() );
                     }
                 }
             }
         }
         catch ( DirectoryIteratorException | IOException e )
         {
-            log.warn( "{}: Couldn't clean up: {}", repo.getCode(), e.toString() );
+            log.warn( "{}: Couldn't clean up: {}", repo.code(), e.toString() );
         }
     }
 }

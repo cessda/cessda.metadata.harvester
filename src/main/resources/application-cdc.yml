@@ -17,65 +17,132 @@ harvester:
    # Changed metadata prefix. See #388
     - url: https://www.adp.fdv.uni-lj.si/v0/oai
       code: ADP
-      metadataPrefixes: ddi_c
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: ddi_c
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     # Changed metadata prefix. See #388
     - url: http://194.117.18.18:6003/v0/oai
       code: APIS
-      metadataPrefixes: ddi_c
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: ddi_c
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://data2.aussda.at/oai
       code: AUSSDA
-      metadataPrefixes: oai_ddi
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: ddi_c
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     # Temporarily excluded, see #372
     # - url: http://nesstar.soc.cas.cz/oai-pmh/
     #  code: CSDA
     # metadataPrefixes: oai_ddi 
     - url: https://easy.dans.knaw.nl/oai/
       code: DANS
-      metadataPrefixes: ["oai_ddi25_en", "oai_ddi25_nl"]
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi25_en
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
+        - metadataPrefix: oai_ddi25_nl
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     # Changed metadata prefix. See #388
     - url: https://kuha.sa.dk/v0/oai
       code: DNA
-      metadataPrefixes: ddi_c
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: ddi_c
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: http://services.fsd.uta.fi/v0/oai
       code: FSD
-      metadataPrefixes: oai_ddi25
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi25
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://dbkapps.gesis.org/dbkoai
       code: GESIS
-      metadataPrefixes: oai_ddi25
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi25
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://oai-pmh.nsd.no/oai-pmh/
       code: NSD
-      metadataPrefixes: oai_ddi
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi
+          ddiVersion: NESSTAR
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-1.2.2/latest/profile.xml
     # Temporarily excluded, has same content as ProgedoCDSP
     #- url: https://data.sciencespo.fr/oai
     #  code: ProgedoSciencesPo
     #  metadataPrefixes: oai_ddi
-    #  sets: CDSP   
+    #  sets: CDSP
     # Added endpoint (see #403)
     - url: https://data.progedo.fr/oai
       code: ProgedoCDSP
-      metadataPrefixes: oai_ddi25
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi25
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
+      # Test endpoint for EQB
+    - url: https://explore.cdsp.sciences-po.fr/oai/request
+      code: ProgedoSciencesPo
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi32
+          ddiVersion: DDI_3_2
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-3.2/latest/profile.xml
     # Changed metadata prefix. See #388
     - url: http://147.213.4.44:6003/v0/oai
       code: SASD
-      metadataPrefixes: ddi_c
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: ddi_c
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://snd.gu.se/en/oai-pmh 
       code: SND
-      metadataPrefixes: oai_ddi25
-      sets: subject:social-sciences
-      # DDI 3.2 - for EQB
-    - url: https://snd.gu.se/en/oai-pmh
-      code: SND
-      metadataPrefixes: ddi_3_2
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi25
+          setSpec: subject:social-sciences
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://www.sodha.be/oai
       code: SODHA
-      metadataPrefixes: oai_ddi
-      sets: SODHA_CDC
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi
+          ddiVersion: DDI_2_5
+          setSpec: SODHA_CDC
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://datacatalogue.sodanet.gr/oai
       code: SoDaNet
-      metadataPrefixes: oai_ddi
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://oai.ukdataservice.ac.uk:8443/oai/provider
       code: UKDS
-      metadataPrefixes: ddi
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: ddi
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: http://oai.unidata.unimib.it/v0/oai
       code: UniData
-      metadataPrefixes: oai_ddi25
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi25
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml

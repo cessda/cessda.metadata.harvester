@@ -72,8 +72,9 @@ harvester:
   repos:
   - url: https://snd.gu.se/en/oai-pmh
     code: SND
-    metadataFormat: ddi_3_2
-    set: social-science
+    metadataPrefixes:
+      - metadataPrefix: ddi_3_2
+        setSpec: subject:social-sciences
 ```
 
 #### Metadata Prefixes
@@ -87,10 +88,64 @@ harvester:
   repos:
   - url: https://snd.gu.se/en/oai-pmh
     code: SND
-    metadataPrefixes: ["dc", "ddi", "ddi_3_2"]
+    metadataPrefixes: 
+      - metadataPrefix: dc
+      - metadataPrefix: ddi
+      - metadataPrefix: ddi_3_2
 ```
 
 Failing to configure any metadata prefixes for a repository will cause the harvest to fail.
+
+#### Sets
+
+OAI-PMH can group multiple records together into a collection of themed records known as a set. Sets can either be configured implicitly or explicitly. Note that a record may be harvested multiple times if it is contained in multiple sets.
+
+To implicitly discover and harvest all sets from a repository, set `discoverSets` to `true` in the repository definition. The following definition will harvest from all sets using the metadata prefixes `dc`, `ddi` and `ddi_3_2`.
+
+```yaml
+harvester:
+  repos:
+  - url: https://snd.gu.se/en/oai-pmh
+    code: SND
+    discoverSets: true
+    metadataPrefixes: 
+      - metadataPrefix: dc
+      - metadataPrefix: ddi
+      - metadataPrefix: ddi_3_2
+```
+
+Sets can also be configured explicitly by defining the name of the set to be harvested. This involves adding a `setSpec` parameter for each configured metadata prefix. Metadata prefixes can be restated multiple times to harvest multiple sets using the same metadata prefix.
+
+```yaml
+harvester:
+  repos:
+  - url: https://snd.gu.se/en/oai-pmh
+    code: SND
+    metadataPrefixes: 
+      - metadataPrefix: ddi
+        setSpec: subject:history
+      - metadataPrefix: ddi
+        setSpec: subject:social-sciences
+      # This will harvest all record that have a ddi_3_2 metadata prefix
+      - metadataPrefix: ddi_3_2
+```
+
+#### Pipeline metadata
+
+In order for records to be correctly consumed by the CESSDA Metadata Pipeline, extra metadata needs to be stated in the repository configuration. This includes the validation profile and gate, the DDI version harvested, the name to be displayed in the CDC user interface and other information. An example repository definition is shown below.
+
+```yaml
+harvester:
+  repos:
+  - url: https://snd.gu.se/en/oai-pmh
+    code: SND
+    validationGate: BASIC
+    metadataPrefixes:
+      - metadataPrefix: oai_ddi25
+        setSpec: subject:social-sciences
+        ddiVersion: DDI_2_5
+        validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
+```
 
 ## Getting started as developer
 

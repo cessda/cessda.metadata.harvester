@@ -1,12 +1,14 @@
 package eu.cessda.eqb.harvester;
 
+import java.io.Serial;
 import java.util.Optional;
 
 /**
  * Represents when an error has occurred retrieving record headers from a repository.
  */
-public class RecordHeaderException extends HarvesterFailedException
+public class RecordHeaderException extends Exception
 {
+    @Serial
     private static final long serialVersionUID = 5629333665262898326L;
 
     private final Repo repo;
@@ -32,11 +34,11 @@ public class RecordHeaderException extends HarvesterFailedException
     {
         if (set != null)
         {
-            return repo.getCode() + ": " + set + ": Fetching identifiers failed: " + cause;
+            return repo.code() + ": " + set + ": Fetching identifiers failed: " + cause;
         }
         else
         {
-            return repo.getCode() + ": Fetching identifiers failed: " + cause;
+            return repo.code() + ": Fetching identifiers failed: " + cause;
         }
     }
 

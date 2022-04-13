@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -63,7 +64,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
-import static java.time.format.DateTimeFormatter.ISO_OFFSET_TIME;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 
 /**
  * HarvesterVerb is the parent class for each of the OAI verbs.
@@ -87,7 +88,9 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
         .append( ISO_LOCAL_DATE )
         .optionalStart()
         .appendLiteral( 'T' )
-        .append( ISO_OFFSET_TIME )
+        .append( ISO_LOCAL_TIME )
+        .optionalStart()
+        .appendOffsetId()
         .toFormatter();
 
     private static final Element namespaceElement;
@@ -193,7 +196,7 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
                     // NSD returns invalid ISO dates such as 2020-09-02T15:12:07+0000.
                     // This corrects the dates before parsing by replacing +0000 with Z.
                     var datestampString = node.getTextContent().replace( "+0000", "Z" );
-                    datestamp = OAI_DATE_TIME_FORMATTER.parseBest( datestampString, OffsetDateTime::from, LocalDate::from );
+                    datestamp = OAI_DATE_TIME_FORMATTER.parseBest( datestampString, OffsetDateTime::from, LocalDateTime::from, LocalDate::from );
                 }
                 case "setSpec" -> sets.add( node.getTextContent() );
                 default -> {
