@@ -17,6 +17,7 @@ harvester:
    # Changed metadata prefix. See #388
     - url: https://www.adp.fdv.uni-lj.si/v0/oai
       code: ADP
+      name: "Slovenian Social Science Data Archives (ADP)"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: ddi_c
@@ -25,6 +26,7 @@ harvester:
     # Changed metadata prefix. See #388
     - url: http://194.117.18.18:6003/v0/oai
       code: APIS
+      name: "Portuguese Archive of Social Information (APIS)"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: ddi_c
@@ -32,6 +34,7 @@ harvester:
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://data2.aussda.at/oai
       code: AUSSDA
+      name: "Austrian Social Science Data Archive (AUSSDA)"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: ddi_c
@@ -40,9 +43,11 @@ harvester:
     # Temporarily excluded, see #372
     # - url: http://nesstar.soc.cas.cz/oai-pmh/
     #  code: CSDA
+    #  name: "Czech Social Science Data Archive (ČSDA)"
     # metadataPrefixes: oai_ddi 
     - url: https://easy.dans.knaw.nl/oai/
       code: DANS
+      name: DANS-KNAW
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi25_en
@@ -54,6 +59,7 @@ harvester:
     # Changed metadata prefix. See #388
     - url: https://kuha.sa.dk/v0/oai
       code: DNA
+      name: "Danish National Archives (DNA)"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: ddi_c
@@ -61,6 +67,7 @@ harvester:
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: http://services.fsd.uta.fi/v0/oai
       code: FSD
+      name: "Finnish Social Science Data Archive (FSD)"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi25
@@ -68,42 +75,51 @@ harvester:
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://dbkapps.gesis.org/dbkoai
       code: GESIS
+      name: "GESIS - Leibniz Institute for the Social Sciences"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi25
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-    - url: https://oai-pmh.nsd.no/oai-pmh/
-      code: NSD
+    # Added endpoint (see #403)
+   - url: https://data.progedo.fr/oai
+      code: ProgedoSciencesPo
+      name: "PROGEDO: Sciences Po"
+      validationGate: BASIC
+      metadataPrefixe: 
+        - metadataPrefix: oai_dc
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
+    - url: https://data.sciencespo.fr/oai
+      code: ProgedoCDSP
+      name: "PROGEDO: Center for Socio-Political Data (CDSP)"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi
-          ddiVersion: NESSTAR
-          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-1.2.2/latest/profile.xml
-    # Temporarily excluded, has same content as ProgedoCDSP
-    #- url: https://data.sciencespo.fr/oai
-    #  code: ProgedoSciencesPo
-    #  metadataPrefixes: oai_ddi
-    #  sets: CDSP
-    # Added endpoint (see #403)
-    - url: https://data.progedo.fr/oai
-      code: ProgedoCDSP
-      validationGate: BASIC
-      metadataPrefixes:
-        - metadataPrefix: oai_ddi25
+          setSpec: CDSP
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
       # Test endpoint for EQB
     - url: https://explore.cdsp.sciences-po.fr/oai/request
       code: ProgedoSciencesPo
+      name: "PROGEDO: Sciences Po"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi32
           ddiVersion: DDI_3_2
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-3.2/latest/profile.xml
+     - url: https://oai-pmh.nsd.no/oai-pmh/
+      code: Sikt
+      name: "Sikt - Norwegian Agency for Shared Services in Education and Research"
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi
+          ddiVersion: NESSTAR
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-1.2.2/latest/profile.xml
     # Changed metadata prefix. See #388
     - url: http://147.213.4.44:6003/v0/oai
       code: SASD
+      name: "Slovak Archive of Social Data (SASD)"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: ddi_c
@@ -111,6 +127,7 @@ harvester:
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://snd.gu.se/en/oai-pmh 
       code: SND
+      name: "Swedish National Data Service (SND)"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi25
@@ -119,6 +136,7 @@ harvester:
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://www.sodha.be/oai
       code: SODHA
+      name: "Social Sciences and Digital Humanities Archive (SODHA)"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi
@@ -127,6 +145,7 @@ harvester:
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://datacatalogue.sodanet.gr/oai
       code: SoDaNet
+      name: "SoDaNet - Greek Research Infrastructure for Social Science"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi
@@ -134,6 +153,7 @@ harvester:
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://oai.ukdataservice.ac.uk:8443/oai/provider
       code: UKDS
+      name: "UK Data Service"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: ddi
@@ -141,6 +161,7 @@ harvester:
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: http://oai.unidata.unimib.it/v0/oai
       code: UniData
+      name: "UniData - Bicocca Data Archive"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi25
