@@ -49,7 +49,7 @@ class EQBHarvestingServiceTest
 		getHarvester( tempDir ).run();
 
         // Read pipeline.json, assert fields are as expected.
-        var pipeline = new ObjectMapper().readValue( new File(tempDir + "/wrapped/TEST/oai_ddi/pipeline.json"), SharedRepositoryModel.class );
+        var pipeline = new ObjectMapper().readValue( new File(tempDir + "/wrapped/TEST/oai_ddi/pipeline.json"), PipelineMetadata.class );
         assertEquals( testRepository.code(), pipeline.code() );
         assertEquals( testRepository.name(), pipeline.name() );
         assertEquals( testRepository.url(), pipeline.url() );

@@ -14,7 +14,7 @@ import java.net.URI;
  * @param validationGate the CMV validation gate to use.
  * @param defaultLanguage the default language to use when a metadata record doesn't specify a language.
  */
-public record SharedRepositoryModel(
+public record PipelineMetadata(
     String code,
     String name,
     URI url,

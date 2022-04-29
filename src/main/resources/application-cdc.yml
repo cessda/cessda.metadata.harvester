@@ -82,11 +82,11 @@ harvester:
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     # Added endpoint (see #403)
-   - url: https://data.progedo.fr/oai
+    - url: https://data.progedo.fr/oai
       code: ProgedoSciencesPo
       name: "PROGEDO: Sciences Po"
       validationGate: BASIC
-      metadataPrefixe: 
+      metadataPrefixes:
         - metadataPrefix: oai_dc
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
@@ -108,8 +108,8 @@ harvester:
         - metadataPrefix: oai_ddi32
           ddiVersion: DDI_3_2
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-3.2/latest/profile.xml
-     - url: https://oai-pmh.nsd.no/oai-pmh/
-      code: Sikt
+    - url: https://oai-pmh.nsd.no/oai-pmh/
+      code: NSD # Use original code
       name: "Sikt - Norwegian Agency for Shared Services in Education and Research"
       validationGate: BASIC
       metadataPrefixes:
