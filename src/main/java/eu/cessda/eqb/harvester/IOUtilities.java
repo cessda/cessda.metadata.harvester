@@ -67,7 +67,7 @@ public class IOUtilities
      */
     static void createMetadata( Path directory, Repo repository, Repo.MetadataFormat metadataFormat ) throws MetadataCreationFailedException
     {
-        var metadata = new SharedRepositoryModel(
+        var metadata = new PipelineMetadata(
             repository.code(),
             repository.name(),
             repository.url(),
