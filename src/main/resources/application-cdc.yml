@@ -87,7 +87,7 @@ harvester:
       name: "PROGEDO: Sciences Po"
       validationGate: BASIC
       metadataPrefixes:
-        - metadataPrefix: oai_dc
+        - metadataPrefix: oai_ddi25
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://data.sciencespo.fr/oai
