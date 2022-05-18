@@ -83,13 +83,13 @@ harvester:
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     # Added endpoint (see #403)
     - url: https://data.progedo.fr/oai
-      code: ProgedoSciencesPo
-      name: "PROGEDO: Sciences Po"
+      code: Progedo
+      name: "PROGEDO"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi25
           ddiVersion: DDI_2_5
-          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile_mono.xml
     - url: https://data.sciencespo.fr/oai
       code: ProgedoCDSP
       name: "PROGEDO: Center for Socio-Political Data (CDSP)"
