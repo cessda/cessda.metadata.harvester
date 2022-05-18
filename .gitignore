@@ -8,3 +8,4 @@ data/
 /lopen/
 /eqb-harvester-1.0.0.tar.gz
 /.surefire-*
+.vscode/
