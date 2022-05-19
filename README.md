@@ -1,4 +1,4 @@
-# Euro Question Bank OAI PMH Harvesting Microservice
+# CESSDA OAI-PMH Metadata Harvester
 [![Build Status](https://jenkins.cessda.eu/buildStatus/icon?job=cessda.eqb.metadata.harvester%2Fmaster)](https://jenkins.cessda.eu/job/cessda.eqb.metadata.harvester%2Fmaster)
 [![Quality Gate Status](https://sonarqube.cessda.eu/api/project_badges/measure?project=eu.cessda.eqb:oaiharvester&metric=alert_status)](https://sonarqube.cessda.eu/dashboard?id=eu.cessda.eqb:oaiharvester)
 [![Coverage](https://sonarqube.cessda.eu/api/project_badges/measure?project=eu.cessda.eqb:oaiharvester&metric=coverage)](https://sonarqube.cessda.eu/dashboard?id=eu.cessda.eqb:oaiharvester)
@@ -9,36 +9,17 @@
 
 ## Summary 
 
-The cessda.eqb.harvester is a microservice for harvesting metadata made available by third parties using the Open Archives Initiatives Protocol for Metadata Harvesting. Please refer to https://www.openarchives.org/OAI/openarchivesprotocol.html for details. It can be run standalone as a spring boot application or in a docker environment.
+The CESSDA metadata harvester is a microservice for harvesting metadata made available by third parties using the Open Archives Initiatives Protocol for Metadata Harvesting. Please refer to <https://www.openarchives.org/OAI/openarchivesprotocol.> for details. It can be run standalone as a spring boot application or in a docker environment.
 
 ## Run as Spring Boot Application
 
 To execute the microservice with a defined profile run the service with the `spring.profiles.active` property. The following will run the app with the properties from the [application-cdc.yml](src/main/resources/application-cdc.yml) file 
 
 ```bash
-java -jar cessda.eqb.oaiharvester.jar --spring.profiles.active=cdc
+java -jar target/oaiharvester.jar --spring.profiles.active=cdc
 ```
 
 By default, the harvester will write to `data/` in the current working directory. To change this, use the parameter `--harvester.dir` when starting the harvester.
-
-### Run all configurations (EQB)
-
-```bash
-java -jar oaiharvester.jar --spring.profiles.active=csda
-java -jar oaiharvester.jar --spring.profiles.active=dans
-java -jar oaiharvester.jar --spring.profiles.active=dbk
-java -jar oaiharvester.jar --spring.profiles.active=ekke
-java -jar oaiharvester.jar --spring.profiles.active=fsd
-java -jar oaiharvester.jar --spring.profiles.active=fsd-ddi32
-java -jar oaiharvester.jar --spring.profiles.active=nsd-questionConstructs
-java -jar oaiharvester.jar --spring.profiles.active=nsd-questions
-java -jar oaiharvester.jar --spring.profiles.active=nsd-questionGrids
-java -jar oaiharvester.jar --spring.profiles.active=nsd-series
-java -jar oaiharvester.jar --spring.profiles.active=nsd-studies
-java -jar oaiharvester.jar --spring.profiles.active=nsd
-java -jar oaiharvester.jar --spring.profiles.active=snd
-java -jar oaiharvester.jar --spring.profiles.active=ukda
-```
 
 ## Configuration
 
@@ -47,19 +28,18 @@ Each of them can be overwritten in the command line such as
 
 
 ```bash
-java -jar cessda.eqb.oaiharvester.jar --harvester.dir=/example/output/directory
+java -jar oaiharvester.jar --harvester.dir=/example/output/directory
 ```
 
 ### Control the harvesting process
 
-| property                    | effect                    |
-| ----------------------------|---------------------------|
-| harvester.dir               | directory where harvested files will be written to |
-| harvester.timeout           | seconds to wait until a request is cancelled |
-| harvester.from.incremental  | controls the `from` parameter when performing incremental harvesting |
-| harvester.from.full         | controls the `from` parameter when performing full harvesting |
-| harvester.keepOAIEnvelope   | if true, will cause the OAI-PMH response to be written "as is" |
-| harvester.removeOAIEnvelope | if true, will remove the OAI-PMH header from the response before writing |
+| property                    | effect                                                                                         |
+|-----------------------------|------------------------------------------------------------------------------------------------|
+| harvester.dir               | directory where harvested files will be written to                                             |
+| harvester.timeout           | seconds to wait until a request is cancelled                                                   |
+| harvester.from.incremental  | controls the `from` parameter when performing incremental harvesting                           |
+| harvester.keepOAIEnvelope   | if true, will cause the OAI-PMH response to be written "as is"                                 |
+| harvester.removeOAIEnvelope | if true, will remove the OAI-PMH header from the response before writing                       |
 | harvester.repos             | a list of repositories; each with a code, url, metadata prefixes and optionally a list of sets |
 
 
@@ -149,20 +129,20 @@ harvester:
 
 ## Getting started as developer
 
-* Execute tests and run the application
+### Execute tests and run the application
 
 ```bash
 # Execute all tests locally with default config
-mvn clean test
+mvn test
 # Run the app locally with default config
-mvn clean spring-boot:run
+mvn spring-boot:run
 ```
 
-* Create and run service environment with docker-compose
+### Create and run service environment with docker-compose
 
 ```bash
 # Package Java jar file and build docker image with required settings
-mvn -DskipTests clean package docker:build -Pdocker-compose
+mvn package docker:build -Pdocker-compose
 # Create and start the environment in daemon mode (-d)
 # as specified in docker-compose.yml
 docker-compose -f target/docker/generated/docker-compose.yml up -d
@@ -185,24 +165,12 @@ docker exec -it $CONTAINERID /bin/sh
 docker-compose -f target/docker/generated/docker-compose.yml down
 ```
 
-## Getting started as user
+## Getting started with Docker
 
-* Ensure that your Docker host is [correctly configured](https://git.gesis.org/alexander.muehlbauer/dev-env-setup#single-setups-andor-configurations).
+* Ensure that Java, Maven and are installed.
+* Build the project using `mvn package docker:build -Pdocker-compose`
 * Run a Docker container by 
 
 ```bash
-docker run -p 8080:8080 docker-private.gesis.intra/gesis/cessda.eqb.oaiharvester:0.0.1-SNAPSHOT
-```
-
-* or run a Docker Compose environment by: 
-
-```yml
-version: '3.2'
-services:
-  cessda.eqb.oaiharvester:
-    image: docker-private.gesis.intra/gesis/cessda.eqb.oaiharvester:0.0.1-SNAPSHOT
-    ports:
-     - 8080:8080
-    volumes:
-     - ./application.properties:/cessda.eqb.oaiharvester/application.properties
+docker run -p 8080:8080 cessda/oaiharvester
 ```

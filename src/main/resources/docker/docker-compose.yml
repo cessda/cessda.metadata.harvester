@@ -5,9 +5,6 @@
 version: '3.2'
 services:
   harvester:
-    image: docker-private-snapshots.gesis.intra/gesis/cessda.eqb.oaiharvester:0.0.1-SNAPSHOT
+    image: @image_tag@
     ports:
      - @server.port@:@server.port@
-    volumes:
-##this line hinders docker-compose from starting     - ./application.properties:/@project.artifactId@/application.properties
-     - /home/thomas/cessda.eqb/data/:@documents@
