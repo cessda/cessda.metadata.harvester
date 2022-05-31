@@ -1,6 +1,44 @@
 # Changelog
 
-## [Unreleased]
+All notable changes to Metadata Harvester will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+*For each release, use the following sub-sections:*
+
+- *Added (for new features)*
+- *Changed (for changes in existing functionality)*
+- *Deprecated (for soon-to-be removed features)*
+- *Removed (for now removed features)*
+- *Fixed (for any bug fixes)*
+- *Security (in case of vulnerabilities)*
+
+## [3.0.0] - 2022-06-07
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6577757.svg)](https://doi.org/10.5281/zenodo.6577757)
+
+### Added
+
+Added new Progedo endpoint [#403](https://bitbucket.org/cessda/cessda.cdc.versions/issues/403)
+
+Added metrics instrumentation for UI + API Search Queries [#393](https://bitbucket.org/cessda/cessda.cdc.versions/issues/393)
+
+### Changed
+
+Updated harvester configuration to match new harvesting/validation/indexing pipeline model [#423](https://bitbucket.org/cessda/cessda.cdc.versions/issues/423)
+
+Refactored harvesting/validation/indexing pipeline configuration [#409](https://bitbucket.org/cessda/cessda.cdc.versions/issues/409)
+
+Improved the test coverage of the harvester [#16](https://bitbucket.org/cessda/cessda.metadata.harvester/issues/16)
+
+### Fixed
+
+Ensured all available endpoints are in the pipeline [#411](https://bitbucket.org/cessda/cessda.cdc.versions/issues/411)
+
+Workaround for XML schema violations caused by incorrect DDI serialisation [#388](https://bitbucket.org/cessda/cessda.cdc.versions/issues/388)
+
+
 
 ## [2.0.0] 2021-11-25
 
