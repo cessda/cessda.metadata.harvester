@@ -37,7 +37,7 @@ harvester:
       name: "Austrian Social Science Data Archive (AUSSDA)"
       validationGate: BASIC
       metadataPrefixes:
-        - metadataPrefix: ddi_c
+        - metadataPrefix: oai_ddi
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     # Temporarily excluded, see #372
@@ -89,7 +89,7 @@ harvester:
       metadataPrefixes:
         - metadataPrefix: oai_ddi25
           ddiVersion: DDI_2_5
-          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile_mono.xml
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://data.sciencespo.fr/oai
       code: ProgedoCDSP
       name: "PROGEDO: Center for Socio-Political Data (CDSP)"
