@@ -32,7 +32,7 @@ harvester:
         - metadataPrefix: ddi_c
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-    - url: https://data2.aussda.at/oai
+    - url: https://data.aussda.at/oai
       code: AUSSDA
       name: "Austrian Social Science Data Archive (AUSSDA)"
       validationGate: BASIC
