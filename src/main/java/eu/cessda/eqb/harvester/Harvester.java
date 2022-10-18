@@ -39,6 +39,7 @@ import javax.xml.transform.dom.DOMSource;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -47,6 +48,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
 import static eu.cessda.eqb.harvester.LoggingConstants.*;
+import static java.lang.Math.max;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.logstash.logback.argument.StructuredArguments.value;
 
@@ -208,10 +210,31 @@ public class Harvester implements CommandLineRunner
         // The folder structure is repo/set(optional)/metadataFormat/record.xml
         var repositoryDirectory = Path.of( repo.code() );
 
-        // Sets are nested in their own directories
+        // Sets are nested in their own directories. If the set contains characters that cannot be represented
+        // by the filesystem, substitute them for -
         if (metadataFormat.setSpec() != null)
         {
-            repositoryDirectory = repositoryDirectory.resolve( metadataFormat.setSpec() );
+            var setSpec = metadataFormat.setSpec();
+
+            while(true)
+            {
+                try
+                {
+                    repositoryDirectory = repositoryDirectory.resolve( setSpec );
+                    break;
+                }
+                catch( InvalidPathException e )
+                {
+                    // Rethrow if the position of the character which caused the error is unknown
+                    if (e.getIndex() == -1)
+                    {
+                        throw e;
+                    }
+
+                    var errorChar = setSpec.charAt( e.getIndex() );
+                    setSpec = setSpec.replace( errorChar, '-' );
+                }
+            }
         }
 
         repositoryDirectory = repositoryDirectory.resolve( metadataFormat.metadataPrefix() );
@@ -335,9 +358,14 @@ public class Harvester implements CommandLineRunner
         // Clean up - this should only run on full harvests.
         if (!harvesterConfiguration.incremental())
         {
-            log.info( "{}: Removing orphaned records.", value( REPO_NAME, repo.code()));
-            IOUtilities.deleteOrphanedRecords( repo, records, unwrappedDirectory );
-            IOUtilities.deleteOrphanedRecords( repo, records, wrappedDirectory );
+            log.debug( "{}: Removing orphaned records.", value( REPO_NAME, repo.code()));
+            var unwrappedRecordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, unwrappedDirectory );
+            var wrappedRecordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, wrappedDirectory );
+
+            if (log.isDebugEnabled() || (unwrappedRecordsDeleted > 0 || wrappedRecordsDeleted > 0))
+            {
+                log.info( "{}: Removed {} orphaned records.", value( REPO_NAME, repo.code() ), max( unwrappedRecordsDeleted, wrappedRecordsDeleted ) );
+            }
         }
 
         return retrievedRecords;

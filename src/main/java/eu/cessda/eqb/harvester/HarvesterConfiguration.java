@@ -38,10 +38,10 @@ import java.util.Objects;
  *
  * <pre>
  * harvester:
- *  repos:
+ *   repos:
  *   - url: http://www.da-ra.de/oaip/oai?verb=ListRecords&amp;metadataPrefix=oai_dc&amp;set=39
- *    setName: 'da|ra: ICPSR – Interuniversity Consortium for Political and Social Research'
- *    dataProvider: da|ra (Registration agency for social science and economic data)
+ *     setName: 'da|ra: ICPSR – Interuniversity Consortium for Political and Social Research'
+ *     dataProvider: da|ra (Registration agency for social science and economic data)
  * </pre>
  *
  * @author kraemets
