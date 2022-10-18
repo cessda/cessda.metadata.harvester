@@ -134,36 +134,36 @@ harvester:
           setSpec: subject:social-sciences
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-    - url: https://www.sodha.be/oai
-      code: SODHA
-      name: "Social Sciences and Digital Humanities Archive (SODHA)"
-      validationGate: BASIC
-      metadataPrefixes:
-        - metadataPrefix: oai_ddi
-          ddiVersion: DDI_2_5
-          setSpec: SODHA_CDC
-          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-    - url: https://datacatalogue.sodanet.gr/oai
-      code: SoDaNet
-      name: "SoDaNet - Greek Research Infrastructure for Social Science"
-      validationGate: BASIC
-      metadataPrefixes:
-        - metadataPrefix: oai_ddi
-          ddiVersion: DDI_2_5
-          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-    - url: https://oai.ukdataservice.ac.uk:8443/oai/provider
-      code: UKDS
-      name: "UK Data Service"
-      validationGate: BASIC
-      metadataPrefixes:
-        - metadataPrefix: ddi
-          ddiVersion: DDI_2_5
-          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-    - url: http://oai.unidata.unimib.it/v0/oai
-      code: UniData
-      name: "UniData - Bicocca Data Archive"
-      validationGate: BASIC
-      metadataPrefixes:
-        - metadataPrefix: oai_ddi25
-          ddiVersion: DDI_2_5
-          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
+#    - url: https://www.sodha.be/oai
+#      code: SODHA
+#      name: "Social Sciences and Digital Humanities Archive (SODHA)"
+#      validationGate: BASIC
+#      metadataPrefixes:
+#        - metadataPrefix: oai_ddi
+#          ddiVersion: DDI_2_5
+#          setSpec: SODHA_CDC
+#          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
+#    - url: https://datacatalogue.sodanet.gr/oai
+#      code: SoDaNet
+#      name: "SoDaNet - Greek Research Infrastructure for Social Science"
+#      validationGate: BASIC
+#      metadataPrefixes:
+#        - metadataPrefix: oai_ddi
+#          ddiVersion: DDI_2_5
+#          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
+#    - url: https://oai.ukdataservice.ac.uk:8443/oai/provider
+#      code: UKDS
+#      name: "UK Data Service"
+#      validationGate: BASIC
+#      metadataPrefixes:
+#        - metadataPrefix: ddi
+#          ddiVersion: DDI_2_5
+#          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
+#    - url: http://oai.unidata.unimib.it/v0/oai
+#      code: UniData
+#      name: "UniData - Bicocca Data Archive"
+#      validationGate: BASIC
+#      metadataPrefixes:
+#        - metadataPrefix: oai_ddi25
+#          ddiVersion: DDI_2_5
+#          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml

@@ -11,7 +11,15 @@
 
 The CESSDA metadata harvester is a microservice for harvesting metadata made available by third parties using the Open Archives Initiatives Protocol for Metadata Harvesting. Please refer to <https://www.openarchives.org/OAI/openarchivesprotocol.> for details. It can be run standalone as a spring boot application or in a docker environment.
 
-## Run as Spring Boot Application
+## Compile the application
+
+To compile the application to a JAR archive, run the following command:
+
+```bash
+./mvnw verify
+```
+
+## Run the application
 
 To execute the microservice with a defined profile run the service with the `spring.profiles.active` property. The following will run the app with the properties from the [application-cdc.yml](src/main/resources/application-cdc.yml) file 
 
@@ -33,15 +41,17 @@ java -jar oaiharvester.jar --harvester.dir=/example/output/directory
 
 ### Control the harvesting process
 
-| property                    | effect                                                                                         |
-|-----------------------------|------------------------------------------------------------------------------------------------|
-| harvester.dir               | directory where harvested files will be written to                                             |
-| harvester.timeout           | seconds to wait until a request is cancelled                                                   |
-| harvester.from.incremental  | controls the `from` parameter when performing incremental harvesting                           |
-| harvester.keepOAIEnvelope   | if true, will cause the OAI-PMH response to be written "as is"                                 |
-| harvester.removeOAIEnvelope | if true, will remove the OAI-PMH header from the response before writing                       |
-| harvester.repos             | a list of repositories; each with a code, url, metadata prefixes and optionally a list of sets |
+| property                    | effect                                                                                                                                    |
+|-----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| harvester.dir               | directory where harvested files will be written to                                                                                        |
+| harvester.timeout           | seconds to wait until a request is cancelled                                                                                              |
+| harvester.incremental       | enables incremental harvesting, by default this will harvest records from the last week unless overridden by `harvester.from.incremental` |
+| harvester.from.incremental  | sets how far back to harvest when harvesting incrementally, accepts an ISO date                                                           |
+| harvester.keepOAIEnvelope   | if true, will cause the OAI-PMH response to be written "as is"                                                                            |
+| harvester.removeOAIEnvelope | if true, will remove the OAI-PMH header from the response before writing                                                                  |
+| harvester.repos             | a list of repositories; each with a code, url, metadata prefixes and optionally a list of sets                                            |
 
+The `harvester.keepOAIEnvelope` and `harvester.removeOAIEnvelope` are not mutually exclusive and can be set independently.
 
 #### Define a list of repositories to be harvested
 

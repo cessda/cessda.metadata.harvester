@@ -115,11 +115,15 @@ public class IOUtilities
      * @param repo the source repository.
      * @param recordHeaders the list of records harvested from the repository.
      * @param destinationPath the destination path.
+     * @return the number of files that were deleted.
      */
     @SuppressWarnings( "java:S1141" )
-    static void deleteOrphanedRecords( Repo repo, Collection<RecordHeader> recordHeaders, Path destinationPath )
+    static int deleteOrphanedRecords( Repo repo, Collection<RecordHeader> recordHeaders, Path destinationPath )
     {
-        try ( var stream = Files.newDirectoryStream( destinationPath ) )
+        // Track the amount of files that were deleted
+        int filesDeleted = 0;
+
+        try ( var stream = Files.newDirectoryStream( destinationPath, "*.xml" ) )
         {
             // Collect encountered identifiers to a HashSet, this will be used for comparisons
             var recordIdentifiers = new HashSet<String>( (int) (recordHeaders.size() / 0.75F), 0.75F );
@@ -132,12 +136,13 @@ public class IOUtilities
             // Select records not discovered by the repository
             for ( var fileName : stream )
             {
-                if ( !fileName.getFileName().toString().equals( "pipeline.json" )  && !recordIdentifiers.contains( fileName.getFileName().toString() ) )
+                if ( !recordIdentifiers.contains( fileName.getFileName().toString() ) )
                 {
                     try
                     {
                         // Delete the records.
                         Files.delete( fileName );
+                        filesDeleted++;
                         log.debug( "{}: Deleted {}", repo.code(), fileName );
                     }
                     catch ( IOException e )
@@ -151,5 +156,7 @@ public class IOUtilities
         {
             log.warn( "{}: Couldn't clean up: {}", repo.code(), e.toString() );
         }
+
+        return filesDeleted;
     }
 }
