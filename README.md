@@ -1,6 +1,6 @@
 # CESSDA OAI-PMH Metadata Harvester
 
-[![SQA badge](https://api.eu.badgr.io/public/assertions/xxx/image)](https://api.eu.badgr.io/public/badges/xxx)
+[![SQA badge](https://api.eu.badgr.io/public/assertions/w4kSDTHUSweWEL4kVAG_vA/image)](https://api.eu.badgr.io/public/badges/IDUsZJpNQPuiJpPwmJ8iJw)
 
 [![Build Status](https://jenkins.cessda.eu/buildStatus/icon?job=cessda.eqb.metadata.harvester%2Fmaster)](https://jenkins.cessda.eu/job/cessda.eqb.metadata.harvester%2Fmaster)
 [![Quality Gate Status](https://sonarqube.cessda.eu/api/project_badges/measure?project=eu.cessda.eqb:oaiharvester&metric=alert_status)](https://sonarqube.cessda.eu/dashboard?id=eu.cessda.eqb:oaiharvester)
