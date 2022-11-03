@@ -12,10 +12,12 @@
 
 ## Summary
 
-The CESSDA metadata harvester is a microservice for harvesting metadata made available by third parties using the
+The CESSDA metadata harvester is a microservice for harvesting metadata made
+available by third parties using the
 Open Archives Initiatives Protocol for Metadata Harvesting. Please refer to
 <https://www.openarchives.org/OAI/openarchivesprotocol.> for details.
-It can be run standalone as a spring boot application or in a docker environment.
+It can be run standalone as a spring boot application or in a docker
+environment.
 
 ## Compile the application
 
@@ -27,21 +29,25 @@ To compile the application to a JAR archive, run the following command:
 
 ## Run the application
 
-To execute the microservice with a defined profile run the service with the `spring.profiles.active` property.
-The following will run the app with the properties from the [application-cdc.yml](src/main/resources/application-cdc.yml) file 
+To execute the microservice with a defined profile run the service with
+the `spring.profiles.active` property.
+The following will run the app with the properties from the
+[application-cdc.yml](src/main/resources/application-cdc.yml) file
 
 ```bash
 java -jar target/oaiharvester.jar --spring.profiles.active=cdc
 ```
 
-By default, the harvester will write to `data/` in the current working directory.
-To change this, use the parameter `--harvester.dir` when starting the harvester.
+By default, the harvester will write to `data/` in the current working
+directory.
+To change this, use the parameter `--harvester.dir` when starting the
+harvester.
 
 ## Configuration
 
-The following properties are related to the harvesting process and extend the standard spring boot properties.
+The following properties are related to the harvesting process and extend the
+standard spring boot properties.
 Each of them can be overwritten in the command line such as
-
 
 ```bash
 java -jar oaiharvester.jar --harvester.dir=/example/output/directory
@@ -50,20 +56,30 @@ java -jar oaiharvester.jar --harvester.dir=/example/output/directory
 ### Control the harvesting process
 
 | property                    | effect                                                                                                                                    |
-|-----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| harvester.dir               | directory where harvested files will be written to                                                                                        |
-| harvester.timeout           | seconds to wait until a request is cancelled                                                                                              |
-| harvester.incremental       | enables incremental harvesting, by default this will harvest records from the last week unless overridden by `harvester.from.incremental` |
-| harvester.from.incremental  | sets how far back to harvest when harvesting incrementally, accepts an ISO date                                                           |
-| harvester.keepOAIEnvelope   | if true, will cause the OAI-PMH response to be written "as is"                                                                            |
-| harvester.removeOAIEnvelope | if true, will remove the OAI-PMH header from the response before writing                                                                  |
-| harvester.repos             | a list of repositories; each with a code, url, metadata prefixes and optionally a list of sets                                            |
+|-----------------------------|------------------------------------------------
+ -------------------------------------------------------------------------------
+ ------------|
+| harvester.dir               | directory where harvested files will be written to                                                                             |
+| harvester.timeout           | seconds to wait until a request is cancelled                                                                      |
+| harvester.incremental       | enables incremental harvesting, by default this
+will harvest records from the last week unless overridden by
+`harvester.from.incremental` |
+| harvester.from.incremental  | sets how far back to harvest when harvesting
+incrementally, accepts an ISO date                                            |
+| harvester.keepOAIEnvelope   | if true, will cause the OAI-PMH response to be
+written "as is"                                                               |
+| harvester.removeOAIEnvelope | if true, will remove the OAI-PMH header from
+the response before writing                                                   |
+| harvester.repos             | a list of repositories; each with a code, url,
+metadata prefixes and optionally a list of sets                               |
 
-The `harvester.keepOAIEnvelope` and `harvester.removeOAIEnvelope` are not mutually exclusive and can be set independently.
+The `harvester.keepOAIEnvelope` and `harvester.removeOAIEnvelope` are not
+mutually exclusive and can be set independently.
 
 #### Define a list of repositories to be harvested
 
-The following configuration will harvest the set `discipline:social-science` of the oai server
+The following configuration will harvest the set `discipline:social-science`
+of the oai server
 `https://snd.gu.se/en/oai-pmh` with the metadata prefix `ddi_3_2`.
 
 ```yml
@@ -78,9 +94,11 @@ harvester:
 
 #### Metadata Prefixes
 
-OAI-PMH supports the concepts of different forms of metadata for the same record. This is handled with metadata prefixes.
+OAI-PMH supports the concepts of different forms of metadata for the same record.
+This is handled with metadata prefixes.
 
-Multiple metadata formats can be harvested from each repository. The example below will harvest `https://snd.gu.se/en/oai-pmh`
+Multiple metadata formats can be harvested from each repository.
+The example below will harvest `https://snd.gu.se/en/oai-pmh`
 using the metadata prefixes `dc`, `ddi` and `ddi_3_2`.
 
 ```yaml
@@ -94,16 +112,21 @@ harvester:
       - metadataPrefix: ddi_3_2
 ```
 
-Failing to configure any metadata prefixes for a repository will cause the harvest to fail.
+Failing to configure any metadata prefixes for a repository will cause
+the harvest to fail.
 
 #### Sets
 
-OAI-PMH can group multiple records together into a collection of themed records known as a set.
-Sets can either be configured implicitly or explicitly. Note that a record may be harvested multiple times
-if it is contained in multiple sets.
+OAI-PMH can group multiple records together into a collection of themed
+records known as a set.
+Sets can either be configured implicitly or explicitly.
+Note that a record may be harvested multiple times if it is contained in
+multiple sets.
 
-To implicitly discover and harvest all sets from a repository, set `discoverSets` to `true` in the repository definition.
-The following definition will harvest from all sets using the metadata prefixes `dc`, `ddi` and `ddi_3_2`.
+To implicitly discover and harvest all sets from a repository,
+set `discoverSets` to `true` in the repository definition.
+The following definition will harvest from all sets using the metadata
+prefixes `dc`, `ddi` and `ddi_3_2`.
 
 ```yaml
 harvester:
@@ -111,7 +134,7 @@ harvester:
   - url: https://snd.gu.se/en/oai-pmh
     code: SND
     discoverSets: true
-    metadataPrefixes: 
+    metadataPrefixes:
       - metadataPrefix: dc
       - metadataPrefix: ddi
       - metadataPrefix: ddi_3_2
@@ -119,14 +142,15 @@ harvester:
 
 Sets can also be configured explicitly by defining the name of the set to be harvested.
 This involves adding a `setSpec` parameter for each configured metadata prefix.
-Metadata prefixes can be restated multiple times to harvest multiple sets using the same metadata prefix.
+Metadata prefixes can be restated multiple times to harvest multiple sets
+using the same metadata prefix.
 
 ```yaml
 harvester:
   repos:
   - url: https://snd.gu.se/en/oai-pmh
     code: SND
-    metadataPrefixes: 
+    metadataPrefixes:
       - metadataPrefix: ddi
         setSpec: subject:history
       - metadataPrefix: ddi
@@ -198,7 +222,7 @@ docker-compose -f target/docker/generated/docker-compose.yml down
 
 * Ensure that Java, Maven and are installed.
 * Build the project using `mvn package docker:build -Pdocker-compose`
-* Run a Docker container by 
+* Run a Docker container by
 
 ```bash
 docker run -p 8080:8080 cessda/oaiharvester
@@ -206,7 +230,8 @@ docker run -p 8080:8080 cessda/oaiharvester
 
 ## Contributing
 
-Please read [CONTRIBUTING](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+Please read [CONTRIBUTING](CONTRIBUTING.md) for details on our code of conduct,
+and the process for submitting pull requests to us.
 
 ## Versioning
 

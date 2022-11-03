@@ -31,8 +31,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed [3.0.0]
 
-- Updated harvester configuration to match new harvesting/validation/indexing pipeline model
-  [#423](https://bitbucket.org/cessda/cessda.cdc.versions/issues/423)
+- Updated harvester configuration to match new harvesting/validation/indexing
+  pipeline model [#423](https://bitbucket.org/cessda/cessda.cdc.versions/issues/423)
 - Refactored harvesting/validation/indexing pipeline configuration [#409](https://bitbucket.org/cessda/cessda.cdc.versions/issues/409)
 - Improved the test coverage of the harvester [#16](https://bitbucket.org/cessda/cessda.metadata.harvester/issues/16)
 
@@ -48,13 +48,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added [2.0.0]
 
-- The harvester can now accept configuring repositories with different metadata prefixes ([#11](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/11))
+- The harvester can now accept configuring repositories with different metadata
+  prefixes ([#11](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/11))
 - Added the ability to harvest each repository in parallel ([#11](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/11))
 - Log OAI-PMH errors ([#14](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/14))
 - Output both wrapped and unwrapped metadata records ([#14](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/14))
 - Added JSON logging support ([#12](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/12))
 - Handle records marked as deleted in an OAI-PMH repository ([#18](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/18))
-- Delete orphaned records, which are records present locally but are not advertised in the source repository,
+- Delete orphaned records, which are records present locally but are not
+  advertised in the source repository,
   after full runs ([#25](https://bitbucket.org/cessda/cessda.eqb.metadata.harvester/issues/25))
 
 ### Fixed [2.0.0]
@@ -90,8 +92,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed [1.0.0]
 
-- Fixed the timeout settings not applying when listing record identifiers with a resumption token,
-  fixed not getting all sets.
+- Fixed the timeout settings not applying when listing record identifiers with
+  a resumption token, fixed not getting all sets.
 
 ### Changed [1.0.0]
 
@@ -100,9 +102,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.0.2-SNAPHSOT]
 
 - Harvesting of OAI servers that have no sets specified
-- Apart from standard application logging at class level, the harvester has a special logger (hlog),
+- Apart from standard application logging at class level, the harvester has a
+  special logger (hlog),
   that prints out status information on the harvesting process only.
-  It contains explicit information on e.g. the start, end and result of a harversting run.
+  It contains explicit information on e.g. the start, end and result of a
+  harvesting run.
 - Configurations for
 - CSDA
 - DANS
