@@ -55,12 +55,11 @@ java -jar oaiharvester.jar --harvester.dir=/example/output/directory
 
 ### Control the harvesting process
 
-| property                    | effect                                                                                                                                    |
+| property                    | effect                                        |
 |-----------------------------|------------------------------------------------
- -------------------------------------------------------------------------------
- ------------|
-| harvester.dir               | directory where harvested files will be written to                                                                             |
-| harvester.timeout           | seconds to wait until a request is cancelled                                                                      |
+------------------------------------------------------------------------------|
+| harvester.dir     | directory where harvested files will be written to     |
+| harvester.timeout           | seconds to wait until a request is cancelled |
 | harvester.incremental       | enables incremental harvesting, by default this
 will harvest records from the last week unless overridden by
 `harvester.from.incremental` |
@@ -106,7 +105,7 @@ harvester:
   repos:
   - url: https://snd.gu.se/en/oai-pmh
     code: SND
-    metadataPrefixes: 
+    metadataPrefixes:
       - metadataPrefix: dc
       - metadataPrefix: ddi
       - metadataPrefix: ddi_3_2
