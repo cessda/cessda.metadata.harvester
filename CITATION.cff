@@ -1,0 +1,17 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: CESSDA Data Catalogue - Metadata Harvesting component
+message: >-
+  If you use this software, please cite it using https://doi.org/10.5281/zenodo.5711127
+type: software
+authors:
+  - given-names: Matthew
+    family-names: Morris
+    email: matthew.morris@cessda.eu
+    affiliation: CESSDA
+  - given-names: Thomas
+    family-names: Krämer
+    email: thomas.kraemer@gesis.org 
+    affiliation: GESIS
