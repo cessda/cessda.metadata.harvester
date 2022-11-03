@@ -44,57 +44,45 @@ import java.net.URI;
 import java.util.NoSuchElementException;
 
 /**
- * This class represents an Identify response on either the server or on the client
+ * This class represents an Identify response on either the server or on the
+ * client
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public final class Identify extends HarvesterVerb
-{
-	/**
-	 * Client-side Identify verb constructor
-	 *
-	 * @throws IOException           an I/O error occurred
-	 */
-	Identify( InputStream is ) throws IOException, SAXException
-	{
-		super( is );
-	}
+public final class Identify extends HarvesterVerb {
+    /**
+     * Client-side Identify verb constructor
+     *
+     * @throws IOException an I/O error occurred
+     */
+    Identify(InputStream is) throws IOException, SAXException {
+        super(is);
+    }
 
-	public static Identify instance( HttpClient httpClient, URI baseURL) throws IOException, SAXException
-	{
-		var requestURL = URI.create(baseURL + "?verb=Identify");
-		try (var is = httpClient.getHttpResponse( requestURL ))
-		{
-			return new Identify( is );
-		}
-	}
+    public static Identify instance(HttpClient httpClient, URI baseURL) throws IOException, SAXException {
+        var requestURL = URI.create(baseURL + "?verb=Identify");
+        try (var is = httpClient.getHttpResponse(requestURL)) {
+            return new Identify(is);
+        }
+    }
 
-	/**
-	 * Get the oai:protocolVersion value from the Identify response
-	 *
-	 * @return the oai:protocolVersion value
-	 */
-	public String getProtocolVersion()
-	{
-		try
-		{
-			if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
-			{
-				return getSingleString( "/oai20:OAI-PMH/oai20:Identify/oai20:protocolVersion" );
-			}
-			else if ( SCHEMA_LOCATION_V1_1_IDENTIFY.equals( getSchemaLocation() ) )
-			{
-				return getSingleString( "/oai11_Identify:Identify/oai11_Identify:protocolVersion" );
-			}
-			else
-			{
-				throw new NoSuchElementException( getSchemaLocation() );
-			}
-		}
-		catch ( TransformerException e )
-		{
-			throw new IllegalStateException( e );
-		}
-	}
+    /**
+     * Get the oai:protocolVersion value from the Identify response
+     *
+     * @return the oai:protocolVersion value
+     */
+    public String getProtocolVersion() {
+        try {
+            if (SCHEMA_LOCATION_V2_0.equals(getSchemaLocation())) {
+                return getSingleString("/oai20:OAI-PMH/oai20:Identify/oai20:protocolVersion");
+            } else if (SCHEMA_LOCATION_V1_1_IDENTIFY.equals(getSchemaLocation())) {
+                return getSingleString("/oai11_Identify:Identify/oai11_Identify:protocolVersion");
+            } else {
+                throw new NoSuchElementException(getSchemaLocation());
+            }
+        } catch (TransformerException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
 }

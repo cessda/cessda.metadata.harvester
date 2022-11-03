@@ -10,8 +10,7 @@ import java.nio.charset.StandardCharsets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class ListSetsTests
-{
+class ListSetsTests {
     // language=XML
     private static final String LIST_SETS_XML = """
             <?xml version="1.0" encoding="UTF-8"?>
@@ -63,43 +62,39 @@ class ListSetsTests
             </OAI-PMH>""";
 
     @Test
-    void shouldReturnSets() throws IOException, SAXException
-    {
+    void shouldReturnSets() throws IOException, SAXException {
         // Given
         var inputStream = new ByteArrayInputStream(
-                LIST_SETS_XML.getBytes( StandardCharsets.UTF_8 )
-        );
+                LIST_SETS_XML.getBytes(StandardCharsets.UTF_8));
 
         // Then
-        var listSets = new ListSets( inputStream );
+        var listSets = new ListSets(inputStream);
 
         var sets = listSets.getSets();
 
         assertEquals(4, sets.size());
 
-        assertThat( sets ).containsExactlyInAnyOrder( "music", "music:(muzak)", "music:(elec)", "video" );
+        assertThat(sets).containsExactlyInAnyOrder("music", "music:(muzak)", "music:(elec)", "video");
     }
 
     @Test
-    void shouldReturnErrorWhenRepositoryDoesNotSupportSets() throws IOException, SAXException
-    {
+    void shouldReturnErrorWhenRepositoryDoesNotSupportSets() throws IOException, SAXException {
         // Given
         var inputStream = new ByteArrayInputStream(
-                SETS_NOT_SUPPORTED_ERROR.getBytes( StandardCharsets.UTF_8 )
-        ) ;
+                SETS_NOT_SUPPORTED_ERROR.getBytes(StandardCharsets.UTF_8));
 
         // Then
-        var listSets = new ListSets( inputStream );
+        var listSets = new ListSets(inputStream);
 
         var sets = listSets.getSets();
 
-        assertEquals( 0, sets.size() );
+        assertEquals(0, sets.size());
 
         var errors = listSets.getErrors();
 
-        assertEquals( 1, errors.size() );
+        assertEquals(1, errors.size());
 
-        assertEquals( OAIError.Code.noSetHierarchy, errors.get( 0 ).getCode() );
-        assertEquals( "This repository does not support sets", errors.get( 0 ).getMessage().orElseThrow() );
+        assertEquals(OAIError.Code.noSetHierarchy, errors.get(0).getCode());
+        assertEquals("This repository does not support sets", errors.get(0).getMessage().orElseThrow());
     }
 }

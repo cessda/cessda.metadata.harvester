@@ -15,47 +15,39 @@ import static java.io.InputStream.nullInputStream;
 import static java.net.http.HttpClient.Redirect.NORMAL;
 
 @Component
-public class HttpClient
-{
+public class HttpClient {
     // Logger
-    private static final Logger log = LoggerFactory.getLogger( HttpClient.class );
+    private static final Logger log = LoggerFactory.getLogger(HttpClient.class);
 
     private final Methanol client;
 
-    public HttpClient(HarvesterConfiguration harvesterConfiguration)
-    {
+    public HttpClient(HarvesterConfiguration harvesterConfiguration) {
         // TK added default timeout for dataverses taking too long to respond / stall
         this.client = Methanol.newBuilder()
-            .autoAcceptEncoding( true )
-            .followRedirects( NORMAL )
-            .userAgent( "OAIHarvester/2.0" )
-            .requestTimeout( harvesterConfiguration.getTimeout() )
-            .build();
+                .autoAcceptEncoding(true)
+                .followRedirects(NORMAL)
+                .userAgent("OAIHarvester/2.0")
+                .requestTimeout(harvesterConfiguration.getTimeout())
+                .build();
     }
 
-    public InputStream getHttpResponse( URI requestURL ) throws IOException
-    {
+    public InputStream getHttpResponse(URI requestURL) throws IOException {
         int responseCode;
 
-        var httpRequest = HttpRequest.newBuilder( requestURL ).GET().build();
+        var httpRequest = HttpRequest.newBuilder(requestURL).GET().build();
 
-        try
-        {
-            var response = client.send( httpRequest, HttpResponse.BodyHandlers.ofInputStream() );
+        try {
+            var response = client.send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
 
             responseCode = response.statusCode();
-            log.trace( "responseCode={}", responseCode );
+            log.trace("responseCode={}", responseCode);
 
-
-            if ( responseCode >= 400 )
-            {
-                throw new HTTPException( requestURL, response.statusCode() );
+            if (responseCode >= 400) {
+                throw new HTTPException(requestURL, response.statusCode());
             }
 
             return response.body();
-        }
-        catch ( InterruptedException e )
-        {
+        } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return nullInputStream();
         }

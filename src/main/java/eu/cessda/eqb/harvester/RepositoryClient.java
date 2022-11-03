@@ -22,124 +22,116 @@ import java.util.stream.Stream;
  * Holds methods used to access OAI-PMH repositories
  */
 @Component
-class RepositoryClient
-{
-    private static final Logger log = LoggerFactory.getLogger( RepositoryClient.class );
+class RepositoryClient {
+    private static final Logger log = LoggerFactory.getLogger(RepositoryClient.class);
 
     private final HttpClient httpClient;
 
     /**
      * Create a new instance of a {@link RepositoryClient}.
      */
-    RepositoryClient( HttpClient httpClient)
-    {
+    RepositoryClient(HttpClient httpClient) {
         this.httpClient = httpClient;
     }
 
     /**
      * Discover sets from the remote repository.
      * <ol>
-     *     <li>If the repository already has sets configured, these are returned.</li>
-     *     <li>If set discovery is enabled, the repository is enquired using the {@code ListSets} verb.</li>
-     *     <li>
-     *         Otherwise, a {@link Repo.MetadataFormat} with a {@code setSpec} set to {@code null} will be returned.
-     *         This will prevent the harvester from using set based harvesting.
-     *     </li>
+     * <li>If the repository already has sets configured, these are returned.</li>
+     * <li>If set discovery is enabled, the repository is enquired using the
+     * {@code ListSets} verb.</li>
+     * <li>
+     * Otherwise, a {@link Repo.MetadataFormat} with a {@code setSpec} set to
+     * {@code null} will be returned.
+     * This will prevent the harvester from using set based harvesting.
+     * </li>
      * </ol>
      *
      * @param repo the repository to get sets for
      * @return a {@link Set} of setSpecs
      */
-    Set<Repo.MetadataFormat> discoverSets( Repo repo )
-    {
+    Set<Repo.MetadataFormat> discoverSets(Repo repo) {
         return repo.metadataPrefixes().stream()
-            .flatMap( mf -> {
-                // If a set is already configured, or if discovery of sets is not configured, return the current configuration.
-                if (mf.setSpec() != null || !repo.discoverSets()) {
-                    return Stream.of(mf);
-                }
-
-                try
-                {
-                    var unfoldedSets = new ArrayList<Repo.MetadataFormat>();
-                    var ls = ListSets.instance( httpClient, repo.url() );
-
-                    Optional<String> resumptionToken;
-                    do
-                    {
-                        if ( !ls.getErrors().isEmpty() )
-                        {
-                            log.error( "{}: Error while retrieving the list of sets: {}", repo.code(), ls.getErrors() );
-                            break;
-                        }
-
-                        unfoldedSets.addAll( ls.getSets().stream().map( s -> new Repo.MetadataFormat( s, mf.metadataPrefix(), mf.ddiVersion(), mf.validationProfile()) ).toList() );
-
-                        resumptionToken = ls.getResumptionToken();
-                        if ( resumptionToken.isPresent() )
-                        {
-                            ls =  ListSets.instance( httpClient, repo.url(), resumptionToken.orElseThrow() );
-                        }
+                .flatMap(mf -> {
+                    // If a set is already configured, or if discovery of sets is not configured,
+                    // return the current configuration.
+                    if (mf.setSpec() != null || !repo.discoverSets()) {
+                        return Stream.of(mf);
                     }
-                    while ( resumptionToken.isPresent() );
 
-                    log.debug( "No. of sets: {}", unfoldedSets.size() );
-                    return unfoldedSets.stream();
-                }
-                catch ( IOException | SAXException e )
-                {
-                    log.warn( "Failed to discover sets from {}: set set=all: {}", repo.code(), e.toString() );
-                    // set set=all in case of no sets found
-                    return Stream.of(mf);
-                }
-            } ).collect( Collectors.toSet());
+                    try {
+                        var unfoldedSets = new ArrayList<Repo.MetadataFormat>();
+                        var ls = ListSets.instance(httpClient, repo.url());
+
+                        Optional<String> resumptionToken;
+                        do {
+                            if (!ls.getErrors().isEmpty()) {
+                                log.error("{}: Error while retrieving the list of sets: {}", repo.code(),
+                                        ls.getErrors());
+                                break;
+                            }
+
+                            unfoldedSets.addAll(ls.getSets().stream().map(s -> new Repo.MetadataFormat(s,
+                                    mf.metadataPrefix(), mf.ddiVersion(), mf.validationProfile())).toList());
+
+                            resumptionToken = ls.getResumptionToken();
+                            if (resumptionToken.isPresent()) {
+                                ls = ListSets.instance(httpClient, repo.url(), resumptionToken.orElseThrow());
+                            }
+                        } while (resumptionToken.isPresent());
+
+                        log.debug("No. of sets: {}", unfoldedSets.size());
+                        return unfoldedSets.stream();
+                    } catch (IOException | SAXException e) {
+                        log.warn("Failed to discover sets from {}: set set=all: {}", repo.code(), e.toString());
+                        // set set=all in case of no sets found
+                        return Stream.of(mf);
+                    }
+                }).collect(Collectors.toSet());
     }
 
     /**
      * Retrieve record headers from the remote repository.
-     * @param repo the repository to harvest.
+     * 
+     * @param repo           the repository to harvest.
      * @param metadataFormat the metadata format to harvest.
-     * @param fromDate the date to harvest from.
+     * @param fromDate       the date to harvest from.
      * @return a list of {@link RecordHeader}s
-     * @throws RecordHeaderException if an error occurs retrieving the record headers
+     * @throws RecordHeaderException if an error occurs retrieving the record
+     *                               headers
      */
-    List<RecordHeader> retrieveRecordHeaders( Repo repo, Repo.MetadataFormat metadataFormat, LocalDate fromDate ) throws RecordHeaderException
-    {
-        log.trace( "URL: {}, set: {}", repo.url(), metadataFormat.setSpec() );
-        try
-        {
+    List<RecordHeader> retrieveRecordHeaders(Repo repo, Repo.MetadataFormat metadataFormat, LocalDate fromDate)
+            throws RecordHeaderException {
+        log.trace("URL: {}, set: {}", repo.url(), metadataFormat.setSpec());
+        try {
             final var records = new ArrayList<RecordHeader>();
-            var li = ListIdentifiers.instance( httpClient, repo.url(), fromDate, null, metadataFormat.setSpec(), metadataFormat.metadataPrefix() );
+            var li = ListIdentifiers.instance(httpClient, repo.url(), fromDate, null, metadataFormat.setSpec(),
+                    metadataFormat.metadataPrefix());
 
             Optional<String> resumptionToken;
 
-            do
-            {
+            do {
                 // Check for errors, abort if any are found
                 if (!li.getErrors().isEmpty()) {
-                    log.warn( "[{}]: OAI-PMH errors: {}", repo.code(), li.getErrors() );
+                    log.warn("[{}]: OAI-PMH errors: {}", repo.code(), li.getErrors());
                     break;
                 }
 
                 // add to list of records to fetch
-                records.addAll( li.getIdentifiers() );
+                records.addAll(li.getIdentifiers());
 
                 // need to continue looping?
                 resumptionToken = li.getResumptionToken();
 
-                if (resumptionToken.isPresent())
-                {
-                    log.trace( "recurse: url {}\ttoken: {}", repo.url(), resumptionToken );
-                    li = ListIdentifiers.instance( httpClient, repo.url(), resumptionToken.orElseThrow() );
+                if (resumptionToken.isPresent()) {
+                    log.trace("recurse: url {}\ttoken: {}", repo.url(), resumptionToken);
+                    li = ListIdentifiers.instance(httpClient, repo.url(), resumptionToken.orElseThrow());
                 }
-            }
-            while ( resumptionToken.isPresent() );
+            } while (resumptionToken.isPresent());
 
             return records;
-        }
-        catch ( IOException | SAXException | DateTimeParseException e )
-        {
-            throw new RecordHeaderException( repo, metadataFormat.setSpec(), e );
+        } catch (IOException | SAXException | DateTimeParseException e) {
+            throw new RecordHeaderException(repo, metadataFormat.setSpec(), e);
         }
     }
 }
