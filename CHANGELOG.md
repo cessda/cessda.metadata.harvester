@@ -14,9 +14,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - *Fixed (for any bug fixes)*
 - *Security (in case of vulnerabilities)*
 
+## [3.1.1] - 2022-11-08
+
+### Fixed
+
+- Replace path characters considered invalid by the current filesystem with "-" when creating setSpec directories ([#480](https://bitbucket.org/cessda/cessda.cdc.versions/issues/480))
+
 ## [3.0.2] - 2022-09-06
 
-## Fixed
+### Fixed
 
 - Fixed not logging in JSON ([#450](https://bitbucket.org/cessda/cessda.cdc.versions/issues/450))
 
