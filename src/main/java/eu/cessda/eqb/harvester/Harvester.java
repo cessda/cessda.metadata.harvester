@@ -19,6 +19,7 @@
  */
 package eu.cessda.eqb.harvester;
 
+import jakarta.annotation.PreDestroy;
 import org.oclc.oai.harvester2.verb.GetRecord;
 import org.oclc.oai.harvester2.verb.RecordHeader;
 import org.slf4j.Logger;
@@ -33,7 +34,6 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.xml.sax.SAXException;
 
-import javax.annotation.PreDestroy;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMSource;
 import java.io.IOException;

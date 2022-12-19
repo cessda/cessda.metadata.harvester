@@ -11,7 +11,7 @@ class DirectoryCreationFailedException extends Exception
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private final Path directory;
+    private final String directory;
 
     /**
      * Constructs a {@link DirectoryCreationFailedException} with the specified directory and cause.
@@ -22,11 +22,11 @@ class DirectoryCreationFailedException extends Exception
     DirectoryCreationFailedException( Path directory, Throwable cause )
     {
         super( "Creating " + directory + " failed", cause );
-        this.directory = directory;
+        this.directory = directory.toString();
     }
 
     Path getDirectory()
     {
-        return directory;
+        return Path.of(directory);
     }
 }
