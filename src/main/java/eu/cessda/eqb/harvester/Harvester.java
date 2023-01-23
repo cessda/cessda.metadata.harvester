@@ -1,8 +1,10 @@
+package eu.cessda.eqb.harvester;
+
 /*-
  * #%L
- * CESSDA Euro Question Bank: Metadata Harvester
+ * CESSDA OAI-PMH Metadata Harvester
  * %%
- * Copyright (C) 2020 CESSDA ERIC
+ * Copyright (C) 2019 - 2023 CESSDA ERIC
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +19,6 @@
  * limitations under the License.
  * #L%
  */
-package eu.cessda.eqb.harvester;
 
 import jakarta.annotation.PreDestroy;
 import org.oclc.oai.harvester2.verb.GetRecord;

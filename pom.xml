@@ -12,6 +12,7 @@
 		A microservice for harvesting metadata made available by third parties by using the Open Archives
 		Initiatives Protocol for Metadata Harvesting.
 	</description>
+	<inceptionYear>2019</inceptionYear>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -219,7 +220,25 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<version>2.0.0</version>
+				<configuration>
+					<licenseName>apache_v2</licenseName>
+					<addJavaLicenseAfterPackage>true</addJavaLicenseAfterPackage>
+					<failOnMissingHeader>true</failOnMissingHeader>
+					<failOnNotUptodateHeader>true</failOnNotUptodateHeader>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>validate</phase>
+						<goals>
+							<goal>check-file-header</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 		<finalName>${project.artifactId}</finalName>
 		<resources>
@@ -295,32 +314,8 @@
 	</profiles>
 
 	<organization>
-		<name>GESIS – Leibniz-Institute for the Social Sciences</name>
-		<url>http://www.gesis.org</url>
+		<name>CESSDA ERIC</name>
+		<url>https://www.cessda.eu/</url>
 	</organization>
-
-	<repositories>
-		<repository>
-			<id>gesis-${gesis.repository.visibility}</id>
-			<url>https://maven.gesis.org/repositories/gesis-${gesis.repository.visibility}</url>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<id>gesis-${gesis.repository.visibility}</id>
-			<url>https://maven.gesis.org/repositories/gesis-${gesis.repository.visibility}</url>
-		</pluginRepository>
-	</pluginRepositories>
-
-	<distributionManagement>
-		<repository>
-			<id>gesis-${gesis.repository.visibility}-releases</id>
-			<url>https://maven.gesis.org/repositories/gesis-${gesis.repository.visibility}-releases</url>
-		</repository>
-		<snapshotRepository>
-			<id>gesis-${gesis.repository.visibility}-snapshots</id>
-			<url>https://maven.gesis.org/repositories/gesis-${gesis.repository.visibility}-snapshots</url>
-		</snapshotRepository>
-	</distributionManagement>
 
 </project>
