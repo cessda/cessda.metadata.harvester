@@ -65,8 +65,8 @@ harvester:
         - metadataPrefix: ddi_c
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-    # URL of TEST endpoint. See #506
-    - url: https://tst.swissubase.ch/oai-pmh/v1/oai
+    # URL of PRODUCTION endpoint. See #506
+    - url: https://www.swissubase.ch/oai-pmh/v1/oai
       code: FORS
       name: "FORS - Swiss Centre of Expertise in the Social Sciences"
       validationGate: BASIC
