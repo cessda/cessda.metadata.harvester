@@ -14,6 +14,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - *Fixed (for any bug fixes)*
 - *Security (in case of vulnerabilities)*
 
+## [3.2.1] -  Unreleased
+
+## Added
+
+- add FORS endpoint details ([#506](https://bitbucket.org/cessda/cessda.cdc.versions/issues/506))
+
+## Changed
+
+- Updated list of harvested endpoints ([#525](https://bitbucket.org/cessda/cessda.cdc.versions/issues/525))
+
+- Updated the copyright statement ([#520](https://bitbucket.org/cessda/cessda.cdc.versions/issues/520))
+
+## [3.1.1] - 2022-11-08
+
+### Fixed [3.1.1]
+
+- Replace path characters considered invalid by the current filesystem with "-" when creating setSpec directories
+  ([#480](https://bitbucket.org/cessda/cessda.cdc.versions/issues/480))
+
 ## [3.0.2] - 2022-09-06
 
 ## Fixed [3.0.2]
