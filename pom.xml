@@ -146,6 +146,7 @@
 			<plugin>
 				<groupId>pl.project13.maven</groupId>
 				<artifactId>git-commit-id-plugin</artifactId>
+				<version>4.9.10</version>
 				<executions>
 					<execution>
 						<id>get-the-git-infos</id>
@@ -239,6 +240,14 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5.3</version>
+				<configuration>
+					<tagNameFormat>v@{project.version}</tagNameFormat>
+				</configuration>
+			</plugin>
 		</plugins>
 		<finalName>${project.artifactId}</finalName>
 		<resources>
@@ -317,5 +326,10 @@
 		<name>CESSDA ERIC</name>
 		<url>https://www.cessda.eu/</url>
 	</organization>
+
+	<scm>
+		<url>https://bitbucket.org/cessda/cessda.metadata.harvester</url>
+		<connection>scm:git:https://bitbucket.org/cessda/cessda.metadata.harvester.git</connection>
+	</scm>
 
 </project>
