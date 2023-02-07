@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>eu.cessda.eqb</groupId>
 	<artifactId>oaiharvester</artifactId>
-	<version>3.1.1-SNAPSHOT</version>
+	<version>3.2.1</version>
 	<name>CESSDA OAI-PMH Metadata Harvester</name>
 	<description>
 		A microservice for harvesting metadata made available by third parties by using the Open Archives
@@ -29,7 +27,7 @@
 		<logging.file>target/application.log</logging.file>
 		<logging.level.org.springframework>INFO</logging.level.org.springframework>
 		<server.port>8083</server.port>
-		<server.servlet.context-path/>
+		<server.servlet.context-path />
 		<documents>data</documents>
 		<sonar.sources>src/main/</sonar.sources>
 		<sonar.tests>src/test/</sonar.tests>
@@ -204,15 +202,12 @@
 							<exportAntProperties>true</exportAntProperties>
 							<target>
 								<condition property="isSnapshot">
-									<contains string="${project.version}"
-										substring="SNAPSHOT" />
+									<contains string="${project.version}" substring="SNAPSHOT" />
 								</condition>
-								<condition property="docker.registry.uri"
-									value="docker-private-snapshots.gesis.intra">
+								<condition property="docker.registry.uri" value="docker-private-snapshots.gesis.intra">
 									<isset property="isSnapshot" />
 								</condition>
-								<property name="docker.registry.uri"
-									value="docker-private-releases.gesis.intra" />
+								<property name="docker.registry.uri" value="docker-private-releases.gesis.intra" />
 							</target>
 						</configuration>
 						<goals>
@@ -330,6 +325,7 @@
 	<scm>
 		<url>https://bitbucket.org/cessda/cessda.metadata.harvester</url>
 		<connection>scm:git:https://bitbucket.org/cessda/cessda.metadata.harvester.git</connection>
-	</scm>
+	  <tag>v3.2.1</tag>
+  </scm>
 
 </project>
