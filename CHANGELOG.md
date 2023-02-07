@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - *Fixed (for any bug fixes)*
 - *Security (in case of vulnerabilities)*
 
+## [3.2.1] - 2023-02-07
+
+### Removed
+
+- Removed DNA from the list of repositories ([#524](https://bitbucket.org/cessda/cessda.cdc.versions/issues/524))
+
 ## [3.1.1] - 2022-11-08
 
 ### Fixed
