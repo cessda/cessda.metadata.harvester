@@ -323,8 +323,8 @@
 	</organization>
 
 	<scm>
-		<url>https://bitbucket.org/cessda/cessda.metadata.harvester</url>
-		<connection>scm:git:https://bitbucket.org/cessda/cessda.metadata.harvester.git</connection>
+		<url>https://github.com/cessda/cessda.metadata.harvester</url>
+		<connection>scm:git:https://github.com/cessda/cessda.metadata.harvester.git</connection>
 	  <tag>HEAD</tag>
   </scm>
 

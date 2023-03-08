@@ -14,7 +14,7 @@ pipeline {
     }
 
     stages {
-        // Building on master
+        // Building on main
         stage('Pull SDK Docker Image') {
             agent {
                 docker {
@@ -29,16 +29,16 @@ pipeline {
                             sh './mvnw clean install -Pdocker-compose'
                         }
                     }
-                    when { branch 'master' }
+                    when { branch 'main' }
                 }
-                // Not running on master - test only (for PRs and integration branches)
+                // Not running on main - test only (for PRs and integration branches)
                 stage('Test Project') {
                     steps {
                         withMaven {
                             sh './mvnw clean test -Pdocker-compose'
                         }
                     }
-                    when { not { branch 'master' } }
+                    when { not { branch 'main' } }
                 }
                 stage('Record Issues') {
                     steps {
@@ -53,7 +53,7 @@ pipeline {
                             }
                         }
                     }
-                    when { branch 'master' }
+                    when { branch 'main' }
                 }
             }
         }
@@ -63,7 +63,7 @@ pipeline {
                     waitForQualityGate abortPipeline: false
                 }
             }
-            when { branch 'master' }
+            when { branch 'main' }
         }
         stage('Build and Push Docker Image') {
             steps {
@@ -73,15 +73,15 @@ pipeline {
                 }
                 sh "gcloud container images add-tag ${IMAGE_TAG} ${docker_repo}/${product_name}-${module_name}:${env.BRANCH_NAME}-latest"
             }
-            when { branch 'master' }
+            when { branch 'main' }
         }
         stage('Check Requirements and Deployments') {
             steps {
-                build job: 'cessda.cdc.aggregator.deploy/master', parameters: [
+                build job: 'cessda.cdc.aggregator.deploy/main', parameters: [
                         string(name: 'harvesterImageTag', value: "${env.BRANCH_NAME}-${env.BUILD_NUMBER}")
                 ], wait: false
             }
-            when { branch 'master' }
+            when { branch 'main' }
         }
     }
 }
