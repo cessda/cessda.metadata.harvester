@@ -57,6 +57,7 @@ public record RecordHeader(String identifier, TemporalAccessor datestamp, Set<St
         this.status = status;
     }
 
+    @SuppressWarnings( {"java:S115", "java:S1124"} )
     public enum Status
     {
         deleted

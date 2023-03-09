@@ -141,7 +141,7 @@ public final class ListIdentifiers extends HarvesterVerb implements Resumable
 		var records = new ArrayList<RecordHeader>(recordHeaders.getLength());
 		for ( int i = 0; i < recordHeaders.getLength(); i++ )
 		{
-			var identifier = HarvesterVerb.getRecordHeader( recordHeaders.item( i ) );
+			var identifier = getRecordHeader( recordHeaders.item( i ) );
 			records.add(identifier);
 		}
 		return Collections.unmodifiableList(records);

@@ -135,6 +135,7 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
 
 	// Instance variables
 	private final Document doc;
+    private final String oaiNamespacePrefix;
 	private final String schemaLocation;
 
 	/**
@@ -164,6 +165,8 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
 			schemaLocationTemp = "";
 		}
 		this.schemaLocation = schemaLocationTemp;
+
+        this.oaiNamespacePrefix = doc.lookupPrefix( OAI_2_0_NAMESPACE );
 	}
 
     /**
@@ -171,15 +174,21 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
      * @param headerNode the node to convert.
      * @throws DateTimeParseException if the datestamp element is not valid.
      */
-    protected static RecordHeader getRecordHeader( Node headerNode )
+    protected RecordHeader getRecordHeader( Node headerNode )
     {
         String identifier = null;
         TemporalAccessor datestamp = null;
         var sets = new HashSet<String>();
 
+        String prefixWithColon = "";
+
+        if ( oaiNamespacePrefix != null && !oaiNamespacePrefix.isEmpty()) {
+            prefixWithColon = oaiNamespacePrefix + ":";
+        }
+
         // Get the status attribute on the header node
         RecordHeader.Status status = null;
-        var namedItem = headerNode.getAttributes().getNamedItem( "status" );
+        var namedItem = headerNode.getAttributes().getNamedItem( prefixWithColon + "status" );
         if ( namedItem != null )
         {
             status = RecordHeader.Status.valueOf( namedItem.getTextContent() );
@@ -190,19 +199,20 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
         for ( int i = 0; i < childNodes.getLength(); i++ )
         {
             var node = childNodes.item( i );
-            switch ( node.getNodeName() )
+            if ( node.getNodeName().equals( prefixWithColon + "identifier" ) )
             {
-                case "identifier" -> identifier = node.getTextContent();
-                case "datestamp" -> {
-                    // NSD returns invalid ISO dates such as 2020-09-02T15:12:07+0000.
-                    // This corrects the dates before parsing by replacing +0000 with Z.
-                    var datestampString = node.getTextContent().replace( "+0000", "Z" );
-                    datestamp = OAI_DATE_TIME_FORMATTER.parseBest( datestampString, OffsetDateTime::from, LocalDateTime::from, LocalDate::from );
-                }
-                case "setSpec" -> sets.add( node.getTextContent() );
-                default -> {
-                    // Unknown node name, do nothing.
-                }
+                identifier = node.getTextContent();
+            }
+            else if ( node.getNodeName().equals( prefixWithColon + "datestamp" ) )
+            {
+                // NSD returns invalid ISO dates such as 2020-09-02T15:12:07+0000.
+                // This corrects the dates before parsing by replacing +0000 with Z.
+                var datestampString = node.getTextContent().replace( "+0000", "Z" );
+                datestamp = OAI_DATE_TIME_FORMATTER.parseBest( datestampString, OffsetDateTime::from, LocalDateTime::from, LocalDate::from );
+            }
+            else if ( node.getNodeName().equals( prefixWithColon +"setSpec" ) )
+            {
+                sets.add( node.getTextContent() );
             }
         }
 
