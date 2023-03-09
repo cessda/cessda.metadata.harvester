@@ -35,7 +35,7 @@ package org.oclc.oai.harvester2.verb;
  * #L%
  */
 
-import eu.cessda.eqb.harvester.HttpClient;
+import eu.cessda.oaiharvester.HttpClient;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 

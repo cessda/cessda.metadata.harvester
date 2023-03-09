@@ -1,4 +1,4 @@
-package eu.cessda.eqb.harvester;
+package eu.cessda.oaiharvester;
 
 /*-
  * #%L
@@ -48,7 +48,7 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
-import static eu.cessda.eqb.harvester.LoggingConstants.*;
+import static eu.cessda.oaiharvester.LoggingConstants.*;
 import static java.lang.Math.max;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.logstash.logback.argument.StructuredArguments.value;

@@ -4,8 +4,8 @@ pipeline {
     }
 
     environment {
-        product_name = "eqb"
-        module_name = "harvester"
+        product_name = 'eqb'
+        module_name = 'harvester'
         image_tag = "${docker_repo}/${product_name}-${module_name}:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
 
