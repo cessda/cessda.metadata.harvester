@@ -1,4 +1,4 @@
-package eu.cessda.eqb.harvester;
+package eu.cessda.oaiharvester;
 
 /*-
  * #%L
