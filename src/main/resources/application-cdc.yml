@@ -188,7 +188,7 @@ harvester:
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: http://oai.unidata.unimib.it/v0/oai
       code: UniData
-      name: "UniData - Bicocca Data Archive"
+      name: "DASSI - Data Archive for Social Sciences in Italy"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi25
