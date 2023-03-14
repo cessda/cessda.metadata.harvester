@@ -32,7 +32,8 @@ harvester:
         - metadataPrefix: ddi_c
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-    - url: https://data2.aussda.at/oai
+    # Changed URL. See #531
+    - url: https://data.aussda.at/oai
       code: AUSSDA
       name: "Austrian Social Science Data Archive (AUSSDA)"
       validationGate: BASIC
@@ -40,11 +41,6 @@ harvester:
         - metadataPrefix: oai_ddi
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-    # Temporarily excluded, see #372
-    # - url: http://nesstar.soc.cas.cz/oai-pmh/
-    #  code: CSDA
-    #  name: "Czech Social Science Data Archive (ČSDA)"
-    # metadataPrefixes: oai_ddi
     - url: https://easy.dans.knaw.nl/oai/
       code: DANS
       name: DANS-KNAW
@@ -56,15 +52,6 @@ harvester:
         - metadataPrefix: oai_ddi25_nl
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-    # Removed from catalogue as no longer a member. See #525
-    #- url: https://kuha.sa.dk/v0/oai
-    #  code: DNA
-    #  name: "Danish National Archives (DNA)"
-    #  validationGate: BASIC
-    #  metadataPrefixes:
-    #    - metadataPrefix: ddi_c
-    #      ddiVersion: DDI_2_5
-    #     validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     # URL of PRODUCTION endpoint. See #506 and #525
     - url: https://www.swissubase.ch/oai-pmh/v1/oai
       code: FORS
