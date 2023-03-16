@@ -39,8 +39,9 @@ harvester:
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi
+          setSpec: originalout
           ddiVersion: DDI_2_5
-          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile-mono.xml
     - url: https://easy.dans.knaw.nl/oai/
       code: DANS
       name: DANS-KNAW
