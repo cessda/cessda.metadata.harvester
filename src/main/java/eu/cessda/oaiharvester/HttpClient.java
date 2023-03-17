@@ -46,7 +46,8 @@ public class HttpClient
     private static final Logger log = LoggerFactory.getLogger( HttpClient.class );
     private static final int MAX_RETRIES = 3;
 
-    private final Methanol client;
+    private final java.net.http.HttpClient client;
+    private final int retryDelay;
 
     public HttpClient(HarvesterConfiguration harvesterConfiguration)
     {
@@ -57,6 +58,16 @@ public class HttpClient
             .userAgent( "OAIHarvester/2.0" )
             .requestTimeout( harvesterConfiguration.getTimeout() )
             .build();
+        this.retryDelay = 1000;
+    }
+
+    /**
+     * Testing constructor, takes a mock HTTP client
+     */
+    HttpClient(java.net.http.HttpClient client)
+    {
+        this.client = client;
+        this.retryDelay = 0;
     }
 
     private static long parseRetryAfterHeader( HttpResponse<?> response )
@@ -158,7 +169,7 @@ public class HttpClient
 
                 // Request failed, set error status
                 currentException = new HTTPException( httpRequest.uri(), response.statusCode() );
-                if ( responseCode < 500 )
+                if ( responseCode != 429 && responseCode < 500 )
                 {
                     // 400 response codes, apart from 429, are caused by client errors, do not retry
                     break;
@@ -181,7 +192,7 @@ public class HttpClient
             if ( retries < MAX_RETRIES )
             {
                 retries++;
-                Thread.sleep( 1000 );
+                Thread.sleep( retryDelay );
             }
             else
             {
