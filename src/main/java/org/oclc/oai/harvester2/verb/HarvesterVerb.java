@@ -35,6 +35,7 @@ package org.oclc.oai.harvester2.verb;
  * #L%
  */
 
+import org.apache.xml.utils.DefaultErrorHandler;
 import org.apache.xpath.XPathAPI;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
@@ -97,8 +98,9 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
     private static final Element namespaceElement;
 	private static final DocumentBuilderFactory factory;
 	private static final TransformerFactory xformFactory = TransformerFactory.newInstance();
+    private static final DefaultErrorHandler HANDLER = new DefaultErrorHandler(true);
 
-	static
+    static
 	{
 		try
 		{
@@ -148,7 +150,9 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
 	{
 		try
 		{
-			doc = factory.newDocumentBuilder().parse( in );
+            var documentBuilder = factory.newDocumentBuilder();
+            documentBuilder.setErrorHandler( HANDLER );
+            doc = documentBuilder.parse( in );
 		}
 		catch ( ParserConfigurationException e )
 		{

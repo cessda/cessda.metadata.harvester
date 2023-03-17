@@ -121,7 +121,7 @@ public class HttpClient
      * @throws IOException if an IO error occurred when sending the response and the maximum retries have been exceeded.
      * @throws InterruptedException if the operation is interrupted.
      */
-    @SuppressWarnings( "java:S3776" ) // Any other way of implementing this logic is more complicated
+    @SuppressWarnings( {"java:S3776", "java:S6212"} ) // Any other way of implementing this logic is more complicated
     private <T> HttpResponse<T> performRequest( HttpRequest httpRequest, HttpResponse.BodyHandler<T> bodyHandler ) throws InterruptedException, IOException
     {
         // Retry counter
@@ -140,7 +140,12 @@ public class HttpClient
                 int responseCode = response.statusCode();
                 log.trace( "responseCode={}", responseCode );
 
-                if ( responseCode == 429 || responseCode == 503 )
+                if ( responseCode < 400 )
+                {
+                    // If successful, return the response
+                    return response;
+                }
+                else if ( responseCode == 429 || responseCode == 503 )
                 {
                     // Try to parse the Retry-After header, fall back to default behavior if the header is not present
                     var delayMilliseconds = parseRetryAfterHeader( response );
@@ -151,17 +156,13 @@ public class HttpClient
                     }
                 }
 
-                if (responseCode >= 400)
+                // Request failed, set error status
+                currentException = new HTTPException( httpRequest.uri(), response.statusCode() );
+                if ( responseCode < 500 )
                 {
-                    currentException = new HTTPException( httpRequest.uri(), response.statusCode() );
-                    if (responseCode < 500)
-                    {
-                        // 400 response codes are caused by client errors, do not retry
-                        break;
-                    }
+                    // 400 response codes, apart from 429, are caused by client errors, do not retry
+                    break;
                 }
-
-                return response;
             }
             catch ( IOException e )
             {
