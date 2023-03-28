@@ -152,7 +152,7 @@ n/a
 
 * added letsencrypt certs - to be imported into the JRE when harvesting OAI servers available via HTTPS only and using letsencrypt SSL certificates
 
-[3.2.1]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/v3.2.1
+[3.2.1]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.2.1
 [3.1.1]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.1.1
 [3.0.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.0.0
 [1.0.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/1.0.0
