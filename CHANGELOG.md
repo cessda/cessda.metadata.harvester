@@ -16,9 +16,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [3.2.1] - 2023-02-07
 
+### Added
+
+- Add new Sikt and ESS endpoints ([#505](https://github.com/cessda/cessda.cdc.versions/issues/505))
+
+### Changed
+
+- Renamed the main package from `eu.cessda.eqb.harvester` to `eu.cessda.oaiharvester` ([PR-2](https://github.com/cessda/cessda.metadata.harvester/pull/2))
+
 ### Removed
 
 - Removed DNA from the list of repositories ([#524](https://github.com/cessda/cessda.cdc.versions/issues/524))
+
+### Fixed
+
+- Fixed not being able to parse OAI responses that have a namespace prefix defined ([#505](https://github.com/cessda/cessda.cdc.versions/issues/505))
 
 ## [3.1.1] - 2022-11-08
 
@@ -140,7 +152,7 @@ n/a
 
 * added letsencrypt certs - to be imported into the JRE when harvesting OAI servers available via HTTPS only and using letsencrypt SSL certificates
 
-[3.2.1]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/v3.2.1
+[3.2.1]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.2.1
 [3.1.1]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.1.1
 [3.0.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.0.0
 [1.0.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/1.0.0
