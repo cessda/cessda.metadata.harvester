@@ -50,7 +50,7 @@ public interface Resumable
 
         if (resumptionToken.getLength() > 0)
         {
-            var token = resumptionToken.item( 0 ).getTextContent();
+            var token = resumptionToken.item( 0 ).getTextContent().trim();
             if (!token.isEmpty())
             {
                 return Optional.of( token );

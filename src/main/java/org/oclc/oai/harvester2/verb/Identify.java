@@ -38,11 +38,9 @@ package org.oclc.oai.harvester2.verb;
 import eu.cessda.oaiharvester.HttpClient;
 import org.xml.sax.SAXException;
 
-import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.NoSuchElementException;
 
 /**
  * This class represents an Identify response on either the server or on the client
@@ -67,34 +65,6 @@ public final class Identify extends HarvesterVerb
 		try (var is = httpClient.getHttpResponse( requestURL ))
 		{
 			return new Identify( is );
-		}
-	}
-
-	/**
-	 * Get the oai:protocolVersion value from the Identify response
-	 *
-	 * @return the oai:protocolVersion value
-	 */
-	public String getProtocolVersion()
-	{
-		try
-		{
-			if ( SCHEMA_LOCATION_V2_0.equals( getSchemaLocation() ) )
-			{
-				return getSingleString( "/oai20:OAI-PMH/oai20:Identify/oai20:protocolVersion" );
-			}
-			else if ( SCHEMA_LOCATION_V1_1_IDENTIFY.equals( getSchemaLocation() ) )
-			{
-				return getSingleString( "/oai11_Identify:Identify/oai11_Identify:protocolVersion" );
-			}
-			else
-			{
-				throw new NoSuchElementException( getSchemaLocation() );
-			}
-		}
-		catch ( TransformerException e )
-		{
-			throw new IllegalStateException( e );
 		}
 	}
 

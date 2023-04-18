@@ -54,35 +54,33 @@ import java.util.Objects;
  */
 public final class ListMetadataFormats extends HarvesterVerb
 {
-	/**
-	 * Client-side ListMetadataFormats verb constructor
-	 *
-	 * @throws MalformedURLException
-	 *             the baseURL is bad
-	 * @throws SAXException
-	 *             the xml response is bad
-	 * @throws IOException
-	 *             an I/O error occurred
-	 */
-	ListMetadataFormats( InputStream in ) throws IOException, SAXException
-	{
-		super( in );
-	}
+    /**
+     * Client-side ListMetadataFormats verb constructor
+     *
+     * @throws MalformedURLException the baseURL is bad
+     * @throws SAXException          the xml response is bad
+     * @throws IOException           an I/O error occurred
+     */
+    ListMetadataFormats( InputStream in ) throws IOException, SAXException
+    {
+        super( in );
+    }
 
     /**
      * Construct a new {@link ListMetadataFormats} instance from an OAI-PMH repository URL.
+     *
      * @param baseURL the URL of the OAI-PMH repository.
-     * @throws IOException if an IO error occurs.
+     * @throws IOException  if an IO error occurs.
      * @throws SAXException if an error occurs when parsing the XML.
      */
-	public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL ) throws IOException, SAXException
-	{
-		var requestURL = getRequestURL( baseURL, null );
-		try (var in = httpClient.getHttpResponse( requestURL ))
-		{
-			return new ListMetadataFormats( in );
-		}
-	}
+    public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL ) throws IOException, SAXException
+    {
+        var requestURL = getRequestURL( baseURL, null );
+        try ( var in = httpClient.getHttpResponse( requestURL ) )
+        {
+            return new ListMetadataFormats( in );
+        }
+    }
 
     /**
      * Construct a new {@link ListMetadataFormats} instance for a specific record identifier in an OAI-PMH repository
@@ -91,21 +89,40 @@ public final class ListMetadataFormats extends HarvesterVerb
      * @throws IOException if an IO error occurs.
      * @throws SAXException if an error occurs when parsing the XML.
      */
-	public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL, String identifier ) throws IOException, SAXException
-	{
-		Objects.requireNonNull(identifier, "identifier cannot be null");
-		var requestURL = getRequestURL( baseURL, identifier );
-		try (var in = httpClient.getHttpResponse( requestURL ))
-		{
-			return new ListMetadataFormats( in );
-		}
-	}
+    public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL, String identifier ) throws IOException, SAXException
+    {
+        Objects.requireNonNull( identifier, "identifier cannot be null" );
+        var requestURL = getRequestURL( baseURL, identifier );
+        try ( var in = httpClient.getHttpResponse( requestURL ) )
+        {
+            return new ListMetadataFormats( in );
+        }
+    }
+
+    /**
+     * Construct the query portion of the http request
+     *
+     * @return a String containing the query portion of the http request
+     */
+    private static URI getRequestURL( URI baseURL, String identifier )
+    {
+        StringBuilder requestURL = new StringBuilder( baseURL.toString() );
+        requestURL.append( "?verb=ListMetadataFormats" );
+
+        if ( identifier != null )
+        {
+            requestURL.append( "&identifier=" ).append( identifier );
+        }
+
+        return URI.create( requestURL.toString() );
+    }
 
     /**
      * Gets a list of metadata formats.
+     *
      * @throws URISyntaxException if the schema or metadataNamespace elements cannot be parsed as a {@link URI}.
      */
-	public List<MetadataFormat> getMetadataFormats() throws URISyntaxException
+    public List<MetadataFormat> getMetadataFormats() throws URISyntaxException
     {
         var metadataFormats = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "metadataFormat" );
 
@@ -122,15 +139,19 @@ public final class ListMetadataFormats extends HarvesterVerb
             for ( int j = 0; j < childNodes.getLength(); j++ )
             {
                 var node = childNodes.item( j );
+                var localName = node.getLocalName();
 
-                switch ( node.getNodeName() )
+                if ( "metadataPrefix".equals( localName ) )
                 {
-                    case "metadataPrefix" -> metadataPrefix = node.getTextContent();
-                    case "schema" -> schema = new URI( node.getTextContent() );
-                    case "metadataNamespace" -> metadataNamespace = new URI( node.getTextContent() );
-                    default -> {
-                        // Unexpected node name - do nothing.
-                    }
+                    metadataPrefix = node.getTextContent().trim();
+                }
+                else if ( "schema".equals( localName ) )
+                {
+                    schema = new URI( node.getTextContent().trim() );
+                }
+                else if ( "metadataNamespace".equals( localName ) )
+                {
+                    metadataNamespace = new URI( node.getTextContent().trim() );
                 }
             }
 
@@ -139,24 +160,6 @@ public final class ListMetadataFormats extends HarvesterVerb
 
         return list;
     }
-
-	/**
-	 * Construct the query portion of the http request
-	 *
-	 * @return a String containing the query portion of the http request
-	 */
-	private static URI getRequestURL( URI baseURL, String identifier )
-	{
-		StringBuilder requestURL = new StringBuilder( baseURL.toString() );
-		requestURL.append( "?verb=ListMetadataFormats" );
-
-		if ( identifier != null )
-		{
-			requestURL.append( "&identifier=" ).append( identifier );
-		}
-
-		return URI.create(requestURL.toString());
-	}
 
     public record MetadataFormat(String metadataPrefix, URI schema, URI metadataNamespace)
     {

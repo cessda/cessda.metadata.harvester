@@ -35,19 +35,15 @@ package org.oclc.oai.harvester2.verb;
  * #L%
  */
 
-import org.apache.xpath.XPathAPI;
-import org.w3c.dom.DOMImplementation;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
-import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
@@ -74,17 +70,12 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
  */
 public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIdentifiers, ListMetadataFormats, ListRecords, ListSets
 {
-	/* Primary OAI namespaces */
-	protected static final String OAI_2_0_NAMESPACE = "http://www.openarchives.org/OAI/2.0/";
-	public static final String SCHEMA_LOCATION_V2_0 = "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd";
-	public static final String SCHEMA_LOCATION_V1_1_GET_RECORD = "http://www.openarchives.org/OAI/1.1/OAI_GetRecord http://www.openarchives.org/OAI/1.1/OAI_GetRecord.xsd";
-	public static final String SCHEMA_LOCATION_V1_1_IDENTIFY = "http://www.openarchives.org/OAI/1.1/OAI_Identify http://www.openarchives.org/OAI/1.1/OAI_Identify.xsd";
-	public static final String SCHEMA_LOCATION_V1_1_LIST_IDENTIFIERS = "http://www.openarchives.org/OAI/1.1/OAI_ListIdentifiers http://www.openarchives.org/OAI/1.1/OAI_ListIdentifiers.xsd";
-	public static final String SCHEMA_LOCATION_V1_1_LIST_METADATA_FORMATS = "http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats.xsd";
-	public static final String SCHEMA_LOCATION_V1_1_LIST_RECORDS = "http://www.openarchives.org/OAI/1.1/OAI_ListRecords http://www.openarchives.org/OAI/1.1/OAI_ListRecords.xsd";
-	public static final String SCHEMA_LOCATION_V1_1_LIST_SETS = "http://www.openarchives.org/OAI/1.1/OAI_ListSets http://www.openarchives.org/OAI/1.1/OAI_ListSets.xsd";
+    /* Primary OAI namespaces */
+    protected static final String OAI_2_0_NAMESPACE = "http://www.openarchives.org/OAI/2.0/";
 
-    /** A formatter that supports all the date formats returned by OAI-PMH repositories. */
+    /**
+     * A formatter that supports all the date formats returned by OAI-PMH repositories.
+     */
     protected static final DateTimeFormatter OAI_DATE_TIME_FORMATTER = new DateTimeFormatterBuilder()
         .append( ISO_LOCAL_DATE )
         .optionalStart()
@@ -94,83 +85,61 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
         .appendOffsetId()
         .toFormatter();
 
-    private static final Element namespaceElement;
-	private static final DocumentBuilderFactory factory;
-	private static final TransformerFactory xformFactory = TransformerFactory.newInstance();
+    private static final DocumentBuilderFactory factory;
+    private static final ThreadLocal<DocumentBuilder> documentBuilder;
+    private static final ThreadLocal<Transformer> identityTransformer;
 
-	static
-	{
-		try
-		{
-			/* Load DOM Document */
-			factory = DocumentBuilderFactory.newInstance();
-			factory.setNamespaceAware( true );
-			DOMImplementation impl = factory.newDocumentBuilder().getDOMImplementation();
-			Document namespaceHolder = impl.createDocument( "http://www.oclc.org/research/software/oai/harvester",
-					"harvester:namespaceHolder", null );
-			namespaceElement = namespaceHolder.getDocumentElement();
-			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:harvester",
-					"http://www.oclc.org/research/software/oai/harvester" );
-			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:xsi",
-					"http://www.w3.org/2001/XMLSchema-instance" );
-			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai20", OAI_2_0_NAMESPACE );
-			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_GetRecord",
-					"http://www.openarchives.org/OAI/1.1/OAI_GetRecord" );
-			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_Identify",
-					"http://www.openarchives.org/OAI/1.1/OAI_Identify" );
-			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_ListIdentifiers",
-					"http://www.openarchives.org/OAI/1.1/OAI_ListIdentifiers" );
-			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_ListMetadataFormats",
-					"http://www.openarchives.org/OAI/1.1/OAI_ListMetadataFormats" );
-			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_ListRecords",
-					"http://www.openarchives.org/OAI/1.1/OAI_ListRecords" );
-			namespaceElement.setAttributeNS( XMLConstants.XMLNS_ATTRIBUTE_NS_URI, "xmlns:oai11_ListSets",
-					"http://www.openarchives.org/OAI/1.1/OAI_ListSets" );
-		}
-		catch ( ParserConfigurationException e )
-		{
-			throw new IllegalStateException( e );
-		}
-	}
+    static
+    {
+        /* Configure Document Builder Factory */
+        factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware( true );
 
-	// Instance variables
-	private final Document doc;
-    private final String oaiNamespacePrefix;
-	private final String schemaLocation;
+        documentBuilder = ThreadLocal.withInitial( () ->
+        {
+            try
+            {
+                return factory.newDocumentBuilder();
+            }
+            catch ( ParserConfigurationException e )
+            {
+                throw new IllegalStateException( e );
+            }
+        } );
 
-	/**
-	 * Instance a {@link HarvesterVerb} from an {@link InputStream}
-	 * @param in the input stream representing the source document.
-	 * @throws IOException if an IO error occurs.
-	 * @throws SAXException if an error occurs when parsing the stream.
-	 */
-	protected HarvesterVerb( InputStream in ) throws IOException, SAXException
-	{
-		try
-		{
-			doc = factory.newDocumentBuilder().parse( in );
-		}
-		catch ( ParserConfigurationException e )
-		{
-			throw new IllegalStateException( e );
-		}
+        identityTransformer = ThreadLocal.withInitial( () ->
+        {
+            try
+            {
+                var transformer = TransformerFactory.newInstance().newTransformer();
+                transformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "yes" );
+                return transformer;
+            }
+            catch ( TransformerConfigurationException e )
+            {
+                throw new IllegalStateException( e );
+            }
+        } );
+    }
 
-		String schemaLocationTemp;
-		try
-		{
-			schemaLocationTemp = getSingleString( "/*/@xsi:schemaLocation" );
-		}
-		catch ( TransformerException e )
-		{
-			schemaLocationTemp = "";
-		}
-		this.schemaLocation = schemaLocationTemp;
+    // Instance variables
+    private final Document doc;
 
-        this.oaiNamespacePrefix = doc.lookupPrefix( OAI_2_0_NAMESPACE );
-	}
+    /**
+     * Instance a {@link HarvesterVerb} from an {@link InputStream}
+     *
+     * @param in the input stream representing the source document.
+     * @throws IOException  if an IO error occurs.
+     * @throws SAXException if an error occurs when parsing the stream.
+     */
+    protected HarvesterVerb( InputStream in ) throws IOException, SAXException
+    {
+        doc = documentBuilder.get().parse( in );
+    }
 
     /**
      * Construct a {@link RecordHeader} from a header node
+     *
      * @param headerNode the node to convert.
      * @throws DateTimeParseException if the datestamp element is not valid.
      */
@@ -180,18 +149,12 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
         TemporalAccessor datestamp = null;
         var sets = new HashSet<String>();
 
-        String prefixWithColon = "";
-
-        if ( oaiNamespacePrefix != null && !oaiNamespacePrefix.isEmpty()) {
-            prefixWithColon = oaiNamespacePrefix + ":";
-        }
-
         // Get the status attribute on the header node
         RecordHeader.Status status = null;
-        var namedItem = headerNode.getAttributes().getNamedItem( prefixWithColon + "status" );
+        var namedItem = (Attr) headerNode.getAttributes().getNamedItem( "status" );
         if ( namedItem != null )
         {
-            status = RecordHeader.Status.valueOf( namedItem.getTextContent() );
+            status = RecordHeader.Status.valueOf( namedItem.getValue() );
         }
 
         var childNodes = headerNode.getChildNodes();
@@ -199,20 +162,23 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
         for ( int i = 0; i < childNodes.getLength(); i++ )
         {
             var node = childNodes.item( i );
-            if ( node.getNodeName().equals( prefixWithColon + "identifier" ) )
+
+            var localName = node.getLocalName();
+
+            if ( "identifier".equals( localName ) )
             {
-                identifier = node.getTextContent();
+                identifier = node.getTextContent().trim();
             }
-            else if ( node.getNodeName().equals( prefixWithColon + "datestamp" ) )
+            else if ( "datestamp".equals( localName ) )
             {
                 // NSD returns invalid ISO dates such as 2020-09-02T15:12:07+0000.
                 // This corrects the dates before parsing by replacing +0000 with Z.
-                var datestampString = node.getTextContent().replace( "+0000", "Z" );
+                var datestampString = node.getTextContent().trim().replace( "+0000", "Z" );
                 datestamp = OAI_DATE_TIME_FORMATTER.parseBest( datestampString, OffsetDateTime::from, LocalDateTime::from, LocalDate::from );
             }
-            else if ( node.getNodeName().equals( prefixWithColon +"setSpec" ) )
+            else if ( "setSpec".equals( localName ) )
             {
-                sets.add( node.getTextContent() );
+                sets.add( node.getTextContent().trim() );
             }
         }
 
@@ -220,82 +186,59 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
     }
 
     /**
-	 * Get the OAI response as a DOM object
-	 *
-	 * @return the DOM for the OAI response
-	 */
-	public Document getDocument()
-	{
-		return doc;
-	}
+     * Get the OAI response as a DOM object
+     *
+     * @return the DOM for the OAI response
+     */
+    public Document getDocument()
+    {
+        return doc;
+    }
 
-	/**
-	 * Get the xsi:schemaLocation for the OAI response
-	 * 
-	 * @return the xsi:schemaLocation value
-	 */
-	public String getSchemaLocation()
-	{
-		return schemaLocation;
-	}
+    /**
+     * Get the OAI errors
+     *
+     * @return a NodeList of /oai:OAI-PMH/oai:error elements
+     */
+    public List<OAIError> getErrors()
+    {
+        var elements = doc.getElementsByTagNameNS( OAI_2_0_NAMESPACE, "error" );
 
-	/**
-	 * Get the OAI errors
-	 *
-	 * @return a NodeList of /oai:OAI-PMH/oai:error elements
-	 */
-	public List<OAIError> getErrors()
-	{
-		var elements = doc.getElementsByTagNameNS( OAI_2_0_NAMESPACE, "error" );
+        var errorList = new ArrayList<OAIError>( elements.getLength() );
 
-		var errorList = new ArrayList<OAIError>(elements.getLength());
+        for ( int i = 0; i < elements.getLength(); i++ )
+        {
+            var errorElement = elements.item( i );
 
-		for ( int i = 0; i < elements.getLength(); i++ )
-		{
-			var errorElement = elements.item( i );
+            var codeString = ( (Attr) errorElement.getAttributes().getNamedItem( "code" ) ).getValue();
+            var errorCode = OAIError.Code.valueOf( codeString );
 
-			var codeString = errorElement.getAttributes().getNamedItem( "code" ).getTextContent();
-			var errorCode = OAIError.Code.valueOf( codeString );
+            // Check if the error has free text
+            var errorText = errorElement.getTextContent().trim();
+            if ( !errorText.isEmpty() )
+            {
+                errorList.add( new OAIError( errorCode, errorText ) );
+            }
+            else
+            {
+                errorList.add( new OAIError( errorCode ) );
+            }
+        }
 
-			// Check if the error has free text
-			if (!errorElement.getTextContent().isEmpty())
-			{
-				errorList.add( new OAIError( errorCode, errorElement.getTextContent() ) );
-			}
-			else
-			{
-				errorList.add( new OAIError( errorCode ) );
-			}
-		}
+        return errorList;
+    }
 
-		return errorList;
-	}
-
-	/**
-	 * Get the String value for the given XPath location in the response DOM
-	 *
-	 * @param xpath the XPath to evaluate.
-	 * @return a String containing the value of the XPath location.
-	 * @throws TransformerException if an error occurs getting the XPath location
-	 */
-	public String getSingleString( String xpath ) throws TransformerException
-	{
-		return XPathAPI.eval( doc, xpath, namespaceElement ).str();
-	}
-
-	public String toString()
-	{
-		try ( var sw = new StringWriter() )
-		{
-			var idTransformer = xformFactory.newTransformer();
-			idTransformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "yes" );
-			idTransformer.transform( new DOMSource( doc ), new StreamResult( sw ) );
-			return sw.toString();
-		}
-		catch (TransformerException | IOException e)
-		{
-			return e.toString();
-		}
-	}
+    public String toString()
+    {
+        try ( var sw = new StringWriter() )
+        {
+            identityTransformer.get().transform( new DOMSource( doc ), new StreamResult( sw ) );
+            return sw.toString();
+        }
+        catch ( TransformerException | IOException e )
+        {
+            return e.toString();
+        }
+    }
 
 }
