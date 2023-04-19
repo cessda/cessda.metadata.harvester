@@ -24,6 +24,7 @@ package eu.cessda.oaiharvester;
 import com.github.mizosoft.methanol.Methanol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -49,6 +50,7 @@ public class HttpClient
     private final java.net.http.HttpClient client;
     private final int retryDelay;
 
+    @Autowired
     public HttpClient(HarvesterConfiguration harvesterConfiguration)
     {
         // TK added default timeout for dataverses taking too long to respond / stall
