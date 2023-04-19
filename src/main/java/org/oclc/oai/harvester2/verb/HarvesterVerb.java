@@ -38,7 +38,9 @@ package org.oclc.oai.harvester2.verb;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -85,6 +87,28 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
         .appendOffsetId()
         .toFormatter();
 
+    // Error handler to suppress DocumentBuilder outputting directly to stderr
+    private static final ErrorHandler HANDLER = new ErrorHandler()
+    {
+        @Override
+        public void warning( SAXParseException exception )
+        {
+            // do nothing
+        }
+
+        @Override
+        public void error( SAXParseException exception ) throws SAXParseException
+        {
+            throw exception;
+        }
+
+        @Override
+        public void fatalError( SAXParseException exception ) throws SAXParseException
+        {
+            throw exception;
+        }
+    };
+
     private static final DocumentBuilderFactory factory;
     private static final ThreadLocal<DocumentBuilder> documentBuilder;
     private static final ThreadLocal<Transformer> identityTransformer;
@@ -99,7 +123,9 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
         {
             try
             {
-                return factory.newDocumentBuilder();
+                var documentBuilder = factory.newDocumentBuilder();
+                documentBuilder.setErrorHandler( HANDLER );
+                return documentBuilder;
             }
             catch ( ParserConfigurationException e )
             {

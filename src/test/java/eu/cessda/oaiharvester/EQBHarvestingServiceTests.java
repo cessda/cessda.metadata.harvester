@@ -38,7 +38,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class EQBHarvestingServiceTest
+class EQBHarvestingServiceTests
 {
     private static final Repo testRepository = new Repo(
         Collections.singleton( new Repo.MetadataFormat( null, "oai_ddi", "DDI_2_5", URI.create( "https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml" ) ) ),
