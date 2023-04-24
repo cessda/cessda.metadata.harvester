@@ -113,24 +113,24 @@ harvester:
         - metadataPrefix: oai_ddi
           ddiVersion: NESSTAR
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-1.2.2/latest/profile.xml
-    - url: https://colectica-ess-published.nsd.no/oai/request
-      code: ESS
-      name: "European Social Survey (ESS)"
-      validationGate: BASIC
-      metadataPrefixes:
-        - metadataPrefix: oai_ddi33
-          ddiVersion: DDI_3_3
-          # Use the DDI 3.2 validation profile for now
-          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-3.2/0.1.1/profile.xml
-    - url: https://colectica-forskningsdata-published.nsd.no/oai/request
-      code: Sikt
-      name: "Sikt - Norwegian Agency for Shared Services in Education and Research"
-      validationGate: BASIC
-      metadataPrefixes:
-        - metadataPrefix: oai_ddi33
-          ddiVersion: DDI_3_3
-          # Use the DDI 3.2 validation profile for now
-          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-3.2/0.1.1/profile.xml
+    #    - url: https://colectica-ess-published.nsd.no/oai/request
+    #      code: ESS
+    #      name: "European Social Survey (ESS)"
+    #      validationGate: BASIC
+    #      metadataPrefixes:
+    #        - metadataPrefix: oai_ddi33
+    #          ddiVersion: DDI_3_3
+    #          # Use the DDI 3.2 validation profile for now
+    #          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-3.2/0.1.1/profile.xml
+    #    - url: https://colectica-forskningsdata-published.nsd.no/oai/request
+    #      code: Sikt
+    #      name: "Sikt - Norwegian Agency for Shared Services in Education and Research"
+    #      validationGate: BASIC
+    #      metadataPrefixes:
+    #        - metadataPrefix: oai_ddi33
+    #          ddiVersion: DDI_3_3
+    #          # Use the DDI 3.2 validation profile for now
+    #          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-3.2/0.1.1/profile.xml
     # Changed metadata prefix. See #388
     - url: http://147.213.4.44:6003/v0/oai
       code: SASD
