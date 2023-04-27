@@ -1,0 +1,18 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: CESSDA OAI-PMH Metadata Harvester
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Matthew
+    family-names: Morris
+    email: matthew.morris@cessda.eu
+    affiliation: CESSDA
+  - given-names: Thomas
+    family-names: Krämer
+    email: Thomas.Kraemer@gesis.org
+    affiliation: GESIS
