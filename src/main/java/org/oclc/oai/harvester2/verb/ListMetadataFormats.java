@@ -3,9 +3,9 @@
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  http://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -24,9 +24,9 @@ package org.oclc.oai.harvester2.verb;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,6 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -48,12 +47,12 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * This class represents an ListMetadataFormats response on either the server or on the client
+ * This class represents an ListMetadataFormats response on either the
+ * server or on the client.
  *
  * @author Jeffrey A. Young, OCLC Online Computer Library Center
  */
-public final class ListMetadataFormats extends HarvesterVerb
-{
+public final class ListMetadataFormats extends HarvesterVerb {
     /**
      * Client-side ListMetadataFormats verb constructor
      *
@@ -61,113 +60,108 @@ public final class ListMetadataFormats extends HarvesterVerb
      * @throws SAXException          the xml response is bad
      * @throws IOException           an I/O error occurred
      */
-    ListMetadataFormats( InputStream in ) throws IOException, SAXException
-    {
-        super( in );
+    ListMetadataFormats(InputStream in) throws IOException, SAXException {
+        super(in);
     }
 
     /**
-     * Construct a new {@link ListMetadataFormats} instance from an OAI-PMH repository URL.
+     * Construct a new {@link ListMetadataFormats} instance from an
+     * OAI-PMH repository URL.
      *
      * @param baseURL the URL of the OAI-PMH repository.
      * @throws IOException  if an IO error occurs.
      * @throws SAXException if an error occurs when parsing the XML.
      */
-    public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL ) throws IOException, SAXException
-    {
-        var requestURL = getRequestURL( baseURL, null );
-        try ( var in = httpClient.getHttpResponse( requestURL ) )
-        {
-            return new ListMetadataFormats( in );
+    public static ListMetadataFormats instance(HttpClient httpClient,
+                                               URI baseURL)
+            throws IOException, SAXException {
+        var requestURL = getRequestURL(baseURL, null);
+        try (var in = httpClient.getHttpResponse(requestURL)) {
+            return new ListMetadataFormats(in);
         }
     }
 
     /**
-     * Construct a new {@link ListMetadataFormats} instance for a specific record identifier in an OAI-PMH repository
+     * Construct a new {@link ListMetadataFormats} instance for a
+     * specific record identifier in an OAI-PMH repository.
+     *
      * @param baseURL the URL of the OAI-PMH repository.
      * @param identifier the record identifier.
      * @throws IOException if an IO error occurs.
      * @throws SAXException if an error occurs when parsing the XML.
      */
-    public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL, String identifier ) throws IOException, SAXException
-    {
-        Objects.requireNonNull( identifier, "identifier cannot be null" );
-        var requestURL = getRequestURL( baseURL, identifier );
-        try ( var in = httpClient.getHttpResponse( requestURL ) )
-        {
-            return new ListMetadataFormats( in );
+    public static ListMetadataFormats instance(HttpClient httpClient,
+                                               URI baseURL, String identifier)
+            throws IOException, SAXException {
+        Objects.requireNonNull(identifier, "identifier cannot be null");
+        var requestURL = getRequestURL(baseURL, identifier);
+        try (var in = httpClient.getHttpResponse(requestURL)) {
+            return new ListMetadataFormats(in);
         }
     }
 
     /**
-     * Construct the query portion of the http request
+     * Construct the query portion of the http request.
      *
      * @return a String containing the query portion of the http request
      */
-    private static URI getRequestURL( URI baseURL, String identifier )
-    {
-        StringBuilder requestURL = new StringBuilder( baseURL.toString() );
-        requestURL.append( "?verb=ListMetadataFormats" );
+    private static URI getRequestURL(URI baseURL, String identifier) {
+        StringBuilder requestURL = new StringBuilder(baseURL.toString());
+        requestURL.append("?verb=ListMetadataFormats");
 
-        if ( identifier != null )
-        {
-            requestURL.append( "&identifier=" ).append( identifier );
+        if (identifier != null) {
+            requestURL.append("&identifier=").append(identifier);
         }
 
-        return URI.create( requestURL.toString() );
+        return URI.create(requestURL.toString());
     }
 
     /**
      * Gets a list of metadata formats.
      *
-     * @throws URISyntaxException if the schema or metadataNamespace elements cannot be parsed as a {@link URI}.
+     * @throws URISyntaxException if the schema or metadataNamespace
+     *     elements cannot be parsed as a {@link URI}.
      */
-    public List<MetadataFormat> getMetadataFormats() throws URISyntaxException
-    {
-        var metadataFormats = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "metadataFormat" );
+    public List<MetadataFormat> getMetadataFormats() throws URISyntaxException {
+        var metadataFormats = getDocument().getElementsByTagNameNS(OAI_2_0_NAMESPACE,
+                                                                   "metadataFormat");
 
         var list = new ArrayList<MetadataFormat>();
 
-        for ( int i = 0; i < metadataFormats.getLength(); i++ )
-        {
-            var childNodes = metadataFormats.item( i ).getChildNodes();
+        for (int i = 0; i < metadataFormats.getLength(); i++) {
+            var childNodes = metadataFormats.item(i).getChildNodes();
 
             String metadataPrefix = null;
             URI schema = null;
             URI metadataNamespace = null;
 
-            for ( int j = 0; j < childNodes.getLength(); j++ )
-            {
-                var node = childNodes.item( j );
+            for (int j = 0; j < childNodes.getLength(); j++) {
+                var node = childNodes.item(j);
                 var localName = node.getLocalName();
 
-                if ( "metadataPrefix".equals( localName ) )
-                {
+                if ("metadataPrefix".equals(localName)) {
                     metadataPrefix = node.getTextContent().trim();
-                }
-                else if ( "schema".equals( localName ) )
-                {
-                    schema = new URI( node.getTextContent().trim() );
-                }
-                else if ( "metadataNamespace".equals( localName ) )
-                {
-                    metadataNamespace = new URI( node.getTextContent().trim() );
+                } else if ("schema".equals(localName)) {
+                    schema = new URI(node.getTextContent().trim());
+                } else if ("metadataNamespace".equals(localName)) {
+                    metadataNamespace = new URI(node.getTextContent().trim());
                 }
             }
 
-            list.add( new MetadataFormat( metadataPrefix, schema, metadataNamespace ) );
+            list.add(new MetadataFormat(metadataPrefix, schema,
+                                        metadataNamespace));
         }
 
         return list;
     }
 
-    public record MetadataFormat(String metadataPrefix, URI schema, URI metadataNamespace)
-    {
-        public MetadataFormat( String metadataPrefix, URI schema, URI metadataNamespace )
-        {
-            this.metadataPrefix = Objects.requireNonNull( metadataPrefix );
-            this.schema = Objects.requireNonNull( schema );
-            this.metadataNamespace = Objects.requireNonNull( metadataNamespace );
+    public record MetadataFormat(String metadataPrefix, URI schema,
+                                 URI metadataNamespace) {
+        public MetadataFormat(String metadataPrefix, URI schema,
+                              URI metadataNamespace) {
+            this.metadataPrefix = Objects.requireNonNull(metadataPrefix);
+            this.schema = Objects.requireNonNull(schema);
+            this.metadataNamespace = Objects.requireNonNull(metadataNamespace);
         }
     }
 }
