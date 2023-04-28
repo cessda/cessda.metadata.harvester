@@ -9,9 +9,9 @@ package eu.cessda.oaiharvester;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,11 +26,11 @@ import java.io.Serial;
 import java.net.URI;
 
 /**
- * Exception for HTTP responses that return a failure status code (i.e. 400+). The status code and
- * the request URI are stored for logging purposes.
+ * Exception for HTTP responses that return a failure status code
+ * (i.e. 400+). The status code and the request URI are stored for
+ * logging purposes.
  */
-class HTTPException extends IOException
-{
+class HTTPException extends IOException {
     @Serial
     private static final long serialVersionUID = 7340278405480735554L;
 
@@ -38,24 +38,24 @@ class HTTPException extends IOException
     private final int statusCode;
 
     /**
-     * Constructs a {@link HTTPException} with the specified status code and request URI.
+     * Constructs a {@link HTTPException} with the specified status
+     * code and request URI.
      *
      * @param requestURI the URI requested from the server.
-     * @param statusCode           the status code of the external response that caused this exception.
+     * @param statusCode the status code of the external response that caused
+     *     this exception.
      */
-    public HTTPException( URI requestURI, int statusCode ) {
+    HTTPException(final URI requestURI, final int statusCode) {
         super(requestURI + ": Server returned " + statusCode);
         this.requestURI = requestURI;
         this.statusCode = statusCode;
     }
 
-    public URI getRequestURI()
-    {
+    public URI getRequestURI() {
         return requestURI;
     }
 
-    public int getStatusCode()
-    {
+    public int getStatusCode() {
         return statusCode;
     }
 }
