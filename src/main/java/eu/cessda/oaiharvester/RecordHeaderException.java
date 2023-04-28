@@ -9,9 +9,9 @@ package eu.cessda.oaiharvester;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,10 +25,10 @@ import java.io.Serial;
 import java.util.Optional;
 
 /**
- * Represents when an error has occurred retrieving record headers
- * from a repository.
+ * Represents when an error has occurred retrieving record headers from a repository.
  */
-public class RecordHeaderException extends Exception {
+public class RecordHeaderException extends Exception
+{
     @Serial
     private static final long serialVersionUID = 5629333665262898326L;
 
@@ -38,12 +38,12 @@ public class RecordHeaderException extends Exception {
     /**
      * Construct a new instance of a {@link RecordHeaderException}.
      * @param repo the repository that failed.
-     * @param set the set that was being harvested, set to {@code null}
-     *     if no sets were being harvested.
+     * @param set the set that was being harvested, set to {@code null} if no sets were being harvested.
      * @param cause the cause of this exception.
      */
-    RecordHeaderException(Repo repo, String set, Throwable cause) {
-        super(generateMessage(repo, set, cause), cause);
+    RecordHeaderException( Repo repo, String set, Throwable cause )
+    {
+        super( generateMessage( repo, set, cause ), cause );
         this.repo = repo;
         this.set = set;
     }
@@ -51,13 +51,14 @@ public class RecordHeaderException extends Exception {
     /**
      * Generate the message for this exception.
      */
-    private static String generateMessage(Repo repo,
-                                          String set,
-                                          Throwable cause) {
-        if (set != null) {
-            return repo.code() + ": " + set + ": Fetching identifiers failed: "
-                + cause;
-        } else {
+    private static String generateMessage( Repo repo, String set, Throwable cause )
+    {
+        if (set != null)
+        {
+            return repo.code() + ": " + set + ": Fetching identifiers failed: " + cause;
+        }
+        else
+        {
             return repo.code() + ": Fetching identifiers failed: " + cause;
         }
     }
@@ -65,14 +66,16 @@ public class RecordHeaderException extends Exception {
     /**
      * Get the repository that failed.
      */
-    public Repo getRepo() {
+    public Repo getRepo()
+    {
         return repo;
     }
 
     /**
      * Get the set that was being harvested.
      */
-    public Optional<String> getSet() {
+    public Optional<String> getSet()
+    {
         return Optional.ofNullable(set);
     }
 }
