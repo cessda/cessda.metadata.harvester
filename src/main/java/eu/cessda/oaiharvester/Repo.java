@@ -9,9 +9,9 @@ package eu.cessda.oaiharvester;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,19 +31,20 @@ import java.util.Set;
  * @param code The identifier of the repository.
  * @param name The friendly name of the remote repository.
  * @param url The base URL of the repository.
- * @param discoverSets If true, the repository should be queried for the sets contained.
+ * @param discoverSets If true, the repository should be queried for the sets
+ *     contained.
  * @param defaultLanguage The default language to be used in the UI.
  * @param validationGate The validation gate to use.
  */
 public record Repo(
-    Set<MetadataFormat> metadataPrefixes,
-    String code,
-    String name,
-    URI url,
-    boolean discoverSets,
-    String defaultLanguage,
-    String validationGate
-) implements Serializable
-{
-    record MetadataFormat(String setSpec, String metadataPrefix, String ddiVersion, URI validationProfile) implements Serializable {}
+        Set<MetadataFormat> metadataPrefixes,
+        String code,
+        String name,
+        URI url,
+        boolean discoverSets,
+        String defaultLanguage,
+        String validationGate) implements Serializable {
+    record MetadataFormat(String setSpec, String metadataPrefix,
+                          String ddiVersion, URI validationProfile)
+        implements Serializable { }
 }
