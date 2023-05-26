@@ -42,6 +42,16 @@ harvester:
           setSpec: all_published
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile-mono.xml
+    # Added endpoint. See #549
+    - url: https://archivdv.soc.cas.cz/oai
+      code: CSDA
+      name: "Czech Social Science Data Archive (ČSDA)"
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi
+          setSpec: CSDA_EN
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://easy.dans.knaw.nl/oai/
       code: DANS
       name: DANS-KNAW
