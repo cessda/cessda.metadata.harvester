@@ -192,6 +192,8 @@ n/a
   harvesting OAI servers available via HTTPS only and using
   letsencrypt SSL certificates
 
+[3.3.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.3.0
+
 [3.2.1]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.2.1
 [3.1.1]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.1.1
 [3.0.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.0.0
