@@ -14,6 +14,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - *Fixed (for any bug fixes)*
 - *Security (in case of vulnerabilities)*
 
+## [3.3.0] - 2023-06-13
+
+### Added
+
+- Added retry logic for when HTTP requests fail due to remote server
+  unavailability ([#529](https://github.com/cessda/cessda.cdc.versions/issues/529))
+
+### Changed
+
+- Changed AUSSDA's setspec ([#439](https://github.com/cessda/cessda.cdc.versions/issues/439))
+- Improved the harvester's SQL rating ([#489](https://github.com/cessda/cessda.cdc.versions/issues/489))
+
+### Fixed
+
+- Fixed not parsing OAI-PMH metadata formats if a namespace prefix was used (i.e. if `oai:request` was used instead
+  of `request`) by only comparing the local name in a namespace aware
+  context ([PR-9](https://github.com/cessda/cessda.metadata.harvester/pull/9))
+
+### Security
+
+- Removed Apache Xalan due to [CVE-2022-34169](https://github.com/advisories/GHSA-9339-86wc-4qgf)
+
 ## [3.2.1] - 2023-02-07
 
 ### Added
