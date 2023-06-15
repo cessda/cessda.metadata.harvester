@@ -22,8 +22,6 @@ package eu.cessda.oaiharvester;
 
 
 import com.github.mizosoft.methanol.Methanol;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -43,8 +41,6 @@ import static java.net.http.HttpClient.Redirect.NORMAL;
 @Component
 public class HttpClient
 {
-    // Logger
-    private static final Logger log = LoggerFactory.getLogger( HttpClient.class );
     private static final int MAX_RETRIES = 3;
 
     private final java.net.http.HttpClient client;
@@ -134,14 +130,16 @@ public class HttpClient
      * @throws IOException if an IO error occurred when sending the response and the maximum retries have been exceeded.
      * @throws InterruptedException if the operation is interrupted.
      */
-    @SuppressWarnings( {"java:S3776", "java:S6212"} ) // Any other way of implementing this logic is more complicated
+    @SuppressWarnings( { "java:S3776", "java:S135" } ) // Any other way of implementing this logic is more complicated
     private <T> HttpResponse<T> performRequest( HttpRequest httpRequest, HttpResponse.BodyHandler<T> bodyHandler ) throws InterruptedException, IOException
     {
         // Retry counter
         int retries = 0;
 
-        // Error variables
+        // Stores any previous errors thrown during previous attempts.
         IOException previousException = null;
+
+        // Container for IO errors thrown during the current attempt.
         IOException currentException;
 
         while ( true )
@@ -151,7 +149,6 @@ public class HttpClient
                 var response = client.send( httpRequest, bodyHandler );
 
                 int responseCode = response.statusCode();
-                log.trace( "responseCode={}", responseCode );
 
                 if ( responseCode < 400 )
                 {
@@ -165,6 +162,8 @@ public class HttpClient
                     if ( delayMilliseconds != -1 )
                     {
                         Thread.sleep( delayMilliseconds );
+
+                        // Reset the loop without incrementing the amount of retries
                         continue;
                     }
                 }
@@ -173,12 +172,13 @@ public class HttpClient
                 currentException = new HTTPException( httpRequest.uri(), response.statusCode() );
                 if ( responseCode != 429 && responseCode < 500 )
                 {
-                    // 400 response codes, apart from 429, are caused by client errors, do not retry
+                    // 400 response codes, apart from 429, are caused by client errors; break and throw the error
                     break;
                 }
             }
             catch ( IOException e )
             {
+                // Store the IO error (i.e. connection timeouts, failed DNS lookups, etc.)
                 currentException = e;
             }
 
@@ -191,20 +191,20 @@ public class HttpClient
                 currentException.addSuppressed( previousException );
             }
 
-            if ( retries < MAX_RETRIES )
+            if ( retries >= MAX_RETRIES )
             {
-                retries++;
-                Thread.sleep( retryDelay );
-            }
-            else
-            {
+                // Maximum amount of retries reached; give up and throw the error
                 break;
             }
 
+            // Store the current error for the next loop and increment the amount of retires
             previousException = currentException;
+            retries++;
+
+            Thread.sleep( retryDelay );
         }
 
-        // An error has occurred
+        // Request failed
         throw currentException;
     }
 }

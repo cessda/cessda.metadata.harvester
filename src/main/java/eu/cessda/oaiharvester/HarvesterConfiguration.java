@@ -24,6 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
@@ -223,7 +224,7 @@ class HarvesterConfiguration
     public static final class LocalDateConverter implements Converter<String, LocalDate>
     {
         @Override
-        public LocalDate convert( String s )
+        public LocalDate convert( @NonNull String s )
         {
             return LocalDate.parse( s );
         }
