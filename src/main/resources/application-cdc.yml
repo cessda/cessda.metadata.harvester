@@ -52,15 +52,14 @@ harvester:
           setSpec: CSDA_EN
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-    - url: https://easy.dans.knaw.nl/oai/
+   # Datavese endpoint. See #552
+    - url: https://ssh.datastations.nl/oai
       code: DANS
       name: DANS-KNAW
       validationGate: BASIC
       metadataPrefixes:
-        - metadataPrefix: oai_ddi25_en
-          ddiVersion: DDI_2_5
-          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-        - metadataPrefix: oai_ddi25_nl
+        - metadataPrefix: oai_ddi
+          setSpec: social_sciences
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     # URL of PRODUCTION endpoint. See #506 and #525
