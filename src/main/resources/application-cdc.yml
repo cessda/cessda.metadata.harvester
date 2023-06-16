@@ -149,13 +149,14 @@ harvester:
         - metadataPrefix: ddi_c
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
-    - url: https://snd.gu.se/en/oai-pmh
+   # See #564
+    - url: https://snd.gu.se/oai-pmh
       code: SND
       name: "Swedish National Data Service (SND)"
       validationGate: BASIC
       metadataPrefixes:
         - metadataPrefix: oai_ddi25
-          setSpec: subject:social-sciences
+          setSpec: subject:ssif:5
           ddiVersion: DDI_2_5
           validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
     - url: https://www.sodha.be/oai
