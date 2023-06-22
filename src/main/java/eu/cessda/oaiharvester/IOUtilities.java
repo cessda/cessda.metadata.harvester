@@ -27,13 +27,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import javax.xml.XMLConstants;
-import javax.xml.transform.*;
-import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.file.DirectoryIteratorException;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
@@ -43,28 +41,19 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Component
 public class IOUtilities
 {
-    private static final Logger log = LoggerFactory.getLogger( IOUtilities.class );
+    private IOUtilities()
+    {
+    }
 
-    @SuppressWarnings( "java:S5164" ) // This application is not a server application.
-    private final ThreadLocal<Transformer> transformerThreadLocal = ThreadLocal.withInitial( () -> {
-        try
-        {
-            var factory = TransformerFactory.newInstance();
-            factory.setFeature( XMLConstants.FEATURE_SECURE_PROCESSING, true );
-            return factory.newTransformer();
-        }
-        catch ( TransformerConfigurationException e )
-        {
-            throw new IllegalStateException(e);
-        }
-    } );
+    private static final Logger log = LoggerFactory.getLogger( IOUtilities.class );
 
     /**
      * Creates the destination directory for this repository.
+     *
      * @param destinationDirectory the base directory.
-     * @param repositoryDirectory the name of the repository.
-     * @throws DirectoryCreationFailedException if the directory cannot be created.
+     * @param repositoryDirectory  the name of the repository.
      * @return the created directory.
+     * @throws DirectoryCreationFailedException if the directory cannot be created.
      */
     static Path createDestinationDirectory( Path destinationDirectory, Path repositoryDirectory ) throws DirectoryCreationFailedException
     {
@@ -109,29 +98,6 @@ public class IOUtilities
     }
 
     /**
-     * Writes the given {@link Source} to the specified {@link Path}.
-     * @throws IOException if an IO error occurs while writing the file.
-     * @throws TransformerException if an unrecoverable error occurs whilst writing the source.
-     * @param source the XML source.
-     * @param destination the {@link Path} to write to.
-     */
-    void writeDomSource( Source source, Path destination ) throws IOException, TransformerException
-    {
-        var transformer = transformerThreadLocal.get();
-
-        try ( var fOutputStream = Files.newOutputStream( destination ) )
-        {
-            log.trace( "Writing to {}", destination );
-            transformer.transform( source, new StreamResult( fOutputStream ) );
-        }
-        finally
-        {
-            // Always reset the transformer before returning.
-            transformer.reset();
-        }
-    }
-
-    /**
      * Remove any records that are present in the destination directory, but are not declared in the repository.
      * @param repo the source repository.
      * @param recordHeaders the list of records harvested from the repository.
@@ -147,17 +113,16 @@ public class IOUtilities
         try ( var stream = Files.newDirectoryStream( destinationPath, "*.xml" ) )
         {
             // Collect encountered identifiers to a HashSet, this will be used for comparisons
-            var recordIdentifiers = new HashSet<String>( (int) (recordHeaders.size() / 0.75F), 0.75F );
+            var recordIdentifiers = new HashSet<Path>( (int) ( recordHeaders.size() / 0.75F ), 0.75F );
             for ( var recordHeader : recordHeaders )
             {
-                var identifier = recordHeader.identifier();
-                recordIdentifiers.add( URLEncoder.encode( identifier, UTF_8 ) + ".xml" );
+                recordIdentifiers.add( generateFileName( recordHeader ) );
             }
 
             // Select records not discovered by the repository
             for ( var fileName : stream )
             {
-                if ( !recordIdentifiers.contains( fileName.getFileName().toString() ) )
+                if ( !recordIdentifiers.contains( fileName.getFileName() ) )
                 {
                     try
                     {
@@ -179,5 +144,42 @@ public class IOUtilities
         }
 
         return filesDeleted;
+    }
+
+    /**
+     * Generate an XML file name from the given record header.
+     */
+    static Path generateFileName( RecordHeader recordHeader )
+    {
+        var fileName = URLEncoder.encode( recordHeader.identifier(), UTF_8 ) + ".xml";
+        return convertStringToPath( fileName );
+    }
+
+    /**
+     * Convert a string into a path, replacing invalid characters with "-".
+     *
+     * @param input the string to convert.
+     * @throws InvalidPathException if the position of the character which cannot be converted is unknown.
+     */
+    static Path convertStringToPath( String input )
+    {
+        while ( true )
+        {
+            try
+            {
+                return Path.of( input );
+            }
+            catch ( InvalidPathException e )
+            {
+                // Rethrow if the position of the character which caused the error is unknown
+                if ( e.getIndex() == -1 )
+                {
+                    throw e;
+                }
+
+                var errorChar = input.charAt( e.getIndex() );
+                input = input.replace( errorChar, '-' );
+            }
+        }
     }
 }

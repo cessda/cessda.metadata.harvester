@@ -61,7 +61,7 @@ class EQBHarvestingServiceTests
         var httpClient = mock( HttpClient.class );
         when( httpClient.getHttpResponse( any(URI.class) ) ).thenReturn( nullInputStream() );
 
-        return new Harvester( httpClient, harvesterConfiguration, new IOUtilities(), new RepositoryClient( httpClient ) );
+        return new Harvester( httpClient, harvesterConfiguration, new RepositoryClient( httpClient ) );
 	}
 
 	@Test
@@ -70,7 +70,7 @@ class EQBHarvestingServiceTests
 		getHarvester( tempDir ).run();
 
         // Read pipeline.json, assert fields are as expected.
-        var pipeline = new ObjectMapper().readValue( new File(tempDir + "/wrapped/TEST/oai_ddi/pipeline.json"), PipelineMetadata.class );
+        var pipeline = new ObjectMapper().readValue( new File( tempDir + "/TEST/oai_ddi/pipeline.json" ), PipelineMetadata.class );
         assertEquals( testRepository.code(), pipeline.code() );
         assertEquals( testRepository.name(), pipeline.name() );
         assertEquals( testRepository.url(), pipeline.url() );

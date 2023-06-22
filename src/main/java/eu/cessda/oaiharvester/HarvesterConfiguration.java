@@ -58,15 +58,7 @@ class HarvesterConfiguration
     /**
      * The output directory of the harvester.
      */
-    private Path dir = Path.of(System.getProperty( "java.io.tmpdir" ));
-    /**
-     * Keep the OAI envelope.
-     */
-    private boolean keepOAIEnvelope = true;
-    /**
-     * Remove the OAI envelope.
-     */
-    private boolean removeOAIEnvelope = false;
+    private Path dir = Path.of( System.getProperty( "java.io.tmpdir" ) ).resolve( "OAI Harvester" );
     /**
      * Incrementally harvest
      */
@@ -79,33 +71,6 @@ class HarvesterConfiguration
      * Timeout for HTTP requests, defaults to 30 seconds if unspecified.
      */
     private Duration timeout = Duration.ofSeconds( 30 );
-
-    /**
-     * Keep the OAI envelope.
-     */
-    public boolean keepOAIEnvelope()
-    {
-        return keepOAIEnvelope;
-    }
-
-    public void setKeepOAIEnvelope( boolean keepOAIEnvelope )
-    {
-        this.keepOAIEnvelope = keepOAIEnvelope;
-    }
-
-    /**
-     * Remove the OAI envelope.
-     */
-    public boolean removeOAIEnvelope()
-    {
-        return removeOAIEnvelope;
-    }
-
-    public void setRemoveOAIEnvelope( boolean removeOAIEnvelope )
-    {
-        this.removeOAIEnvelope = removeOAIEnvelope;
-    }
-
     /**
      * Harvest incrementally.
      */
@@ -190,16 +155,15 @@ class HarvesterConfiguration
         if ( this == o ) return true;
         if ( o == null || getClass() != o.getClass() ) return false;
         HarvesterConfiguration that = (HarvesterConfiguration) o;
-        return keepOAIEnvelope == that.keepOAIEnvelope && removeOAIEnvelope == that.removeOAIEnvelope &&
-                incremental == that.incremental && timeout == that.timeout &&
-                Objects.equals( dir, that.dir ) && Objects.equals( repos, that.repos ) &&
-                Objects.equals( from, that.from );
+        return incremental == that.incremental && timeout == that.timeout &&
+            Objects.equals( dir, that.dir ) && Objects.equals( repos, that.repos ) &&
+            Objects.equals( from, that.from );
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash( dir, keepOAIEnvelope, removeOAIEnvelope, incremental, repos, from, timeout );
+        return Objects.hash( dir, incremental, repos, from, timeout );
     }
 
     @Override
@@ -208,8 +172,6 @@ class HarvesterConfiguration
         return "HarvesterConfiguration{" +
                 "repos=" + repos +
                 ", dir=" + dir +
-                ", keepOAIEnvelope=" + keepOAIEnvelope +
-                ", removeOAIEnvelope=" + removeOAIEnvelope +
                 ", incremental=" + incremental +
                 ", from=" + from +
                 ", timeout=" + timeout +

@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GetRecordTests
@@ -53,10 +54,10 @@ class GetRecordTests
               <setSpec>math</setSpec>
             </header>
             <metadata>
-              <oai_dc:dc\s
-                 xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"\s
-                 xmlns:dc="http://purl.org/dc/elements/1.1/"\s
-                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\s
+              <oai_dc:dc
+                 xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/"
+                 xmlns:dc="http://purl.org/dc/elements/1.1/"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/
                  http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
                 <dc:title>Using Structural Metadata to Localize Experience of Digital Content</dc:title>
@@ -113,12 +114,29 @@ class GetRecordTests
             new RecordHeader(
                 "oai:arXiv.org:cs/0112017",
                 LocalDate.of( 2001, 12, 14 ),
-                Set.of("cs", "math"),
+                Set.of( "cs", "math" ),
                 null
             ),
             header
         );
     }
+
+    @Test
+    void shouldReturnARecordsMetadata() throws IOException, SAXException
+    {
+        var record = new GetRecord(
+            new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( StandardCharsets.UTF_8 ) )
+        );
+
+        assertThat( record.getMetadata() )
+            .isPresent()
+            .hasValueSatisfying( element ->
+            {
+                assertThat( element.getNamespaceURI() ).isEqualTo( "http://www.openarchives.org/OAI/2.0/oai_dc/" );
+                assertThat( element.getLocalName() ).isEqualTo( "dc" );
+            } );
+    }
+
 
     @Test
     void shouldHandleADeletedRecord() throws IOException, SAXException

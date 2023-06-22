@@ -33,14 +33,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.xml.sax.SAXException;
 
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.dom.DOMSource;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -49,8 +44,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
 import static eu.cessda.oaiharvester.LoggingConstants.*;
-import static java.lang.Math.max;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static net.logstash.logback.argument.StructuredArguments.value;
 
 @EnableConfigurationProperties
@@ -59,20 +52,16 @@ public class Harvester implements CommandLineRunner
 {
 
     private static final Logger log = LoggerFactory.getLogger( Harvester.class );
-    private static final String WRAPPED_DIRECTORY_NAME = "wrapped";
-    private static final String UNWRAPPED_DIRECTORY_NAME = "unwrapped";
 
     private final HttpClient httpClient;
     private final HarvesterConfiguration harvesterConfiguration;
-    private final IOUtilities ioUtilities;
     private final RepositoryClient repositoryClient;
 
     @Autowired
-    public Harvester( HttpClient httpClient, HarvesterConfiguration harvesterConfiguration, IOUtilities ioUtilities, RepositoryClient repositoryClient )
+    public Harvester( HttpClient httpClient, HarvesterConfiguration harvesterConfiguration, RepositoryClient repositoryClient )
     {
         this.httpClient = httpClient;
         this.harvesterConfiguration = harvesterConfiguration;
-        this.ioUtilities = ioUtilities;
         this.repositoryClient = repositoryClient;
     }
 
@@ -213,55 +202,28 @@ public class Harvester implements CommandLineRunner
 
         // Sets are nested in their own directories. If the set contains characters that cannot be represented
         // by the filesystem, substitute them for -
-        if (metadataFormat.setSpec() != null)
+        if ( metadataFormat.setSpec() != null )
         {
             var setSpec = metadataFormat.setSpec();
-
-            while(true)
-            {
-                try
-                {
-                    repositoryDirectory = repositoryDirectory.resolve( setSpec );
-                    break;
-                }
-                catch( InvalidPathException e )
-                {
-                    // Rethrow if the position of the character which caused the error is unknown
-                    if (e.getIndex() == -1)
-                    {
-                        throw e;
-                    }
-
-                    var errorChar = setSpec.charAt( e.getIndex() );
-                    setSpec = setSpec.replace( errorChar, '-' );
-                }
-            }
+            var setSpecPath = IOUtilities.convertStringToPath( setSpec );
+            repositoryDirectory = repositoryDirectory.resolve( setSpecPath );
         }
 
         repositoryDirectory = repositoryDirectory.resolve( metadataFormat.metadataPrefix() );
 
-        if ( harvesterConfiguration.keepOAIEnvelope() )
-        {
-            var wrappedDirectory = harvesterConfiguration.getDir().resolve( WRAPPED_DIRECTORY_NAME );
-            var createdDirectory = IOUtilities.createDestinationDirectory( wrappedDirectory, repositoryDirectory );
-            IOUtilities.createMetadata( createdDirectory, repo, metadataFormat );
-        }
 
-        if ( harvesterConfiguration.removeOAIEnvelope() )
-        {
-            var unwrappedDirectory = harvesterConfiguration.getDir().resolve( UNWRAPPED_DIRECTORY_NAME );
-            var createdDirectory = IOUtilities.createDestinationDirectory( unwrappedDirectory, repositoryDirectory );
-            IOUtilities.createMetadata( createdDirectory, repo, metadataFormat );
-        }
+        var createdDirectory = IOUtilities.createDestinationDirectory( harvesterConfiguration.getDir(), repositoryDirectory );
+        IOUtilities.createMetadata( createdDirectory, repo, metadataFormat );
+
 
         log.debug( "{}: Set: {}: Prefix: {} Fetching records.", repo.code(), metadataFormat.setSpec(), metadataFormat.metadataPrefix() );
 
         var recordIdentifiers = repositoryClient.retrieveRecordHeaders( repo, metadataFormat, fromDate );
 
         log.info( "{}: Set: {}: Retrieved {} record headers.",
-                value( REPO_NAME, repo.code() ),
-                value( OAI_SET, metadataFormat.setSpec() ),
-                value( RETRIEVED_RECORD_HEADERS, recordIdentifiers.size())
+            value( REPO_NAME, repo.code() ),
+            value( OAI_SET, metadataFormat.setSpec() ),
+            value( RETRIEVED_RECORD_HEADERS, recordIdentifiers.size() )
         );
 
         int retrievedRecords = harvestRecords( recordIdentifiers, repo, metadataFormat.metadataPrefix(), repositoryDirectory );
@@ -286,72 +248,31 @@ public class Harvester implements CommandLineRunner
     {
         int retrievedRecords = 0;
 
-        // Destination directories
-        var unwrappedDirectory = harvesterConfiguration.getDir()
-            .resolve( UNWRAPPED_DIRECTORY_NAME )
-            .resolve( repoDirectory );
-        var wrappedDirectory = harvesterConfiguration.getDir()
-            .resolve( Harvester.WRAPPED_DIRECTORY_NAME )
-            .resolve( repoDirectory );
+        var destinationDirectory = harvesterConfiguration.getDir().resolve( repoDirectory );
 
         for ( var currentRecord : records )
         {
-            var fileName = URLEncoder.encode( currentRecord.identifier(), UTF_8 ) + ".xml";
+            log.debug( "Harvesting {} from {}", currentRecord, repo.url() );
 
-            try
+            // Create a filename from the current identifier
+            var fileName = IOUtilities.generateFileName( currentRecord );
+
+            try (
+                var pmhRecord = GetRecord.asStream( httpClient, repo.url(), currentRecord.identifier(), metadataFormat );
+                var outputStream = Files.newOutputStream( destinationDirectory.resolve( fileName ) )
+            )
             {
-                log.debug( "Harvesting {} from {}", currentRecord, repo.url() );
-                var pmhRecord = GetRecord.instance( httpClient, repo.url(), currentRecord.identifier(), metadataFormat );
-
-                // Check for errors
-                if (!pmhRecord.getErrors().isEmpty())
-                {
-                    var error = pmhRecord.getErrors().get( 0 );
-                    log.warn( "{}: Failed to harvest record {}: {}: {}",
-                            value( REPO_NAME, repo.code()),
-                            value( OAI_RECORD, currentRecord.identifier() ),
-                            value( OAI_ERROR_CODE, error.getCode() ),
-                            value( OAI_ERROR_MESSAGE, error.getMessage().orElse( "" ) )
-                    );
-                    continue;
-                }
-
+                pmhRecord.transferTo( outputStream );
                 retrievedRecords++;
-
-                // Remove envelope
-                if (harvesterConfiguration.removeOAIEnvelope())
-                {
-                    var metadata = pmhRecord.getMetadata();
-                    var destinationFile = unwrappedDirectory.resolve( fileName );
-
-                    if (metadata.isPresent())
-                    {
-                        var source = new DOMSource( metadata.orElseThrow() );
-                        ioUtilities.writeDomSource( source, destinationFile );
-                    }
-                    else if (RecordHeader.Status.deleted.equals( currentRecord.status() ))
-                    {
-                        // Delete the unwrapped XML
-                        Files.deleteIfExists(destinationFile);
-                    }
-                }
-
-                // Keep envelope
-                if (harvesterConfiguration.keepOAIEnvelope())
-                {
-                    var destinationFile = wrappedDirectory.resolve( fileName );
-                    var source = new DOMSource( pmhRecord.getDocument() );
-                    ioUtilities.writeDomSource( source, destinationFile );
-                }
             }
-            catch ( IOException | SAXException | TransformerException e1 )
+            catch ( IOException e )
             {
                 log.warn( "{}: Failed to harvest record {} from {}: {}: {}",
-                        value( REPO_NAME, repo.code()),
-                        value( LoggingConstants.OAI_RECORD, currentRecord.identifier()),
-                        value( LoggingConstants.OAI_URL, repo.url()),
-                        value( LoggingConstants.EXCEPTION_NAME, e1.getClass().getName()),
-                        value( LoggingConstants.EXCEPTION_MESSAGE, e1.getMessage())
+                    value( REPO_NAME, repo.code() ),
+                    value( LoggingConstants.OAI_RECORD, currentRecord.identifier() ),
+                    value( LoggingConstants.OAI_URL, repo.url() ),
+                    value( LoggingConstants.EXCEPTION_NAME, e.getClass().getName() ),
+                    value( LoggingConstants.EXCEPTION_MESSAGE, e.getMessage() )
                 );
             }
         }
@@ -360,17 +281,17 @@ public class Harvester implements CommandLineRunner
         if (!harvesterConfiguration.incremental())
         {
             log.debug( "{}: Removing orphaned records.", value( REPO_NAME, repo.code()));
-            var unwrappedRecordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, unwrappedDirectory );
-            var wrappedRecordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, wrappedDirectory );
+            var wrappedRecordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, destinationDirectory );
 
-            if (log.isDebugEnabled() || (unwrappedRecordsDeleted > 0 || wrappedRecordsDeleted > 0))
+            if ( log.isInfoEnabled() || wrappedRecordsDeleted > 0 )
             {
-                log.info( "{}: Removed {} orphaned records.", value( REPO_NAME, repo.code() ), max( unwrappedRecordsDeleted, wrappedRecordsDeleted ) );
+                log.info( "{}: Removed {} orphaned records.", value( REPO_NAME, repo.code() ), wrappedRecordsDeleted );
             }
         }
 
         return retrievedRecords;
     }
+
 
     @PreDestroy
     void printConfig()
