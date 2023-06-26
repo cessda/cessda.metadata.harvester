@@ -63,34 +63,53 @@ public final class GetRecord extends HarvesterVerb
 	}
 
     /**
-     * Query a OAI-PMH repository for a record using the GetRecord verb.
+     * Query an OAI-PMH repository for a record using the GetRecord verb.
      *
-     * @param httpClient the HTTP client to use.
-     * @param baseURL the baseURL of the server to be queried.
-     * @param identifier the record identifier.
+     * @param httpClient     the HTTP client to use.
+     * @param baseURL        the baseURL of the server to be queried.
+     * @param identifier     the record identifier.
      * @param metadataPrefix the metadata prefix of the record to retrieve.
-     * @throws IOException if an IO error occurred.
+     * @throws IOException  if an IO error occurred.
      * @throws SAXException if the XML could not be parsed.
      */
-	public static GetRecord instance( HttpClient httpClient, URI baseURL, String identifier, String metadataPrefix ) throws IOException, SAXException
-	{
-        var requestURL = URI.create( baseURL + "?verb=GetRecord"
+    public static GetRecord instance( HttpClient httpClient, URI baseURL, String identifier, String metadataPrefix ) throws IOException, SAXException
+    {
+        var requestURL = getRequestURL( baseURL, identifier, metadataPrefix );
+
+        try ( var in = httpClient.getHttpResponse( requestURL ) )
+        {
+            return new GetRecord( in );
+        }
+    }
+
+    /**
+     * Get an OAI-PMH GetRecord request as an input stream.
+     *
+     * @param httpClient     the HTTP client to use.
+     * @param baseURL        the baseURL of the server to be queried.
+     * @param identifier     the record identifier.
+     * @param metadataPrefix the metadata prefix of the record to retrieve.
+     * @throws IOException if an IO error occurred.
+     */
+    public static InputStream asStream( HttpClient httpClient, URI baseURL, String identifier, String metadataPrefix ) throws IOException
+    {
+        var requestURL = getRequestURL( baseURL, identifier, metadataPrefix );
+        return httpClient.getHttpResponse( requestURL );
+    }
+
+    private static URI getRequestURL( URI baseURL, String identifier, String metadataPrefix )
+    {
+        return URI.create( baseURL + "?verb=GetRecord"
             + "&identifier=" + identifier
             + "&metadataPrefix=" + metadataPrefix
         );
+    }
 
-		try (var in = httpClient.getHttpResponse( requestURL ))
-		{
-			return new GetRecord( in );
-		}
-	}
-
-	/**
-	 * Get the oai:record header.
-	 *
-	 */
-	public RecordHeader getHeader()
-	{
+    /**
+     * Get the oai:record header.
+     */
+    public RecordHeader getHeader()
+    {
         var recordHeader = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "header" );
         var headerNode = recordHeader.item( 0 );
         return getRecordHeader( headerNode );
