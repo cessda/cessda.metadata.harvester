@@ -30,9 +30,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
-- Fixed not parsing OAI-PMH metadata formats if a namespace prefix was used (i.e. if `oai:request` was used instead
-  of `request`) by only comparing the local name in a namespace aware
-  context ([PR-9](https://github.com/cessda/cessda.metadata.harvester/pull/9))
+- Fixed not parsing OAI-PMH metadata formats if a namespace prefix was used
+  (i.e. if `oai:request` was used instead of `request`) by only comparing the
+  local name in a namespace aware context
+  ([PR-9](https://github.com/cessda/cessda.metadata.harvester/pull/9))
 
 ### Security
 
@@ -162,15 +163,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   information on the harvesting process only. It contains explicit
   information on e.g. the start, end and result of a harversting run.
 - Configurations for
-   - CSDA
-   - DANS
-   - DBK
-   - DNA
-   - EKKE
-   - FSD
-   - NSD
-   - SND
-   - UKDA
+  - CSDA
+  - DANS
+  - DBK
+  - DNA
+  - EKKE
+  - FSD
+  - NSD
+  - SND
+  - UKDA
 
 ### Changed
 
