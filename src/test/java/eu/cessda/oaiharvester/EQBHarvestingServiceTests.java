@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
 class EQBHarvestingServiceTests
 {
     private static final Repo testRepository = new Repo(
-        Collections.singleton( new Repo.MetadataFormat( null, "oai_ddi", "DDI_2_5", URI.create( "https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml" ) ) ),
+        Collections.singleton( new Repo.MetadataFormat( "oai_ddi", null, "DDI_2_5", URI.create( "https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml" ) ) ),
         "TEST",
         "Test Repository",
         URI.create( "http://localhost:8080/v0/oai?set=study_group:paihde" ),

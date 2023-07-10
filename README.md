@@ -73,11 +73,11 @@ The following configuration will harvest the set
 ```yml
 harvester:
   repos:
-  - url: https://snd.gu.se/en/oai-pmh
-    code: SND
-    metadataPrefixes:
-      - metadataPrefix: ddi_3_2
-        setSpec: subject:social-sciences
+    - url: https://snd.gu.se/en/oai-pmh
+      code: SND
+      metadataPrefixes:
+        - metadataPrefix: ddi_3_2
+          setSpec: subject:social-sciences
 ```
 
 #### Metadata Prefixes
@@ -92,12 +92,12 @@ metadata prefixes `dc`, `ddi` and `ddi_3_2`.
 ```yaml
 harvester:
   repos:
-  - url: https://snd.gu.se/en/oai-pmh
-    code: SND
-    metadataPrefixes:
-      - metadataPrefix: dc
-      - metadataPrefix: ddi
-      - metadataPrefix: ddi_3_2
+    - url: https://snd.gu.se/en/oai-pmh
+      code: SND
+      metadataPrefixes:
+        - metadataPrefix: dc
+        - metadataPrefix: ddi
+        - metadataPrefix: ddi_3_2
 ```
 
 Failing to configure any metadata prefixes for a repository will cause
@@ -105,12 +105,11 @@ the harvest to fail.
 
 #### Sets
 
-OAI-PMH can group multiple records together into a collection of
-themed records known as a set. Sets can either be configured
-implicitly or explicitly. Note that a record may be harvested multiple
-times if it is contained in multiple sets.
+OAI-PMH can group multiple records together into a collection of themed records known as a set.
+Sets can either be automatically detected or specified explicitly.
+Note that a record may be harvested multiple times if it is contained in multiple sets.
 
-To implicitly discover and harvest all sets from a repository, set
+To automatically discover and harvest all sets from a repository, set
 `discoverSets` to `true` in the repository definition. The following
 definition will harvest from all sets using the metadata prefixes
 `dc`, `ddi` and `ddi_3_2`.
@@ -118,13 +117,13 @@ definition will harvest from all sets using the metadata prefixes
 ```yaml
 harvester:
   repos:
-  - url: https://snd.gu.se/en/oai-pmh
-    code: SND
-    discoverSets: true
-    metadataPrefixes:
-      - metadataPrefix: dc
-      - metadataPrefix: ddi
-      - metadataPrefix: ddi_3_2
+    - url: https://snd.gu.se/en/oai-pmh
+      code: SND
+      discoverSets: true
+      metadataPrefixes:
+        - metadataPrefix: dc
+        - metadataPrefix: ddi
+        - metadataPrefix: ddi_3_2
 ```
 
 Sets can also be configured explicitly by defining the name of the set
@@ -135,16 +134,18 @@ times to harvest multiple sets using the same metadata prefix.
 ```yaml
 harvester:
   repos:
-  - url: https://snd.gu.se/en/oai-pmh
-    code: SND
-    metadataPrefixes:
-      - metadataPrefix: ddi
-        setSpec: subject:history
-      - metadataPrefix: ddi
-        setSpec: subject:social-sciences
-      # This will harvest all record that have a ddi_3_2 metadata prefix
-      - metadataPrefix: ddi_3_2
+    - url: https://snd.gu.se/en/oai-pmh
+      code: SND
+      metadataPrefixes:
+        - metadataPrefix: ddi
+          setSpec: subject:history
+        - metadataPrefix: ddi
+          setSpec: subject:social-sciences
+        # This will harvest all record that have a ddi_3_2 metadata prefix
+        - metadataPrefix: ddi_3_2
 ```
+
+Explicitly defining a set under `metadataPrefixes` will override automatic `discoverSets` detection.
 
 #### Pipeline metadata
 
@@ -158,15 +159,38 @@ below.
 ```yaml
 harvester:
   repos:
-  - url: https://snd.gu.se/en/oai-pmh
-    code: SND
-    validationGate: BASIC
-    metadataPrefixes:
-      - metadataPrefix: oai_ddi25
-        setSpec: subject:social-sciences
-        ddiVersion: DDI_2_5
-        validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
+    - url: https://snd.gu.se/en/oai-pmh
+      code: SND
+      validationGate: BASIC
+      metadataPrefixes:
+        - metadataPrefix: oai_ddi25
+          setSpec: subject:social-sciences
+          ddiVersion: DDI_2_5
+          validationProfile: https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml
 ```
+
+#### Repository Configuration Specification
+
+| Field              | Type           | Description                                                                               |
+|--------------------|----------------|-------------------------------------------------------------------------------------------|
+| `code`             | String         | The short name of the repository.                                                         |
+| `name`             | String         | The friendly name of the repository, displayed in the user interface.                     |
+| `url`              | URI            | The base URL of the OAI-PMH repository.                                                   |
+| `discoverSets`     | boolean        | Determines whether the repository should harvest each set in the repository individually. |
+| `defaultLanguage`  | String         | The language to treat metadata if unspecified.                                            |
+| `validationGate`   | String         | The CESSDA Metadata Validator validation gate to use when validating.                     |
+| `metadataPrefixes` | MetadataFormat | Specific harvesting configuration.                                                        |
+
+##### `MetadataFormat` Specification
+
+| Field               | Type   | Description                                                         |
+|---------------------|--------|---------------------------------------------------------------------|
+| `metadataPrefix`    | String | The metadata prefix to harvest. This is a mandatory parameter.      |
+| `setSpec`           | String | The set to harvest, can be omitted.                                 |
+| `ddiVersion`        | String | The version of DDI harvested. This is currently unused.             |
+| `validationProfile` | URI    | The URI to the CMV validation profile to validate metadata against. |
+
+See [Repo.java](/src/main/java/eu/cessda/oaiharvester/Repo.java) for the concrete implementation and JavaDoc.
 
 ## Getting started as developer
 

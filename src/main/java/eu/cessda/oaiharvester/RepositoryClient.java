@@ -94,7 +94,7 @@ class RepositoryClient
                             break;
                         }
 
-                        unfoldedSets.addAll( ls.getSets().stream().map( s -> new Repo.MetadataFormat( s, mf.metadataPrefix(), mf.ddiVersion(), mf.validationProfile()) ).toList() );
+                        unfoldedSets.addAll( ls.getSets().stream().map( s -> new Repo.MetadataFormat( mf.metadataPrefix(), s, mf.ddiVersion(), mf.validationProfile()) ).toList() );
 
                         resumptionToken = ls.getResumptionToken();
                         if ( resumptionToken.isPresent() )
