@@ -51,18 +51,18 @@ java -jar oaiharvester.jar --harvester.dir=/example/output/directory
 
 ### Control the harvesting process
 
-| property                    | effect                                                                                                                                    |
-|-----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| harvester.dir               | directory where harvested files will be written to                                                                                        |
-| harvester.timeout           | seconds to wait until a request is cancelled                                                                                              |
-| harvester.incremental       | enables incremental harvesting, by default this will harvest records from the last week unless overridden by `harvester.from.incremental` |
-| harvester.from.incremental  | sets how far back to harvest when harvesting incrementally, accepts an ISO date                                                           |
-| harvester.keepOAIEnvelope   | if true, will cause the OAI-PMH response to be written "as is"                                                                            |
-| harvester.removeOAIEnvelope | if true, will remove the OAI-PMH header from the response before writing                                                                  |
-| harvester.repos             | a list of repositories; each with a code, url, metadata prefixes and optionally a list of sets                                            |
+Configuration properties that control the harvesting process are all under the `harvester` key.
 
-The `harvester.keepOAIEnvelope` and `harvester.removeOAIEnvelope` are
-not mutually exclusive and can be set independently.
+| Property                     | Type      | Description                                                                                                                                 |
+|------------------------------|-----------|---------------------------------------------------------------------------------------------------------------------------------------------|
+| `harvester.dir`              | Path      | Directory where harvested files will be written to.                                                                                         |
+| `harvester.timeout`          | Duration  | Seconds to wait until an individual HTTP request is cancelled, defaults to 30 seconds.                                                      |
+| `harvester.incremental`      | boolean   | Enables incremental harvesting. By default, this will harvest records from the last week unless overridden by `harvester.from.incremental`. |
+| `harvester.from.incremental` | LocalDate | If harvester.incremental is true, only records modified after this date will be harvested. This accepts an ISO date as a parameter.         |
+| `harvester.repos`            | Repo      | A list of repositories. [See below for a description on how to configure a repository.](#repository-configuration-specification)            |
+
+See <https://www.openarchives.org/OAI/openarchivesprotocol.html#SelectiveHarvestingandDatestamps>
+for a description on how incremental harvesting works at the OAI-PMH protocol level.
 
 #### Define a list of repositories to be harvested
 
