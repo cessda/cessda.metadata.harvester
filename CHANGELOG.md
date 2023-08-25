@@ -14,6 +14,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - *Fixed (for any bug fixes)*
 - *Security (in case of vulnerabilities)*
 
+## [3.4.0] - 2023-08-29
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8277067.svg)](https://doi.org/10.5281/zenodo.8277067)
+
+**NOTICE**: The location of the harvesting configuration when running on the CESSDA Cloud Platform has changed, and can be found at <https://github.com/cessda/cessda.cdc.aggregator.deploy/blob/main/charts/harvester/config/config.yaml>. Changing application-cdc.yaml in this repository will have no effect. 
+
+### Changed
+
+- Documented the `Repo` configuration class in the README and JavaDocs ([#569](https://github.com/cessda/cessda.cdc.versions/issues/569))
+- Revised the documentation in [README.md](README.md), removing references to properties that no longer have any effect ([PR-29](https://github.com/cessda/cessda.metadata.harvester/pull/29))
+- Stream records directly to disk, improving performance and reducing memory usage ([#565](https://github.com/cessda/cessda.cdc.versions/issues/565))
+
+### Removed
+
+- Removed the ability to "unwrap" records ([#565](https://github.com/cessda/cessda.cdc.versions/issues/565))
+
 ## [3.3.0] - 2023-06-13
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8021252.svg)](https://doi.org/10.5281/zenodo.8021252)
@@ -195,6 +211,7 @@ n/a
   harvesting OAI servers available via HTTPS only and using
   letsencrypt SSL certificates
 
+[3.4.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.4.0
 [3.3.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.3.0
 [3.2.1]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.2.1
 [3.1.1]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.1.1
