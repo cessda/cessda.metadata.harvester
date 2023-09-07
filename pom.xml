@@ -168,24 +168,20 @@
 					</execution>
 				</executions>
 			</plugin>
-			<plugin>
-				<groupId>io.fabric8</groupId>
-				<artifactId>docker-maven-plugin</artifactId>
-				<version>0.43.4</version>
-				<configuration>
-					<images>
-						<image>
-							<name>${image_tag}</name>
-							<build>
-								<dockerFile>${project.basedir}/target/docker/generated/application.Dockerfile</dockerFile>
-								<assembly>
-									<descriptorRef>artifact</descriptorRef>
-								</assembly>
-							</build>
-						</image>
-					</images>
-				</configuration>
-			</plugin>
+            <!--Docker Containerisation-->
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.3.2</version>
+                <configuration>
+                    <to>
+                        <image>${image_tag}</image>
+                    </to>
+                    <container>
+                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+                    </container>
+                </configuration>
+            </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-antrun-plugin</artifactId>
@@ -301,16 +297,6 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-
-	<profiles>
-		<profile>
-			<id>docker-compose</id>
-			<properties>
-				<documents>/${project.artifactId}/data</documents>
-				<logging.file>application.log</logging.file>
-			</properties>
-		</profile>
-	</profiles>
 
 	<organization>
 		<name>CESSDA ERIC</name>
