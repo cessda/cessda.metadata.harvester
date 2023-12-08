@@ -4,9 +4,9 @@ pipeline {
     }
 
     environment {
-        product_name = 'eqb'
+        product_name = 'cdc'
         module_name = 'harvester'
-        image_tag = "${docker_repo}/${product_name}-${module_name}:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+        image_tag = "${DOCKER_ARTIFACT_REGISTRY}/${product_name}-${module_name}:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
     }
 
     agent {
@@ -67,11 +67,11 @@ pipeline {
         }
         stage('Build and Push Docker Image') {
             steps {
-                sh 'gcloud auth configure-docker'
+                sh "gcloud auth configure-docker ${ARTIFACT_REGISTRY_HOST}"
                 withMaven {
                     sh "./mvnw jib:build -Dimage=${IMAGE_TAG}"
                 }
-                sh "gcloud container images add-tag ${IMAGE_TAG} ${docker_repo}/${product_name}-${module_name}:${env.BRANCH_NAME}-latest"
+                sh "gcloud artifacts docker tags add ${IMAGE_TAG} ${DOCKER_ARTIFACT_REGISTRY}/${product_name}-${module_name}:${env.BRANCH_NAME}-latest"
             }
             when { branch 'main' }
         }
