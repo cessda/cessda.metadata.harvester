@@ -213,7 +213,7 @@
 				<version>2.3.0</version>
 				<configuration>
 					<licenseName>apache_v2</licenseName>
-					<addJavaLicenseAfterPackage>true</addJavaLicenseAfterPackage>
+                    <canUpdateCopyright>true</canUpdateCopyright>
 					<failOnMissingHeader>true</failOnMissingHeader>
 					<failOnNotUptodateHeader>true</failOnNotUptodateHeader>
 				</configuration>
