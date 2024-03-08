@@ -44,6 +44,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
 import static eu.cessda.oaiharvester.LoggingConstants.*;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static net.logstash.logback.argument.StructuredArguments.value;
 
 @EnableConfigurationProperties
@@ -244,6 +245,7 @@ public class Harvester implements CommandLineRunner
      * @param repoDirectory  the destination directory of the harvest.
      * @return the number of records successfully harvested.
      */
+    @SuppressWarnings( "java:S1141" )
     private int harvestRecords( Collection<RecordHeader> records, Repo repo, String metadataFormat, Path repoDirectory )
     {
         int retrievedRecords = 0;
@@ -256,13 +258,31 @@ public class Harvester implements CommandLineRunner
 
             // Create a filename from the current identifier
             var fileName = IOUtilities.generateFileName( currentRecord );
+            var filePath = destinationDirectory.resolve( fileName );
 
             try (
                 var pmhRecord = GetRecord.asStream( httpClient, repo.url(), currentRecord.identifier(), metadataFormat );
-                var outputStream = Files.newOutputStream( destinationDirectory.resolve( fileName ) )
             )
             {
-                pmhRecord.transferTo( outputStream );
+                var tmpFile = Files.createTempFile( destinationDirectory, fileName.toString(), null );
+                try ( var outputStream = Files.newOutputStream( tmpFile ))
+                {
+                    pmhRecord.transferTo( outputStream );
+                }
+                catch ( IOException downloadException )
+                {
+                    // An IO error occurred, resulting in an incomplete XML file
+                    try
+                    {
+                        Files.delete( tmpFile );
+                    }
+                    catch ( IOException deleteException )
+                    {
+                        downloadException.addSuppressed( deleteException );
+                    }
+                    throw downloadException;
+                }
+                Files.move( tmpFile, filePath, REPLACE_EXISTING );
                 retrievedRecords++;
             }
             catch ( IOException e )
