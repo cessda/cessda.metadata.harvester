@@ -36,10 +36,10 @@ package org.oclc.oai.harvester2.verb;
  */
 
 import eu.cessda.oaiharvester.HttpClient;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -62,7 +62,7 @@ public final class ListIdentifiers extends HarvesterVerb implements Resumable
 	 * @throws SAXException the xml response is bad
 	 * @throws IOException  an I/O error occurred
 	 */
-	ListIdentifiers( InputStream is ) throws IOException, SAXException
+	ListIdentifiers( InputSource is ) throws IOException, SAXException
 	{
 		super( is );
 	}
@@ -78,9 +78,12 @@ public final class ListIdentifiers extends HarvesterVerb implements Resumable
 	{
         Objects.requireNonNull( resumptionToken, "resumptionToken cannot be null" );
 		var requestURL = getRequestURL( baseURL, resumptionToken );
-		try (var is = httpClient.getHttpResponse( requestURL ))
+		try (var httpResponse = httpClient.getHttpResponse( requestURL ))
 		{
-			return new ListIdentifiers( is );
+            var inputSource = new InputSource();
+            inputSource.setSystemId( requestURL.toASCIIString() );
+            inputSource.setByteStream( httpResponse );
+			return new ListIdentifiers( inputSource );
 		}
 	}
 
@@ -98,9 +101,12 @@ public final class ListIdentifiers extends HarvesterVerb implements Resumable
 			throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, from, until, set, metadataPrefix );
-		try (var is = httpClient.getHttpResponse( requestURL ))
+		try (var httpResponse = httpClient.getHttpResponse( requestURL ))
 		{
-			return new ListIdentifiers( is );
+            var inputSource = new InputSource();
+            inputSource.setSystemId( requestURL.toASCIIString() );
+            inputSource.setByteStream( httpResponse );
+			return new ListIdentifiers( inputSource );
 		}
 	}
 

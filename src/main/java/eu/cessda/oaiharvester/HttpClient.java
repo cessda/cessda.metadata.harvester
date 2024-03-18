@@ -35,7 +35,6 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
-import static java.io.InputStream.nullInputStream;
 import static java.net.http.HttpClient.Redirect.NORMAL;
 
 @Component
@@ -47,7 +46,7 @@ public class HttpClient
     private final int retryDelay;
 
     @Autowired
-    public HttpClient(HarvesterConfiguration harvesterConfiguration)
+    public HttpClient( HarvesterConfiguration harvesterConfiguration )
     {
         // TK added default timeout for dataverses taking too long to respond / stall
         this.client = Methanol.newBuilder()
@@ -62,7 +61,7 @@ public class HttpClient
     /**
      * Testing constructor, takes a mock HTTP client
      */
-    HttpClient(java.net.http.HttpClient client)
+    HttpClient( java.net.http.HttpClient client )
     {
         this.client = client;
         this.retryDelay = 0;
@@ -72,12 +71,12 @@ public class HttpClient
     {
         var retryAfterHeader = response.headers().firstValue( "Retry-After" );
 
-        if (retryAfterHeader.isPresent())
+        if ( retryAfterHeader.isPresent() )
         {
             try
             {
                 // Try parsing as an integer, sleep for the time specified
-                var delaySeconds = Long.parseLong(retryAfterHeader.get());
+                var delaySeconds = Long.parseLong( retryAfterHeader.get() );
                 return delaySeconds * 1000L;
             }
             catch ( NumberFormatException ignored )
@@ -89,7 +88,8 @@ public class HttpClient
             {
                 var httpDate = ZonedDateTime.parse( retryAfterHeader.get(), DateTimeFormatter.RFC_1123_DATE_TIME );
                 var delay = Duration.between( ZonedDateTime.now(), httpDate );
-                if ( delay.isNegative() ) {
+                if ( delay.isNegative() )
+                {
                     // Negative delays are invalid
                     return -1;
                 }
@@ -118,16 +118,17 @@ public class HttpClient
         catch ( InterruptedException e )
         {
             Thread.currentThread().interrupt();
-            return nullInputStream();
+            throw new IOException( e );
         }
     }
 
     /**
      * Perform the HTTP request, retrying in case of connection errors.
+     *
      * @param httpRequest the request to perform.
      * @param bodyHandler the body handler for the response.
      * @return the response.
-     * @throws IOException if an IO error occurred when sending the response and the maximum retries have been exceeded.
+     * @throws IOException          if an IO error occurred when sending the response and the maximum retries have been exceeded.
      * @throws InterruptedException if the operation is interrupted.
      */
     @SuppressWarnings( { "java:S3776", "java:S135" } ) // Any other way of implementing this logic is more complicated

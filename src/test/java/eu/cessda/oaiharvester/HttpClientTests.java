@@ -184,8 +184,8 @@ class HttpClientTests
     void shouldParseRetryAfterHeaderWithA503StatusCode() throws IOException, InterruptedException
     {
         // Setup variables
-        var delayInSeconds = 2;
-        var expectedTimeAfter = ZonedDateTime.now().plusSeconds( delayInSeconds );
+        var delay = Duration.ofSeconds( 2 );
+        var expectedTimeAfter = ZonedDateTime.now().plus( delay );
 
         var responseHeaders = Map.of( "Retry-After", List.of(DateTimeFormatter.RFC_1123_DATE_TIME.format( expectedTimeAfter )));
 
@@ -197,11 +197,12 @@ class HttpClientTests
         var httpClient = new eu.cessda.oaiharvester.HttpClient( clientMock );
 
         // The client should return a successful result
+        var timeBefore = Instant.now();
         assertDoesNotThrow( () -> httpClient.getHttpResponse( URI.create( "http://localhost:8080/" ) ) );
-        var timeAfter = ZonedDateTime.now();
+        var timeAfter = Instant.now();
 
         // Assert that the appropriate amount of time passed
-        assertThat( Duration.between( expectedTimeAfter, timeAfter )).isCloseTo( Duration.ZERO, Duration.ofSeconds( 500 ) );
+        assertThat( Duration.between( timeBefore, timeAfter )).isCloseTo( delay, Duration.ofMillis( 500 ) );
     }
 
     @Test
@@ -273,8 +274,8 @@ class HttpClientTests
 
         var httpClient = new eu.cessda.oaiharvester.HttpClient( clientMock );
 
-        // The client should return a successful result, and the thread should be interrupted
-        assertDoesNotThrow( () -> httpClient.getHttpResponse( URI.create( "http://localhost:8080/" ) ) );
+        // The client should throw an IOException, and the thread should be interrupted
+        assertThrows( IOException.class, () -> httpClient.getHttpResponse( URI.create( "http://localhost:8080/" ) ) );
         assertTrue( Thread.interrupted() );
     }
 }

@@ -36,10 +36,10 @@ package org.oclc.oai.harvester2.verb;
  */
 
 import eu.cessda.oaiharvester.HttpClient;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -61,7 +61,7 @@ public final class ListMetadataFormats extends HarvesterVerb
      * @throws SAXException          the xml response is bad
      * @throws IOException           an I/O error occurred
      */
-    ListMetadataFormats( InputStream in ) throws IOException, SAXException
+    ListMetadataFormats( InputSource in ) throws IOException, SAXException
     {
         super( in );
     }
@@ -76,9 +76,12 @@ public final class ListMetadataFormats extends HarvesterVerb
     public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL ) throws IOException, SAXException
     {
         var requestURL = getRequestURL( baseURL, null );
-        try ( var in = httpClient.getHttpResponse( requestURL ) )
+        try ( var httpResponse = httpClient.getHttpResponse( requestURL ) )
         {
-            return new ListMetadataFormats( in );
+            var inputSource = new InputSource();
+            inputSource.setSystemId( requestURL.toASCIIString() );
+            inputSource.setByteStream( httpResponse );
+            return new ListMetadataFormats( inputSource );
         }
     }
 
@@ -93,9 +96,12 @@ public final class ListMetadataFormats extends HarvesterVerb
     {
         Objects.requireNonNull( identifier, "identifier cannot be null" );
         var requestURL = getRequestURL( baseURL, identifier );
-        try ( var in = httpClient.getHttpResponse( requestURL ) )
+        try ( var httpResponse = httpClient.getHttpResponse( requestURL ) )
         {
-            return new ListMetadataFormats( in );
+            var inputSource = new InputSource();
+            inputSource.setSystemId( requestURL.toASCIIString() );
+            inputSource.setByteStream( httpResponse );
+            return new ListMetadataFormats( inputSource );
         }
     }
 

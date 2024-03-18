@@ -22,6 +22,7 @@ package org.oclc.oai.harvester2.verb;
 
 
 import org.junit.jupiter.api.Test;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
@@ -61,8 +62,8 @@ class ListMetadataFormatsTests
     void shouldReturnAListOfMetadataFormats() throws IOException, SAXException, URISyntaxException
     {
         // Given
-        var metadataFormats = new ListMetadataFormats( new ByteArrayInputStream(
-            LIST_METADATA_FORMATS_RESPONSE.getBytes( StandardCharsets.UTF_8 )
+        var metadataFormats = new ListMetadataFormats( new InputSource(
+            new ByteArrayInputStream( LIST_METADATA_FORMATS_RESPONSE.getBytes( StandardCharsets.UTF_8 ) )
         ));
 
         // Then

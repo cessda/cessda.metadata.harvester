@@ -22,6 +22,7 @@ package org.oclc.oai.harvester2.verb;
 
 
 import org.junit.jupiter.api.Test;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
@@ -92,7 +93,7 @@ class ListSetsTests
         );
 
         // Then
-        var listSets = new ListSets( inputStream );
+        var listSets = new ListSets( new InputSource( inputStream ) );
 
         var sets = listSets.getSets();
 
@@ -110,7 +111,7 @@ class ListSetsTests
         ) ;
 
         // Then
-        var listSets = new ListSets( inputStream );
+        var listSets = new ListSets(  new InputSource( inputStream ) );
 
         var sets = listSets.getSets();
 

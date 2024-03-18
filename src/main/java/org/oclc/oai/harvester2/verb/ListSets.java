@@ -36,10 +36,10 @@ package org.oclc.oai.harvester2.verb;
  */
 
 import eu.cessda.oaiharvester.HttpClient;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -61,7 +61,7 @@ public final class ListSets extends HarvesterVerb implements Resumable
      * @throws SAXException if an error occurs parsing the XML.
      * @throws IOException  if an I/O error occurred.
      */
-    ListSets( InputStream is ) throws IOException, SAXException
+    ListSets( InputSource is ) throws IOException, SAXException
     {
         super( is );
     }
@@ -69,18 +69,24 @@ public final class ListSets extends HarvesterVerb implements Resumable
     public static ListSets instance( HttpClient httpClient, URI baseURL ) throws IOException, SAXException
     {
         var requestURL = getRequestURL( baseURL );
-        try ( var is = httpClient.getHttpResponse( requestURL ) )
+        try ( var httpResponse = httpClient.getHttpResponse( requestURL ) )
         {
-            return new ListSets( is );
+            var inputSource = new InputSource();
+            inputSource.setSystemId( requestURL.toASCIIString() );
+            inputSource.setByteStream( httpResponse );
+            return new ListSets( inputSource );
         }
     }
 
     public static ListSets instance( HttpClient httpClient, URI baseURL, String resumptionToken ) throws IOException, SAXException
     {
         var requestURL = getRequestURL( baseURL, resumptionToken );
-        try ( var is = httpClient.getHttpResponse( requestURL ) )
+        try ( var httpResponse = httpClient.getHttpResponse( requestURL ) )
         {
-            return new ListSets( is );
+            var inputSource = new InputSource();
+            inputSource.setSystemId( requestURL.toASCIIString() );
+            inputSource.setByteStream( httpResponse );
+            return new ListSets( inputSource );
         }
     }
 

@@ -22,6 +22,7 @@ package org.oclc.oai.harvester2.verb;
 
 
 import org.junit.jupiter.api.Test;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
@@ -105,7 +106,7 @@ class GetRecordTests
     void shouldReturnARecordHeader() throws IOException, SAXException
     {
         var record = new GetRecord(
-            new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( StandardCharsets.UTF_8 ) )
+            new InputSource( new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( StandardCharsets.UTF_8 ) ) )
         );
 
         var header = record.getHeader();
@@ -125,7 +126,7 @@ class GetRecordTests
     void shouldReturnARecordsMetadata() throws IOException, SAXException
     {
         var record = new GetRecord(
-            new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( StandardCharsets.UTF_8 ) )
+            new InputSource( new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( StandardCharsets.UTF_8 ) ) )
         );
 
         assertThat( record.getMetadata() )
@@ -142,7 +143,7 @@ class GetRecordTests
     void shouldHandleADeletedRecord() throws IOException, SAXException
     {
         var deletedRecord = new GetRecord(
-            new ByteArrayInputStream( DELETED_RECORD.getBytes( StandardCharsets.UTF_8 ) )
+            new InputSource( new ByteArrayInputStream( DELETED_RECORD.getBytes( StandardCharsets.UTF_8 ) ) )
         );
 
         var header = deletedRecord.getHeader();

@@ -35,10 +35,13 @@ package org.oclc.oai.harvester2.verb;
  * #L%
  */
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.ErrorHandler;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
@@ -49,7 +52,6 @@ import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringWriter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -72,6 +74,8 @@ import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
  */
 public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIdentifiers, ListMetadataFormats, ListRecords, ListSets
 {
+    private static final Logger log = LoggerFactory.getLogger( HarvesterVerb.class );
+
     /* Primary OAI namespaces */
     protected static final String OAI_2_0_NAMESPACE = "http://www.openarchives.org/OAI/2.0/";
 
@@ -93,7 +97,11 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
         @Override
         public void warning( SAXParseException exception )
         {
-            // do nothing
+            // Log SAX warnings as debug messages
+            if (log.isDebugEnabled())
+            {
+                log.debug( "{}", exception.toString() );
+            }
         }
 
         @Override
@@ -109,56 +117,48 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
         }
     };
 
-    private static final DocumentBuilderFactory factory;
-    private static final ThreadLocal<DocumentBuilder> documentBuilder;
-    private static final ThreadLocal<Transformer> identityTransformer;
-
-    static
+    private static final ThreadLocal<DocumentBuilder> documentBuilder = ThreadLocal.withInitial( () ->
     {
         /* Configure Document Builder Factory */
-        factory = DocumentBuilderFactory.newInstance();
+        var factory = DocumentBuilderFactory.newInstance();
         factory.setNamespaceAware( true );
 
-        documentBuilder = ThreadLocal.withInitial( () ->
+        try
         {
-            try
-            {
-                var documentBuilder = factory.newDocumentBuilder();
-                documentBuilder.setErrorHandler( HANDLER );
-                return documentBuilder;
-            }
-            catch ( ParserConfigurationException e )
-            {
-                throw new IllegalStateException( e );
-            }
-        } );
-
-        identityTransformer = ThreadLocal.withInitial( () ->
+            var builder = factory.newDocumentBuilder();
+            builder.setErrorHandler( HANDLER );
+            return builder;
+        }
+        catch ( ParserConfigurationException e )
         {
-            try
-            {
-                var transformer = TransformerFactory.newInstance().newTransformer();
-                transformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "yes" );
-                return transformer;
-            }
-            catch ( TransformerConfigurationException e )
-            {
-                throw new IllegalStateException( e );
-            }
-        } );
-    }
+            throw new IllegalStateException( e );
+        }
+    } );
+    private static final ThreadLocal<Transformer> identityTransformer = ThreadLocal.withInitial( () ->
+    {
+        try
+        {
+            var transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty( OutputKeys.OMIT_XML_DECLARATION, "yes" );
+            return transformer;
+        }
+        catch ( TransformerConfigurationException e )
+        {
+            throw new IllegalStateException( e );
+        }
+    } );
 
     // Instance variables
     private final Document doc;
 
     /**
-     * Instance a {@link HarvesterVerb} from an {@link InputStream}
+     * Instance a {@link HarvesterVerb} from an {@link InputSource}
      *
      * @param in the input stream representing the source document.
      * @throws IOException  if an IO error occurs.
      * @throws SAXException if an error occurs when parsing the stream.
      */
-    protected HarvesterVerb( InputStream in ) throws IOException, SAXException
+    protected HarvesterVerb( InputSource in ) throws IOException, SAXException
     {
         doc = documentBuilder.get().parse( in );
     }
@@ -256,15 +256,15 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
 
     public String toString()
     {
-        try ( var sw = new StringWriter() )
+        try
         {
-            identityTransformer.get().transform( new DOMSource( doc ), new StreamResult( sw ) );
-            return sw.toString();
+            var stringWriter = new StringWriter();
+            identityTransformer.get().transform( new DOMSource( doc ), new StreamResult( stringWriter ) );
+            return stringWriter.toString();
         }
-        catch ( TransformerException | IOException e )
+        catch ( TransformerException e )
         {
             return e.toString();
         }
     }
-
 }
