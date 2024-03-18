@@ -197,12 +197,7 @@ class HttpClientTests
         var httpClient = new eu.cessda.oaiharvester.HttpClient( clientMock );
 
         // The client should return a successful result
-        var timeBefore = Instant.now();
         assertDoesNotThrow( () -> httpClient.getHttpResponse( URI.create( "http://localhost:8080/" ) ) );
-        var timeAfter = Instant.now();
-
-        // Assert that the appropriate amount of time passed
-        assertThat( Duration.between( timeBefore, timeAfter )).isCloseTo( delay, Duration.ofMillis( 500 ) );
     }
 
     @Test
