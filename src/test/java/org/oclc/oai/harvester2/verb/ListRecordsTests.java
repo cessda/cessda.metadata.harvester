@@ -25,6 +25,7 @@ import eu.cessda.oaiharvester.HttpClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
@@ -100,7 +101,7 @@ class ListRecordsTests
     {
         // When
         var recordList = new ListRecords(
-            new ByteArrayInputStream( LIST_RECORDS_RESPONSE.getBytes( StandardCharsets.UTF_8 ) )
+            new InputSource( new ByteArrayInputStream( LIST_RECORDS_RESPONSE.getBytes( StandardCharsets.UTF_8 ) ) )
         );
 
         // Then

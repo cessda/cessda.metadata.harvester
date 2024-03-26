@@ -37,6 +37,7 @@ package org.oclc.oai.harvester2.verb;
 
 import eu.cessda.oaiharvester.HttpClient;
 import org.w3c.dom.Element;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -57,7 +58,7 @@ public final class GetRecord extends HarvesterVerb
 	 * @throws IOException if an IO error occurs when reading the input stream.
 	 * @throws SAXException if an error occurs when parsing the XML.
 	 */
-	GetRecord( InputStream in ) throws IOException, SAXException
+	GetRecord( InputSource in ) throws IOException, SAXException
 	{
 		super(in);
 	}
@@ -76,9 +77,12 @@ public final class GetRecord extends HarvesterVerb
     {
         var requestURL = getRequestURL( baseURL, identifier, metadataPrefix );
 
-        try ( var in = httpClient.getHttpResponse( requestURL ) )
+        try ( var httpResponse = httpClient.getHttpResponse( requestURL ) )
         {
-            return new GetRecord( in );
+            var inputSource = new InputSource();
+            inputSource.setSystemId( requestURL.toASCIIString() );
+            inputSource.setByteStream( httpResponse );
+            return new GetRecord( inputSource );
         }
     }
 
@@ -131,9 +135,10 @@ public final class GetRecord extends HarvesterVerb
 			for ( int j = 0; j < metadataNodes.getLength(); j++ )
 			{
 			    // Select the first element within the metadata element
-				if ( metadataNodes.item( j ) instanceof Element )
+                var node = metadataNodes.item( j );
+                if ( node instanceof Element element )
                 {
-					return Optional.of( (Element) metadataNodes.item( j ) );
+					return Optional.of( element );
 				}
             }
         }

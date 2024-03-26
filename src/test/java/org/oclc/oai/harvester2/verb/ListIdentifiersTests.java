@@ -23,6 +23,7 @@ package org.oclc.oai.harvester2.verb;
 
 import eu.cessda.oaiharvester.HttpClient;
 import org.junit.jupiter.api.Test;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
@@ -59,8 +60,8 @@ class ListIdentifiersTests
     void shouldReturnRecordHeaders() throws IOException, SAXException
     {
         // Given
-        var identifiers = new ListIdentifiers( new ByteArrayInputStream(
-                GET_LIST_IDENTIFIERS_XML_RESUMPTION_EMPTY.getBytes( UTF_8 )
+        var identifiers = new ListIdentifiers( new InputSource(
+            new ByteArrayInputStream( GET_LIST_IDENTIFIERS_XML_RESUMPTION_EMPTY.getBytes( UTF_8 ) )
         ) );
 
         var identifiersIDs = identifiers.getIdentifiers();
@@ -75,8 +76,8 @@ class ListIdentifiersTests
     void shouldReturnResumptionToken() throws IOException, SAXException
     {
         // Given
-        var identifiers = new ListIdentifiers( new ByteArrayInputStream(
-                GET_LIST_IDENTIFIERS_XML_WITH_RESUMPTION.getBytes( UTF_8 )
+        var identifiers = new ListIdentifiers( new InputSource(
+            new ByteArrayInputStream( GET_LIST_IDENTIFIERS_XML_WITH_RESUMPTION.getBytes( UTF_8 ) )
         ));
 
         assertEquals("3/6/7/ddi/null/2017-01-01/null", identifiers.getResumptionToken().orElseThrow() );
@@ -86,8 +87,8 @@ class ListIdentifiersTests
     void shouldReturnEmptyOptionalForAnEmptyResumptionToken() throws IOException, SAXException
     {
         // Given
-        var identifiers = new ListIdentifiers(new ByteArrayInputStream(
-                GET_LIST_IDENTIFIERS_XML_RESUMPTION_EMPTY.getBytes( UTF_8 )
+        var identifiers = new ListIdentifiers( new InputSource(
+            new ByteArrayInputStream( GET_LIST_IDENTIFIERS_XML_RESUMPTION_EMPTY.getBytes( UTF_8 ) )
         ));
 
         assertTrue( identifiers.getResumptionToken().isEmpty() );
@@ -97,8 +98,8 @@ class ListIdentifiersTests
     void shouldReturnDocumentWhenResumingWithToken() throws IOException, SAXException
     {
         // Given
-        var identifiers = new ListIdentifiers(new ByteArrayInputStream(
-                GET_LIST_IDENTIFIERS_XML_WITH_RESUMPTION_LAST_LIST.getBytes( UTF_8 )
+        var identifiers = new ListIdentifiers( new InputSource(
+            new ByteArrayInputStream( GET_LIST_IDENTIFIERS_XML_WITH_RESUMPTION_LAST_LIST.getBytes( UTF_8 ) )
         ));
 
         // Then
@@ -113,8 +114,8 @@ class ListIdentifiersTests
     void shouldReturnNoRecordsOnError() throws IOException, SAXException
     {
         // Given
-        var identifiers = new ListIdentifiers( new ByteArrayInputStream(
-                GET_LIST_IDENTIFIERS_XML_WITH_CANNOT_DISSEMINATE_FORMAT_ERROR.getBytes( UTF_8 )
+        var identifiers = new ListIdentifiers(  new InputSource(
+            new ByteArrayInputStream( GET_LIST_IDENTIFIERS_XML_WITH_CANNOT_DISSEMINATE_FORMAT_ERROR.getBytes( UTF_8 ) )
         ));
 
         // Then
@@ -157,7 +158,7 @@ class ListIdentifiersTests
     {
         // When
         var listIdentifiers = new ListIdentifiers(
-            new ByteArrayInputStream( NSD_DATE_FORMAT_RESPONSE.getBytes( UTF_8 ) )
+            new InputSource( new ByteArrayInputStream( NSD_DATE_FORMAT_RESPONSE.getBytes( UTF_8 ) ) )
         );
 
         // Then

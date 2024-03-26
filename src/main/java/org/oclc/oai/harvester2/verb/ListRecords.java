@@ -37,11 +37,10 @@ package org.oclc.oai.harvester2.verb;
 
 import eu.cessda.oaiharvester.HttpClient;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -57,14 +56,12 @@ public final class ListRecords extends HarvesterVerb implements Resumable
 	/**
 	 * Client-side ListRecords verb constructor
 	 *
-	 * @throws MalformedURLException
-	 *             the baseURL is bad
 	 * @throws SAXException
 	 *             the xml response is bad
 	 * @throws IOException
 	 *             an I/O error occurred
 	 */
-	ListRecords( InputStream is ) throws IOException, SAXException
+	ListRecords( InputSource is ) throws IOException, SAXException
 	{
 		super( is );
 	}
@@ -72,9 +69,12 @@ public final class ListRecords extends HarvesterVerb implements Resumable
 	public static ListRecords instance( HttpClient httpClient, URI baseURL, String resumptionToken ) throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, resumptionToken );
-		try (var is = httpClient.getHttpResponse( requestURL ))
+		try (var httpResponse = httpClient.getHttpResponse( requestURL ))
 		{
-			return new ListRecords( is );
+            var inputSource = new InputSource();
+            inputSource.setSystemId( requestURL.toASCIIString() );
+            inputSource.setByteStream( httpResponse );
+			return new ListRecords( inputSource );
 		}
 	}
 
@@ -82,9 +82,12 @@ public final class ListRecords extends HarvesterVerb implements Resumable
 			throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, from, until, set, metadataPrefix );
-		try (var is = httpClient.getHttpResponse( requestURL ))
+		try (var httpResponse = httpClient.getHttpResponse( requestURL ))
 		{
-			return new ListRecords( is );
+            var inputSource = new InputSource();
+            inputSource.setSystemId( requestURL.toASCIIString() );
+            inputSource.setByteStream( httpResponse );
+			return new ListRecords( inputSource );
 		}
 	}
 
@@ -96,7 +99,7 @@ public final class ListRecords extends HarvesterVerb implements Resumable
 	/**
 	 * Construct the query portion of the http request
 	 *
-	 * @return a String containing the query portion of the http request
+	 * @return a {@link String} containing the query portion of the http request
 	 */
 	private static URI getRequestURL( URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix )
 	{
@@ -120,10 +123,6 @@ public final class ListRecords extends HarvesterVerb implements Resumable
 
 	/**
 	 * Construct the query portion of the http request (resumptionToken version)
-	 *
-	 * @param baseURL
-	 * @param resumptionToken
-	 * @return
 	 */
 	private static URI getRequestURL( URI baseURL, String resumptionToken )
 	{

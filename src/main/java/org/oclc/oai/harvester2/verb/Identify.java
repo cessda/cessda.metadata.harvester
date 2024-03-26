@@ -36,10 +36,10 @@ package org.oclc.oai.harvester2.verb;
  */
 
 import eu.cessda.oaiharvester.HttpClient;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 
 /**
@@ -54,7 +54,7 @@ public final class Identify extends HarvesterVerb
 	 *
 	 * @throws IOException           an I/O error occurred
 	 */
-	Identify( InputStream is ) throws IOException, SAXException
+	Identify( InputSource is ) throws IOException, SAXException
 	{
 		super( is );
 	}
@@ -62,9 +62,12 @@ public final class Identify extends HarvesterVerb
 	public static Identify instance( HttpClient httpClient, URI baseURL) throws IOException, SAXException
 	{
 		var requestURL = URI.create(baseURL + "?verb=Identify");
-		try (var is = httpClient.getHttpResponse( requestURL ))
+		try (var httpResponse = httpClient.getHttpResponse( requestURL ))
 		{
-			return new Identify( is );
+            var inputSource = new InputSource();
+            inputSource.setSystemId( requestURL.toASCIIString() );
+            inputSource.setByteStream( httpResponse );
+			return new Identify( inputSource );
 		}
 	}
 
