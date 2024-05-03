@@ -147,21 +147,31 @@ public class Harvester implements CommandLineRunner
         // Create an executor that will harvest each repository in parallel
         var executor = Executors.newFixedThreadPool( repositories.size() );
 
-        // Start the harvest for each repository
-        var futures = repositories.stream().map( repo ->
-                CompletableFuture.runAsync( () -> {
+        try
+        {
+            // Start the harvest for each repository
+            var futures = repositories.stream().map( repo ->
+                CompletableFuture.runAsync( () ->
+                {
                     MDC.put( HARVESTER_RUN, runId );
                     harvestRepository( fromDate, repo );
                     MDC.remove( HARVESTER_RUN );
-                }, executor ).exceptionally( e -> {
+                }, executor ).exceptionally( e ->
+                {
                     MDC.put( HARVESTER_RUN, runId );
-                    log.error("Unexpected error occurred when harvesting!", e);
+                    log.error( "Unexpected error occurred when harvesting!", e );
                     MDC.remove( HARVESTER_RUN );
                     return null;
                 } )
-        ).toArray(CompletableFuture[]::new);
+            ).toArray( CompletableFuture[]::new );
 
-        CompletableFuture.allOf( futures ).join();
+            CompletableFuture.allOf( futures ).join();
+        }
+        finally
+        {
+            // Close the executor
+            executor.shutdown();
+        }
     }
 
     private void harvestRepository( LocalDate fromDate, Repo repo )
