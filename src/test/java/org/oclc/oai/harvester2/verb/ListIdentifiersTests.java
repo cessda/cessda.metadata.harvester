@@ -32,7 +32,6 @@ import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.stream.Collectors;
 
-import static java.net.URLEncoder.encode;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -140,7 +139,7 @@ class ListIdentifiersTests
         // When
         var resumptionToken = "3/6/7/ddi/null/2017-01-01/null";
         when( httpClient.getHttpResponse(
-            URI.create("http://localhost:4556/?verb=ListIdentifiers&resumptionToken=" + encode( resumptionToken, UTF_8 ) ) )
+            URI.create("http://localhost:4556/?verb=ListIdentifiers&resumptionToken=" + resumptionToken ) )
         ).thenReturn( new ByteArrayInputStream(
             GET_LIST_IDENTIFIERS_XML_RESUMPTION_TOKEN_NOT_MOCKED_FOR_INVALID.getBytes( UTF_8 )
         ));
