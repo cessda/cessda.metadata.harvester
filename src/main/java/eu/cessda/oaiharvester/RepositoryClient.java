@@ -127,9 +127,10 @@ class RepositoryClient
     List<RecordHeader> retrieveRecordHeaders( Repo repo, Repo.MetadataFormat metadataFormat, LocalDate fromDate ) throws RecordHeaderException
     {
         log.trace( "URL: {}, set: {}", repo.url(), metadataFormat.setSpec() );
+        final var records = new ArrayList<RecordHeader>();
+
         try
         {
-            final var records = new ArrayList<RecordHeader>();
             var li = ListIdentifiers.instance( httpClient, repo.url(), fromDate, null, metadataFormat.setSpec(), metadataFormat.metadataPrefix() );
 
             Optional<String> resumptionToken;
@@ -160,7 +161,7 @@ class RepositoryClient
         }
         catch ( IOException | SAXException | DateTimeParseException e )
         {
-            throw new RecordHeaderException( repo, metadataFormat.setSpec(), e );
+            throw new RecordHeaderException( repo, metadataFormat.setSpec(), records, e );
         }
     }
 }

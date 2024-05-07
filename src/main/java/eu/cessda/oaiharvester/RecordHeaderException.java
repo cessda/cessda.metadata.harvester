@@ -21,7 +21,10 @@ package eu.cessda.oaiharvester;
  */
 
 
+import org.oclc.oai.harvester2.verb.RecordHeader;
+
 import java.io.Serial;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -34,18 +37,21 @@ public class RecordHeaderException extends Exception
 
     private final Repo repo;
     private final String set;
+    private final List<RecordHeader> headers;
 
     /**
      * Construct a new instance of a {@link RecordHeaderException}.
      * @param repo the repository that failed.
      * @param set the set that was being harvested, set to {@code null} if no sets were being harvested.
+     * @param headers the list of headers discovered so far.
      * @param cause the cause of this exception.
      */
-    RecordHeaderException( Repo repo, String set, Throwable cause )
+    RecordHeaderException( Repo repo, String set, List<RecordHeader> headers, Throwable cause )
     {
         super( generateMessage( repo, set, cause ), cause );
         this.repo = repo;
         this.set = set;
+        this.headers = headers;
     }
 
     /**
@@ -77,5 +83,13 @@ public class RecordHeaderException extends Exception
     public Optional<String> getSet()
     {
         return Optional.ofNullable(set);
+    }
+
+    /**
+     * Get the list of record headers.
+     */
+    public List<RecordHeader> getHeaders()
+    {
+        return headers;
     }
 }

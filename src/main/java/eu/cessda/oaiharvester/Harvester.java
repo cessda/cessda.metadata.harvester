@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
@@ -229,7 +230,28 @@ public class Harvester implements CommandLineRunner
 
         log.debug( "{}: Set: {}: Prefix: {} Fetching records.", repo.code(), metadataFormat.setSpec(), metadataFormat.metadataPrefix() );
 
-        var recordIdentifiers = repositoryClient.retrieveRecordHeaders( repo, metadataFormat, fromDate );
+        List<RecordHeader> recordIdentifiers;
+
+        try
+        {
+           recordIdentifiers = repositoryClient.retrieveRecordHeaders( repo, metadataFormat, fromDate );
+        }
+        catch ( RecordHeaderException e )
+        {
+            recordIdentifiers = e.getHeaders();
+            if ( !recordIdentifiers.isEmpty() )
+            {
+                log.warn( "{}: Partially retrieved record headers in set {}: {}",
+                    value( LoggingConstants.OAI_URL, repo.code() ),
+                    value( LoggingConstants.OAI_SET, metadataFormat.setSpec() ),
+                    e.getCause().toString()
+                );
+            }
+            else
+            {
+                throw e;
+            }
+        }
 
         log.info( "{}: Set: {}: Retrieved {} record headers.",
             value( REPO_NAME, repo.code() ),
