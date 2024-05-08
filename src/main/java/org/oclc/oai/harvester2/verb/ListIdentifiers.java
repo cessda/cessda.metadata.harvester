@@ -41,8 +41,6 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -161,8 +159,6 @@ public final class ListIdentifiers extends HarvesterVerb implements Resumable
 	 */
 	private static URI getRequestURL( URI baseURL, String resumptionToken )
 	{
-		return URI.create(baseURL + "?verb=ListIdentifiers"
-				+ "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 )
-		);
+		return URI.create(baseURL + "?verb=ListIdentifiers&resumptionToken=" +  resumptionToken );
 	}
 }

@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
@@ -147,21 +148,31 @@ public class Harvester implements CommandLineRunner
         // Create an executor that will harvest each repository in parallel
         var executor = Executors.newFixedThreadPool( repositories.size() );
 
-        // Start the harvest for each repository
-        var futures = repositories.stream().map( repo ->
-                CompletableFuture.runAsync( () -> {
+        try
+        {
+            // Start the harvest for each repository
+            var futures = repositories.stream().map( repo ->
+                CompletableFuture.runAsync( () ->
+                {
                     MDC.put( HARVESTER_RUN, runId );
                     harvestRepository( fromDate, repo );
                     MDC.remove( HARVESTER_RUN );
-                }, executor ).exceptionally( e -> {
+                }, executor ).exceptionally( e ->
+                {
                     MDC.put( HARVESTER_RUN, runId );
-                    log.error("Unexpected error occurred when harvesting!", e);
+                    log.error( "Unexpected error occurred when harvesting!", e );
                     MDC.remove( HARVESTER_RUN );
                     return null;
                 } )
-        ).toArray(CompletableFuture[]::new);
+            ).toArray( CompletableFuture[]::new );
 
-        CompletableFuture.allOf( futures ).join();
+            CompletableFuture.allOf( futures ).join();
+        }
+        finally
+        {
+            // Close the executor
+            executor.shutdown();
+        }
     }
 
     private void harvestRepository( LocalDate fromDate, Repo repo )
@@ -219,7 +230,28 @@ public class Harvester implements CommandLineRunner
 
         log.debug( "{}: Set: {}: Prefix: {} Fetching records.", repo.code(), metadataFormat.setSpec(), metadataFormat.metadataPrefix() );
 
-        var recordIdentifiers = repositoryClient.retrieveRecordHeaders( repo, metadataFormat, fromDate );
+        List<RecordHeader> recordIdentifiers;
+
+        try
+        {
+           recordIdentifiers = repositoryClient.retrieveRecordHeaders( repo, metadataFormat, fromDate );
+        }
+        catch ( RecordHeaderException e )
+        {
+            recordIdentifiers = e.getHeaders();
+            if ( !recordIdentifiers.isEmpty() )
+            {
+                log.warn( "{}: Partially retrieved record headers in set {}: {}",
+                    value( LoggingConstants.OAI_URL, repo.code() ),
+                    value( LoggingConstants.OAI_SET, metadataFormat.setSpec() ),
+                    e.getCause().toString()
+                );
+            }
+            else
+            {
+                throw e;
+            }
+        }
 
         log.info( "{}: Set: {}: Retrieved {} record headers.",
             value( REPO_NAME, repo.code() ),
