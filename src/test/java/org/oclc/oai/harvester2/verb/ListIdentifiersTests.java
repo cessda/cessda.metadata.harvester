@@ -106,7 +106,7 @@ class ListIdentifiersTests
 
         assertEquals( 1, identifiersIDs.size());
 
-        assertEquals( "998", identifiersIDs.get( 0 ).identifier() );
+        assertEquals( "998", identifiersIDs.getFirst().identifier() );
     }
 
     @Test
@@ -126,7 +126,7 @@ class ListIdentifiersTests
         var errors = identifiers.getErrors();
         assertFalse( errors.isEmpty() );
 
-        var error = errors.get( 0 );
+        var error = errors.getFirst();
         assertEquals( OAIError.Code.cannotDisseminateFormat, error.getCode() );
         assertTrue( error.getMessage().isEmpty() );
     }
@@ -163,7 +163,7 @@ class ListIdentifiersTests
         // Then
         var identifiersIDs = listIdentifiers.getIdentifiers();
 
-        var firstIdentifer = identifiersIDs.get( 0 );
+        var firstIdentifer = identifiersIDs.getFirst();
 
         // Assert the header has the expected content
         assertEquals( "http://nsddata.nsd.uib.no:80/obj/fStudy/NSD2200-2", firstIdentifer.identifier() );

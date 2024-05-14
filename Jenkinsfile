@@ -18,7 +18,7 @@ pipeline {
         stage('Pull SDK Docker Image') {
             agent {
                 docker {
-                    image 'openjdk:17-jdk'
+                    image 'eclipse-temurin:21'
                     reuseNode true
                 }
             }

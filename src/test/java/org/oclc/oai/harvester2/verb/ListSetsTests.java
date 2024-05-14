@@ -121,7 +121,7 @@ class ListSetsTests
 
         assertEquals( 1, errors.size() );
 
-        assertEquals( OAIError.Code.noSetHierarchy, errors.get( 0 ).getCode() );
-        assertEquals( "This repository does not support sets", errors.get( 0 ).getMessage().orElseThrow() );
+        assertEquals( OAIError.Code.noSetHierarchy, errors.getFirst().getCode() );
+        assertEquals( "This repository does not support sets", errors.getFirst().getMessage().orElseThrow() );
     }
 }
