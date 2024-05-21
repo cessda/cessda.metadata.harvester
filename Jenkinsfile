@@ -7,6 +7,7 @@ pipeline {
         product_name = 'cdc'
         module_name = 'harvester'
         image_tag = "${DOCKER_ARTIFACT_REGISTRY}/${product_name}-${module_name}:${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
+        M2_HOME = "${WORKSPACE_TMP}/.m2"
     }
 
     agent {
@@ -19,7 +20,6 @@ pipeline {
             agent {
                 docker {
                     image 'eclipse-temurin:21'
-                    args '-v $HOME/.m2:/.m2'
                     reuseNode true
                 }
             }
