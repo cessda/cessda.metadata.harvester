@@ -146,9 +146,7 @@ public class Harvester implements CommandLineRunner
         repositories.forEach( Harvester::validateRepository );
 
         // Create an executor that will harvest each repository in parallel
-        var executor = Executors.newFixedThreadPool( repositories.size() );
-
-        try
+        try( var executor = Executors.newFixedThreadPool( repositories.size() ) )
         {
             // Start the harvest for each repository
             var futures = repositories.stream().map( repo ->
@@ -167,11 +165,6 @@ public class Harvester implements CommandLineRunner
             ).toArray( CompletableFuture[]::new );
 
             CompletableFuture.allOf( futures ).join();
-        }
-        finally
-        {
-            // Close the executor
-            executor.shutdown();
         }
     }
 
