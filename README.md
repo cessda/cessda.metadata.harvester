@@ -1,5 +1,9 @@
 # CESSDA OAI-PMH Metadata Harvester
-[![SQAaaS badge shields.io](https://img.shields.io/badge/sqaaas%20software-silver-lightgrey)](https://eu.badgr.com/public/assertions/4MtipH8nTG-1OC0hjsZQ5A "SQAaaS silver badge achieved")
+[![SQAaaS badge](https://github.com/EOSC-synergy/SQAaaS/raw/master/badges/badges_150x116/badge_software_silver.png)](https://api.eu.badgr.io/public/assertions/dLDYq9j3QGOLlau0Bx6dvg "SQAaaS silver badge achieved")
+
+[![SQAaaS badge shields.io](https://img.shields.io/badge/sqaaas%20software-silver-lightgrey)](https://api.eu.badgr.io/public/assertions/dLDYq9j3QGOLlau0Bx6dvg "SQAaaS silver badge achieved")
+
+
 [![Build Status](https://jenkins.cessda.eu/buildStatus/icon?job=cessda.eqb.metadata.harvester%2Fmain)](https://jenkins.cessda.eu/job/cessda.eqb.metadata.harvester%2Fmain)
 [![Quality Gate Status](https://sonarqube.cessda.eu/api/project_badges/measure?project=eu.cessda.eqb:oaiharvester&metric=alert_status)](https://sonarqube.cessda.eu/dashboard?id=eu.cessda.eqb:oaiharvester)
 [![Coverage](https://sonarqube.cessda.eu/api/project_badges/measure?project=eu.cessda.eqb:oaiharvester&metric=coverage)](https://sonarqube.cessda.eu/dashboard?id=eu.cessda.eqb:oaiharvester)
