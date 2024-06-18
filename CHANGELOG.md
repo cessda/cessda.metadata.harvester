@@ -14,6 +14,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - *Fixed (for any bug fixes)*
 - *Security (in case of vulnerabilities)*
 
+## [3.6.0] - 2024-06-17
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11918406.svg)](https://doi.org/10.5281/zenodo.11918406)
+
+### Changed
+
+* Harvest records to a temporary file, throw an `IOException` if the `HttpClient` is interrupted ([PR-48](https://github.com/cessda/cessda.metadata.harvester/pull/48))
+* Updated SND endpoint domain, metadata prefix and OAI-PMH set ([PR-50](https://github.com/cessda/cessda.metadata.harvester/pull/50))
+* Updated OpenJDK to version 21 ([#658](https://github.com/cessda/cessda.cdc.versions/issues/658))
+* Updated SQAaaS software quality badge ([#661](https://github.com/cessda/cessda.cdc.versions/issues/661))
+
+### Fixed
+
+* Fixed only harvesting 100 records from SND ([#655](https://github.com/cessda/cessda.cdc.versions/issues/655))
+
 ## [3.4.0] - 2023-08-29
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8277067.svg)](https://doi.org/10.5281/zenodo.8277067)
@@ -211,6 +226,7 @@ n/a
   harvesting OAI servers available via HTTPS only and using
   letsencrypt SSL certificates
 
+[3.6.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.6.0
 [3.4.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.4.0
 [3.3.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.3.0
 [3.2.1]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.2.1
