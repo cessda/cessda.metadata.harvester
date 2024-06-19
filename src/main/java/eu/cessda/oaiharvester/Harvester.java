@@ -183,10 +183,10 @@ public class Harvester implements CommandLineRunner
             catch ( DirectoryCreationFailedException | MetadataCreationFailedException | RecordHeaderException e )
             {
                 log.error( "Could not harvest repository: {}, set: {}: {}: {}",
-                        value( LoggingConstants.OAI_URL, repo.code()),
-                        value( LoggingConstants.OAI_SET, metadata),
-                        value( LoggingConstants.EXCEPTION_NAME, e.getClass().getName()),
-                        value( LoggingConstants.EXCEPTION_MESSAGE, e.getMessage())
+                        value( REPO_NAME, repo.code() ),
+                        value( OAI_SET, metadata.setSpec() ),
+                        value( EXCEPTION_NAME, e.getClass().getName() ),
+                        value( EXCEPTION_MESSAGE, e.getMessage() )
                 );
             }
         }
@@ -234,10 +234,11 @@ public class Harvester implements CommandLineRunner
             recordIdentifiers = e.getHeaders();
             if ( !recordIdentifiers.isEmpty() )
             {
-                log.warn( "{}: Partially retrieved record headers in set {}: {}",
-                    value( LoggingConstants.OAI_URL, repo.code() ),
-                    value( LoggingConstants.OAI_SET, metadataFormat.setSpec() ),
-                    e.getCause().toString()
+                log.warn( "{}: Partially retrieved record headers in set {}: {}: {}",
+                    value( REPO_NAME, repo.code() ),
+                    value( OAI_SET, metadataFormat.setSpec() ),
+                    value( EXCEPTION_NAME, e.getClass().getName() ),
+                    value( EXCEPTION_MESSAGE, e.getMessage() )
                 );
             }
             else
@@ -255,7 +256,7 @@ public class Harvester implements CommandLineRunner
         int retrievedRecords = harvestRecords( recordIdentifiers, repo, metadataFormat.metadataPrefix(), repositoryDirectory );
 
         log.info( "{}: Set: {}: Retrieved {} records.",
-                value( OAI_RECORD, repo.code() ),
+                value( REPO_NAME, repo.code() ),
                 value( OAI_SET, metadataFormat.setSpec() ),
                 value( RETRIEVED_RECORDS, retrievedRecords )
         );
@@ -314,10 +315,10 @@ public class Harvester implements CommandLineRunner
             {
                 log.warn( "{}: Failed to harvest record {} from {}: {}: {}",
                     value( REPO_NAME, repo.code() ),
-                    value( LoggingConstants.OAI_RECORD, currentRecord.identifier() ),
-                    value( LoggingConstants.OAI_URL, repo.url() ),
-                    value( LoggingConstants.EXCEPTION_NAME, e.getClass().getName() ),
-                    value( LoggingConstants.EXCEPTION_MESSAGE, e.getMessage() )
+                    value( OAI_RECORD, currentRecord.identifier() ),
+                    value( OAI_URL, repo.url() ),
+                    value( EXCEPTION_NAME, e.getClass().getName() ),
+                    value( EXCEPTION_MESSAGE, e.getMessage() )
                 );
             }
         }
