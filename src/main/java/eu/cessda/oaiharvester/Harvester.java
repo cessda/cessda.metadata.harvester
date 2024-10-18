@@ -221,7 +221,11 @@ public class Harvester implements CommandLineRunner
         IOUtilities.createMetadata( createdDirectory, repo, metadataFormat );
 
 
-        log.debug( "{}: Set: {}: Prefix: {} Fetching records.", repo.code(), metadataFormat.setSpec(), metadataFormat.metadataPrefix() );
+        log.debug( "{}: Set: {}: Prefix: {} Fetching records.",
+            value( REPO_NAME, repo.code() ),
+            value( OAI_SET, metadataFormat.setSpec() ),
+            value( "oai_prefix", metadataFormat.metadataPrefix() )
+        );
 
         List<RecordHeader> recordIdentifiers;
 
@@ -327,11 +331,14 @@ public class Harvester implements CommandLineRunner
         if (!harvesterConfiguration.incremental())
         {
             log.debug( "{}: Removing orphaned records.", value( REPO_NAME, repo.code()));
-            var wrappedRecordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, destinationDirectory );
+            var recordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, destinationDirectory );
 
-            if ( log.isInfoEnabled() || wrappedRecordsDeleted > 0 )
+            if ( log.isInfoEnabled() || recordsDeleted > 0 )
             {
-                log.info( "{}: Removed {} orphaned records.", value( REPO_NAME, repo.code() ), wrappedRecordsDeleted );
+                log.info( "{}: Removed {} orphaned records.",
+                    value( REPO_NAME, repo.code() ),
+                    value( "records_deleted", recordsDeleted )
+                );
             }
         }
 
