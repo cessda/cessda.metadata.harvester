@@ -19,7 +19,7 @@ package org.oclc.oai.harvester2.verb;
  * #%L
  * CESSDA OAI-PMH Metadata Harvester
  * %%
- * Copyright (C) 2019 - 2024 CESSDA ERIC
+ * Copyright (C) 2019 - 2025 CESSDA ERIC
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -188,7 +188,6 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
         for ( int i = 0; i < childNodes.getLength(); i++ )
         {
             var node = childNodes.item( i );
-
             var localName = node.getLocalName();
 
             if ( "identifier".equals( localName ) )
