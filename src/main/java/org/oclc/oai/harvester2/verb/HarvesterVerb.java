@@ -196,9 +196,7 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
             }
             else if ( "datestamp".equals( localName ) )
             {
-                // NSD returns invalid ISO dates such as 2020-09-02T15:12:07+0000.
-                // This corrects the dates before parsing by replacing +0000 with Z.
-                var datestampString = node.getTextContent().trim().replace( "+0000", "Z" );
+                var datestampString = node.getTextContent().trim();
                 datestamp = OAI_DATE_TIME_FORMATTER.parseBest( datestampString, OffsetDateTime::from, LocalDateTime::from, LocalDate::from );
             }
             else if ( "setSpec".equals( localName ) )
