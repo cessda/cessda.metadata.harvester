@@ -68,4 +68,4 @@ harvester:
     incremental: 0 0 */2 * * *
     full: 00 31 12 * * ?
   repos:
-  - url: https://snd.se/oai-pmh?verb=ListIdentifiers&set=subject:ssif:5
+  - url: https://api.researchdata.se/oai-pmh?verb=ListIdentifiers&set=subject:ssif:5
