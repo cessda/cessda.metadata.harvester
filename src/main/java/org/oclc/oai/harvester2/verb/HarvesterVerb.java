@@ -45,9 +45,14 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -77,7 +82,7 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
     private static final Logger log = LoggerFactory.getLogger( HarvesterVerb.class );
 
     /* Primary OAI namespaces */
-    protected static final String OAI_2_0_NAMESPACE = "http://www.openarchives.org/OAI/2.0/";
+    public static final String OAI_2_0_NAMESPACE = "http://www.openarchives.org/OAI/2.0/";
 
     /**
      * A formatter that supports all the date formats returned by OAI-PMH repositories.
@@ -147,6 +152,7 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
             throw new IllegalStateException( e );
         }
     } );
+    protected static final XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
 
     // Instance variables
     private final Document doc;
@@ -161,6 +167,39 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
     protected HarvesterVerb( InputSource in ) throws IOException, SAXException
     {
         doc = documentBuilder.get().parse( in );
+    }
+
+    /**
+     * Gets the text content of the OAI-PMH {@code <datestamp>} element. This method will read the document
+     * until either the {@code <datestamp>} is found or the end of the {@code <header>} element is reached.
+     *
+     * @param reader the source document reader.
+     * @return a {@link TemporalAccessor} representing the {@code <datestamp>} element,
+     *         or {@code null} if the datestamp element is not present
+     * @throws DateTimeParseException if the datestamp element is not valid.
+     * @throws XMLStreamException if the OAI-PMH document is malformed.
+     */
+    protected static TemporalAccessor getDateStamp( XMLStreamReader reader ) throws XMLStreamException
+    {
+        while ( reader.hasNext() )
+        {
+            var event = reader.next();
+
+            if ( event == XMLStreamConstants.START_ELEMENT &&
+                reader.getName().equals( new QName( OAI_2_0_NAMESPACE, "datestamp" ) ) )
+            {
+                return OAI_DATE_TIME_FORMATTER.parseBest( reader.getElementText(), OffsetDateTime::from, LocalDateTime::from, LocalDate::from);
+            }
+
+            // Stop reading at the end of the <header> element
+            if (event == XMLStreamConstants.END_ELEMENT &&
+                reader.getName().equals( new QName( OAI_2_0_NAMESPACE, "header" ) ) )
+            {
+                break;
+            }
+        }
+
+        return null;
     }
 
     /**

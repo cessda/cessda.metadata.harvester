@@ -34,12 +34,14 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.Collection;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -224,10 +226,12 @@ public class Harvester implements CommandLineRunner
         log.debug( "{}: Set: {}: Prefix: {} Fetching records.", repo.code(), metadataFormat.setSpec(), metadataFormat.metadataPrefix() );
 
         List<RecordHeader> recordIdentifiers;
+        boolean complete;
 
         try
         {
            recordIdentifiers = repositoryClient.retrieveRecordHeaders( repo, metadataFormat, fromDate );
+           complete = true;
         }
         catch ( RecordHeaderException e )
         {
@@ -239,6 +243,7 @@ public class Harvester implements CommandLineRunner
                     value( LoggingConstants.OAI_SET, metadataFormat.setSpec() ),
                     e.getCause().toString()
                 );
+                complete = false;
             }
             else
             {
@@ -252,7 +257,7 @@ public class Harvester implements CommandLineRunner
             value( RETRIEVED_RECORD_HEADERS, recordIdentifiers.size() )
         );
 
-        int retrievedRecords = harvestRecords( recordIdentifiers, repo, metadataFormat.metadataPrefix(), repositoryDirectory );
+        int retrievedRecords = harvestRecords( recordIdentifiers, repo, metadataFormat.metadataPrefix(), repositoryDirectory, complete );
 
         log.info( "{}: Set: {}: Retrieved {} records.",
                 value( OAI_RECORD, repo.code() ),
@@ -268,10 +273,11 @@ public class Harvester implements CommandLineRunner
      * @param repo           the repository to harvest.
      * @param metadataFormat the metadata prefix to harvest.
      * @param repoDirectory  the destination directory of the harvest.
+     * @param complete       {@code true} if all metadata headers were retrieved.
      * @return the number of records successfully harvested.
      */
     @SuppressWarnings( "java:S1141" )
-    private int harvestRecords( Collection<RecordHeader> records, Repo repo, String metadataFormat, Path repoDirectory )
+    private int harvestRecords( List<RecordHeader> records, Repo repo, String metadataFormat, Path repoDirectory, boolean complete )
     {
         int retrievedRecords = 0;
 
@@ -285,29 +291,38 @@ public class Harvester implements CommandLineRunner
             var fileName = IOUtilities.generateFileName( currentRecord );
             var filePath = destinationDirectory.resolve( fileName );
 
-            try (
-                var pmhRecord = GetRecord.asStream( httpClient, repo.url(), currentRecord.identifier(), metadataFormat );
-            )
+            Path tmpFile = null;
+
+            // Compare datestamp of the currently harvested record
+            try(var oldRecord = Files.newInputStream( filePath ))
             {
-                var tmpFile = Files.createTempFile( destinationDirectory, fileName.toString(), null );
+                if ( !GetRecord.shouldHarvest( currentRecord, oldRecord ) )
+                {
+                    continue;
+                }
+            }
+            catch ( NoSuchFileException e )
+            {
+                // ignore
+            }
+            catch ( DateTimeParseException | IOException | XMLStreamException e )
+            {
+                // IO error occurred opening previous file - skip comparison and harvest anyway
+                log.warn( "Error reading \"{}\" for timestamp comparisons: {}", filePath, e.toString() );
+            }
+
+            try ( var pmhRecord = GetRecord.asStream( httpClient, repo.url(), currentRecord.identifier(), metadataFormat ) )
+            {
+                // Download the record to a temp file
+                tmpFile = Files.createTempFile( null, ".xml" );
                 try ( var outputStream = Files.newOutputStream( tmpFile ))
                 {
                     pmhRecord.transferTo( outputStream );
                 }
-                catch ( IOException downloadException )
-                {
-                    // An IO error occurred, resulting in an incomplete XML file
-                    try
-                    {
-                        Files.delete( tmpFile );
-                    }
-                    catch ( IOException deleteException )
-                    {
-                        downloadException.addSuppressed( deleteException );
-                    }
-                    throw downloadException;
-                }
+
+                // Move the completed file to the destination directory
                 Files.move( tmpFile, filePath, REPLACE_EXISTING );
+
                 retrievedRecords++;
             }
             catch ( IOException e )
@@ -320,10 +335,25 @@ public class Harvester implements CommandLineRunner
                     value( LoggingConstants.EXCEPTION_MESSAGE, e.getMessage() )
                 );
             }
+            finally
+            {
+                // Clean up temp file on a best-effort basis
+                if (tmpFile != null)
+                {
+                    try
+                    {
+                        Files.delete( tmpFile );
+                    }
+                    catch ( IOException e )
+                    {
+                        // ignore
+                    }
+                }
+            }
         }
 
-        // Clean up - this should only run on full harvests.
-        if (!harvesterConfiguration.incremental())
+        // Clean up - this should only run on full harvests with complete metadata headers.
+        if (!harvesterConfiguration.incremental() && complete)
         {
             log.debug( "{}: Removing orphaned records.", value( REPO_NAME, repo.code()));
             var wrappedRecordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, destinationDirectory );

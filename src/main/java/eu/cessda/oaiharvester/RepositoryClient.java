@@ -32,10 +32,7 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -127,11 +124,11 @@ class RepositoryClient
     List<RecordHeader> retrieveRecordHeaders( Repo repo, Repo.MetadataFormat metadataFormat, LocalDate fromDate ) throws RecordHeaderException
     {
         log.trace( "URL: {}, set: {}", repo.url(), metadataFormat.setSpec() );
-        final var records = new ArrayList<RecordHeader>();
+        final var recordMap = new HashMap<String, RecordHeader>();
 
         try
         {
-            var li = ListIdentifiers.instance( httpClient, repo.url(), fromDate, null, metadataFormat.setSpec(), metadataFormat.metadataPrefix() );
+            var li = ListIdentifiers.instance( httpClient, repo.url(), metadataFormat.metadataPrefix(), metadataFormat.setSpec(), fromDate, null );
 
             Optional<String> resumptionToken;
 
@@ -144,7 +141,10 @@ class RepositoryClient
                 }
 
                 // add to list of records to fetch
-                records.addAll( li.getIdentifiers() );
+                for (var id : li.getIdentifiers())
+                {
+                    recordMap.putIfAbsent( id.identifier(), id );
+                }
 
                 // need to continue looping?
                 resumptionToken = li.getResumptionToken();
@@ -157,10 +157,11 @@ class RepositoryClient
             }
             while ( resumptionToken.isPresent() );
 
-            return records;
+            return List.copyOf( recordMap.values() );
         }
         catch ( IOException | SAXException | DateTimeParseException e )
         {
+            var records = List.copyOf( recordMap.values() );
             throw new RecordHeaderException( repo, metadataFormat.setSpec(), records, e );
         }
     }
