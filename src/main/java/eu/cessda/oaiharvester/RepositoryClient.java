@@ -33,8 +33,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Holds methods used to access OAI-PMH repositories
@@ -68,49 +66,58 @@ class RepositoryClient
      * @param repo the repository to get sets for
      * @return a {@link Set} of setSpecs
      */
+    @SuppressWarnings( "java:S3776" )
     Set<Repo.MetadataFormat> discoverSets( Repo repo )
     {
-        return repo.metadataPrefixes().stream()
-            .flatMap( mf -> {
-                // If a set is already configured, or if discovery of sets is not configured, return the current configuration.
-                if (mf.setSpec() != null || !repo.discoverSets()) {
-                    return Stream.of(mf);
-                }
+        var mfs = new HashSet<Repo.MetadataFormat>();
 
-                try
+        for (var mf : repo.metadataPrefixes())
+        {
+            // If a set is already configured, or if discovery of sets is not configured, return the current configuration.
+            if (mf.setSpec() != null || !repo.discoverSets())
+            {
+                mfs.add(mf);
+            }
+
+            try
+            {
+                int unfoldedSets = 0;
+                var ls = ListSets.instance( httpClient, repo.url() );
+
+                Optional<String> resumptionToken;
+                do
                 {
-                    var unfoldedSets = new ArrayList<Repo.MetadataFormat>();
-                    var ls = ListSets.instance( httpClient, repo.url() );
-
-                    Optional<String> resumptionToken;
-                    do
+                    if ( !ls.getErrors().isEmpty() )
                     {
-                        if ( !ls.getErrors().isEmpty() )
-                        {
-                            log.error( "{}: Error while retrieving the list of sets: {}", repo.code(), ls.getErrors() );
-                            break;
-                        }
-
-                        unfoldedSets.addAll( ls.getSets().stream().map( s -> new Repo.MetadataFormat( mf.metadataPrefix(), s, mf.ddiVersion(), mf.validationProfile()) ).toList() );
-
-                        resumptionToken = ls.getResumptionToken();
-                        if ( resumptionToken.isPresent() )
-                        {
-                            ls =  ListSets.instance( httpClient, repo.url(), resumptionToken.orElseThrow() );
-                        }
+                        log.error( "{}: Error while retrieving the list of sets: {}", repo.code(), ls.getErrors() );
+                        break;
                     }
-                    while ( resumptionToken.isPresent() );
 
-                    log.debug( "No. of sets: {}", unfoldedSets.size() );
-                    return unfoldedSets.stream();
+                    for ( String s : ls.getSets() )
+                    {
+                        mfs.add( new Repo.MetadataFormat( mf.metadataPrefix(), s, mf.ddiVersion(), mf.validationProfile() ) );
+                        unfoldedSets++;
+                    }
+
+                    resumptionToken = ls.getResumptionToken();
+                    if ( resumptionToken.isPresent() )
+                    {
+                        ls =  ListSets.instance( httpClient, repo.url(), resumptionToken.orElseThrow() );
+                    }
                 }
-                catch ( IOException | SAXException e )
-                {
-                    log.warn( "Failed to discover sets from {}: set set=all: {}", repo.code(), e.toString() );
-                    // set set=all in case of no sets found
-                    return Stream.of(mf);
-                }
-            } ).collect( Collectors.toSet());
+                while ( resumptionToken.isPresent() );
+
+                log.debug( "No. of sets: {}", unfoldedSets);
+            }
+            catch ( IOException | SAXException e )
+            {
+                log.warn( "Failed to discover sets from {}: set set=all: {}", repo.code(), e.toString() );
+                // set set=all in case of no sets found
+                mfs.add(mf);
+            }
+        }
+
+        return mfs;
     }
 
     /**
@@ -135,7 +142,8 @@ class RepositoryClient
             do
             {
                 // Check for errors, abort if any are found
-                if (!li.getErrors().isEmpty()) {
+                if (!li.getErrors().isEmpty())
+                {
                     log.warn( "[{}]: OAI-PMH errors: {}", repo.code(), li.getErrors() );
                     break;
                 }

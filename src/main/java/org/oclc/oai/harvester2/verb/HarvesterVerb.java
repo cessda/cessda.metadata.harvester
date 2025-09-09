@@ -105,7 +105,7 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
             // Log SAX warnings as debug messages
             if (log.isDebugEnabled())
             {
-                log.debug( "{}", exception.toString() );
+                log.debug( exception.toString() );
             }
         }
 

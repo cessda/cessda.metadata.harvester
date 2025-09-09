@@ -62,7 +62,7 @@ public class Harvester implements CommandLineRunner
     private final RepositoryClient repositoryClient;
 
     @Autowired
-    public Harvester( HttpClient httpClient, HarvesterConfiguration harvesterConfiguration, RepositoryClient repositoryClient )
+    Harvester( HttpClient httpClient, HarvesterConfiguration harvesterConfiguration, RepositoryClient repositoryClient )
     {
         this.httpClient = httpClient;
         this.harvesterConfiguration = harvesterConfiguration;
@@ -276,7 +276,7 @@ public class Harvester implements CommandLineRunner
      * @param complete       {@code true} if all metadata headers were retrieved.
      * @return the number of records successfully harvested.
      */
-    @SuppressWarnings( "java:S1141" )
+    @SuppressWarnings( { "java:S1141", "java:S3776", "java:S5443" } )
     private int harvestRecords( List<RecordHeader> records, Repo repo, String metadataFormat, Path repoDirectory, boolean complete )
     {
         int retrievedRecords = 0;
@@ -346,7 +346,7 @@ public class Harvester implements CommandLineRunner
                     }
                     catch ( IOException e )
                     {
-                        // ignore
+                        // ignore file deletion exceptions
                     }
                 }
             }

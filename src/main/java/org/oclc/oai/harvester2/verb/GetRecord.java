@@ -115,7 +115,7 @@ public final class GetRecord extends HarvesterVerb
      * <p>
      * This method checks whether the datestamps in the OAI-PMH header differ and returns {@code true} if they do.
      *
-     * @param newRecord an input stream representing the record that would be harvested
+     * @param newRecordHeader an input stream representing the record that would be harvested
      * @param oldRecord an input stream representing the already harvested record
      * @return {@code true} if the timestamps differ or if an IO error occurs loading
      */
