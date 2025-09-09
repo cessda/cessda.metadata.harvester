@@ -46,7 +46,7 @@ public class HttpClient
     private final int retryDelay;
 
     @Autowired
-    public HttpClient( HarvesterConfiguration harvesterConfiguration )
+    HttpClient( HarvesterConfiguration harvesterConfiguration )
     {
         // TK added default timeout for dataverses taking too long to respond / stall
         this.client = Methanol.newBuilder()
