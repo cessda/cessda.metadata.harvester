@@ -29,7 +29,6 @@ import org.xml.sax.SAXException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,7 +52,7 @@ class ListIdentifiersTests
 
         assertEquals( 3, identifiersIDs.size());
 
-        assertThat( identifiersIDs.stream().map( RecordHeader::identifier ).collect( Collectors.toList()) )
+        assertThat( identifiersIDs ).map( RecordHeader::identifier )
             .containsExactlyInAnyOrder( "850229", "850232", "850235" );
     }
 
