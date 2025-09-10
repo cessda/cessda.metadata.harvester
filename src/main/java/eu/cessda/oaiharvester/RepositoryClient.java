@@ -77,6 +77,7 @@ class RepositoryClient
             if (mf.setSpec() != null || !repo.discoverSets())
             {
                 mfs.add(mf);
+                continue;
             }
 
             try
