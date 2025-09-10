@@ -181,23 +181,22 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
      */
     protected static TemporalAccessor getDateStamp( XMLStreamReader reader ) throws XMLStreamException
     {
-        while ( reader.hasNext() )
+        do
         {
-            var event = reader.next();
-
-            if ( event == XMLStreamConstants.START_ELEMENT &&
+            if ( reader.getEventType() == XMLStreamConstants.START_ELEMENT &&
                 reader.getName().equals( new QName( OAI_2_0_NAMESPACE, "datestamp" ) ) )
             {
                 return OAI_DATE_TIME_FORMATTER.parseBest( reader.getElementText(), OffsetDateTime::from, LocalDateTime::from, LocalDate::from);
             }
 
             // Stop reading at the end of the <header> element
-            if (event == XMLStreamConstants.END_ELEMENT &&
+            if ( reader.getEventType() == XMLStreamConstants.END_ELEMENT &&
                 reader.getName().equals( new QName( OAI_2_0_NAMESPACE, "header" ) ) )
             {
                 break;
             }
         }
+        while ( reader.hasNext() && reader.next() != XMLStreamConstants.END_DOCUMENT );
 
         return null;
     }
