@@ -228,4 +228,22 @@ class GetRecordTests
 
         assertThat( shouldHarvest ).isTrue();
     }
+
+    @Test
+    void shouldImplementToString() throws IOException, SAXException
+    {
+        // Instance GetRecord
+        var getRecord = new GetRecord(
+            new InputSource( new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( UTF_8 ) ) )
+        );
+
+        // Assert that string matches
+        var getRecordFromString = new GetRecord(
+            new InputSource( new ByteArrayInputStream( getRecord.toString().getBytes( UTF_8 ) ) )
+        );
+
+        // Methods should return the same as the original
+        assertThat( getRecordFromString.getHeader() ).isEqualTo( getRecord.getHeader() );
+        assertThat( getRecordFromString.getErrors() ).isEqualTo( getRecord.getErrors() );
+    }
 }

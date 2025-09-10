@@ -164,5 +164,4 @@ public final class GetRecord extends HarvesterVerb
         }
         return Optional.empty();
 	}
-
 }

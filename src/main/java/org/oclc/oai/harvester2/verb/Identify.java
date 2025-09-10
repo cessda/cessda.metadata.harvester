@@ -59,7 +59,7 @@ public final class Identify extends HarvesterVerb
 		super( is );
 	}
 
-	public static Identify instance( HttpClient httpClient, URI baseURL) throws IOException, SAXException
+	public static Identify instance( HttpClient httpClient, URI baseURL ) throws IOException, SAXException
 	{
 		var requestURL = URI.create(baseURL + "?verb=Identify");
 		try (var httpResponse = httpClient.getHttpResponse( requestURL ))
