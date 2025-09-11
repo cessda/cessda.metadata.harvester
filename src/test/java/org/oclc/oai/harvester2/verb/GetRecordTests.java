@@ -4,7 +4,7 @@ package org.oclc.oai.harvester2.verb;
  * #%L
  * CESSDA OAI-PMH Metadata Harvester
  * %%
- * Copyright (C) 2019 - 2024 CESSDA ERIC
+ * Copyright (C) 2019 - 2025 CESSDA ERIC
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,13 @@ import org.junit.jupiter.api.Test;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Set;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -102,34 +103,56 @@ class GetRecordTests
           </GetRecord>
         </OAI-PMH>""";
 
+    //language=XML
+    private static final String MISSING_DATESTAMP = """
+        <?xml version="1.0" encoding="UTF-8" ?>
+        <?xml-stylesheet type='text/xsl' href='oai2.xsl' ?>
+        <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
+         http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+          <responseDate>2018-01-18T17:11:52Z</responseDate>
+          <request verb="GetRecord" identifier="1031" metadataPrefix="ddi">https://oai.ukdataservice.ac.uk:8443/oai/provider</request>
+          <GetRecord>
+            <record>
+              <header status="deleted">
+                <identifier>1031</identifier>
+                <setSpec>DataCollections</setSpec>
+              </header>
+            </record>
+          </GetRecord>
+        </OAI-PMH>""";
+
+    //language=XML
+    private static final String EMPTY_DOCUMENT = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><empty/>";
+
+    private static final RecordHeader RECORD_HEADER = new RecordHeader(
+        "oai:arXiv.org:cs/0112017",
+        LocalDate.of( 2001, 12, 14 ),
+        Set.of( "cs", "math" ),
+        null
+    );
+
     @Test
     void shouldReturnARecordHeader() throws IOException, SAXException
     {
-        var record = new GetRecord(
-            new InputSource( new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( StandardCharsets.UTF_8 ) ) )
+        var getRecord = new GetRecord(
+            new InputSource( new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( UTF_8 ) ) )
         );
 
-        var header = record.getHeader();
+        var header = getRecord.getHeader();
 
-        assertEquals(
-            new RecordHeader(
-                "oai:arXiv.org:cs/0112017",
-                LocalDate.of( 2001, 12, 14 ),
-                Set.of( "cs", "math" ),
-                null
-            ),
-            header
-        );
+        assertThat( header ).isEqualTo( RECORD_HEADER );
     }
 
     @Test
     void shouldReturnARecordsMetadata() throws IOException, SAXException
     {
-        var record = new GetRecord(
-            new InputSource( new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( StandardCharsets.UTF_8 ) ) )
+        var getRecord = new GetRecord(
+            new InputSource( new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( UTF_8 ) ) )
         );
 
-        assertThat( record.getMetadata() )
+        assertThat( getRecord.getMetadata() )
             .isPresent()
             .hasValueSatisfying( element ->
             {
@@ -143,11 +166,84 @@ class GetRecordTests
     void shouldHandleADeletedRecord() throws IOException, SAXException
     {
         var deletedRecord = new GetRecord(
-            new InputSource( new ByteArrayInputStream( DELETED_RECORD.getBytes( StandardCharsets.UTF_8 ) ) )
+            new InputSource( new ByteArrayInputStream( DELETED_RECORD.getBytes( UTF_8 ) ) )
         );
 
         var header = deletedRecord.getHeader();
 
         assertEquals( RecordHeader.Status.deleted, header.status() );
+    }
+
+    @Test
+    void shouldHarvest() throws XMLStreamException
+    {
+        // New record header, has a newer timestamp than GET_RECORD_RESPONSE
+        var newRecordHeader = new RecordHeader(
+            "oai:arXiv.org:cs/0112017",
+            LocalDate.of( 2004, 6, 18 ),
+            Set.of( "cs", "math" ),
+            null
+        );
+
+        boolean shouldHarvest = GetRecord.shouldHarvest(
+            newRecordHeader,
+            new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( UTF_8 ) )
+        );
+
+        assertThat( shouldHarvest ).isTrue();
+    }
+
+    @Test
+    void shouldSkipHarvesting() throws XMLStreamException
+    {
+        boolean shouldHarvest = GetRecord.shouldHarvest(
+            // New record header, has the same timestamp as GET_RECORD_RESPONSE
+            RECORD_HEADER,
+            new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( UTF_8 ) )
+        );
+
+        assertThat( shouldHarvest ).isFalse();
+    }
+
+    @Test
+    void shouldIgnoreMissingTimestamps() throws XMLStreamException
+    {
+        boolean shouldHarvest = GetRecord.shouldHarvest(
+            // New record header, has a timestamp
+            RECORD_HEADER,
+            new ByteArrayInputStream( MISSING_DATESTAMP.getBytes( UTF_8 ) )
+        );
+
+        assertThat( shouldHarvest ).isTrue();
+    }
+
+    @Test
+    void shouldIgnoreEmptyDocument() throws XMLStreamException
+    {
+        boolean shouldHarvest = GetRecord.shouldHarvest(
+            // New record header, has a timestamp
+            RECORD_HEADER,
+            new ByteArrayInputStream( EMPTY_DOCUMENT.getBytes( UTF_8) )
+        );
+
+        assertThat( shouldHarvest ).isTrue();
+    }
+
+    @Test
+    void shouldImplementToString() throws IOException, SAXException
+    {
+        // Instance GetRecord
+        var getRecord = new GetRecord(
+            new InputSource( new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( UTF_8 ) ) )
+        );
+
+        // Assert that string matches
+        var getRecordFromString = new GetRecord(
+            new InputSource( new ByteArrayInputStream( getRecord.toString().getBytes( UTF_8 ) ) )
+        );
+
+        // Methods should return the same as the original
+        assertThat( getRecordFromString.getHeader() ).isEqualTo( getRecord.getHeader() );
+        assertThat( getRecordFromString.getErrors() ).isEqualTo( getRecord.getErrors() );
     }
 }

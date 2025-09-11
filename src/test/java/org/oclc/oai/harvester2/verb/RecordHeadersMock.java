@@ -4,7 +4,7 @@ package org.oclc.oai.harvester2.verb;
  * #%L
  * CESSDA OAI-PMH Metadata Harvester
  * %%
- * Copyright (C) 2019 - 2024 CESSDA ERIC
+ * Copyright (C) 2019 - 2025 CESSDA ERIC
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -133,5 +133,64 @@ public final class RecordHeadersMock
                   <request>http://services.fsd.uta.fi/v0/oai</request>
                   <error code="cannotDisseminateFormat"/>
                 </OAI-PMH>""";
-
+    //language=xml
+    public static final String GET_LIST_SETS_XML = """
+                <?xml version="1.0" encoding="utf-16" standalone="no"?>
+                <?xml-stylesheet type='text/xsl' href='/oai/oai-pmh.xsl'?>
+                <oai:OAI-PMH xmlns:oai="http://www.openarchives.org/OAI/2.0/">
+                  <!-- Non-compliant date format, should be ignored -->
+                  <oai:responseDate>9/9/2025 12:13:58 PM</oai:responseDate>
+                  <oai:request verb="ListSets">/oai/request</oai:request>
+                  <oai:ListSets>
+                    <oai:set>
+                      <oai:setSpec>f2b9352a-d976-4eac-8ee1-0c76da7cfca4</oai:setSpec>
+                      <oai:setName>Projects</oai:setName>
+                    </oai:set>
+                    <oai:set>
+                      <oai:setSpec>4bd6eef6-99df-40e6-9b11-5b8f64e5cb23</oai:setSpec>
+                      <oai:setName>Series</oai:setName>
+                    </oai:set>
+                    <oai:set>
+                      <oai:setSpec>30ea0200-7121-4f01-8d21-a931a182b86d</oai:setSpec>
+                      <oai:setName>Studies</oai:setName>
+                    </oai:set>
+                    <oai:resumptionToken completeListSize="7" cursor="3">token</oai:resumptionToken>
+                  </oai:ListSets>
+                </oai:OAI-PMH>""";
+    //language=xml
+    public static final String GET_LIST_SETS_XML_LAST_LIST = """
+                <?xml version="1.0" encoding="utf-16" standalone="no"?>
+                <?xml-stylesheet type='text/xsl' href='/oai/oai-pmh.xsl'?>
+                <oai:OAI-PMH xmlns:oai="http://www.openarchives.org/OAI/2.0/">
+                    <!-- Non-compliant date format, should be ignored -->
+                    <oai:responseDate>9/9/2025 12:13:58 PM</oai:responseDate>
+                    <oai:request verb="ListSets">/oai/request</oai:request>
+                    <oai:ListSets>
+                        <oai:set>
+                            <oai:setSpec>679a61f5-4246-4c89-b482-924dec09af98</oai:setSpec>
+                            <oai:setName>Metadata Packages</oai:setName>
+                        </oai:set>
+                        <oai:set>
+                            <oai:setSpec>f196cc07-9c99-4725-ad55-5b34f479cf7d</oai:setSpec>
+                            <oai:setName>Instruments</oai:setName>
+                        </oai:set>
+                        <oai:set>
+                            <oai:setSpec>a1bb19bd-a24a-4443-8728-a6ad80eb42b8</oai:setSpec>
+                            <oai:setName>Questions</oai:setName>
+                        </oai:set>
+                        <oai:set>
+                            <oai:setSpec>8b108ef8-b642-4484-9c49-f88e4bf7cf1d</oai:setSpec>
+                            <oai:setName>Code Lists</oai:setName>
+                        </oai:set>
+                        <oai:set>
+                            <oai:setSpec>a51e85bb-6259-4488-8df2-f08cb43485f8</oai:setSpec>
+                            <oai:setName>Data Files</oai:setName>
+                        </oai:set>
+                        <oai:set>
+                            <oai:setSpec>683889c6-f74b-4d5e-92ed-908c0a42bb2d</oai:setSpec>
+                            <oai:setName>Variables</oai:setName>
+                        </oai:set>
+                        <oai:resumptionToken completeListSize="9" cursor="6"/>
+                    </oai:ListSets>
+                </oai:OAI-PMH>""";
 }

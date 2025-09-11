@@ -4,7 +4,7 @@ package org.oclc.oai.harvester2.verb;
  * #%L
  * CESSDA OAI-PMH Metadata Harvester
  * %%
- * Copyright (C) 2019 - 2024 CESSDA ERIC
+ * Copyright (C) 2019 - 2025 CESSDA ERIC
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,8 +29,6 @@ import org.xml.sax.SAXException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.time.OffsetDateTime;
-import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,19 +39,6 @@ import static org.oclc.oai.harvester2.verb.RecordHeadersMock.*;
 
 class ListIdentifiersTests
 {
-    //language=XML
-    private static final String NSD_DATE_FORMAT_RESPONSE = """
-        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-        <OAI-PMH xmlns="http://www.openarchives.org/OAI/2.0/">
-            <responseDate>2021-07-04T00:00:29.482Z</responseDate>
-            <request verb="ListIdentifiers" metadataPrefix="oai_ddi">http://129.177.90.182/</request>
-            <ListIdentifiers>
-                <header>
-                    <identifier>http://nsddata.nsd.uib.no:80/obj/fStudy/NSD2200-2</identifier>
-                    <datestamp>2020-09-02T15:12:03+0000</datestamp>
-                </header>
-            </ListIdentifiers>
-        </OAI-PMH>""";
 
     @Test
     void shouldReturnRecordHeaders() throws IOException, SAXException
@@ -67,7 +52,7 @@ class ListIdentifiersTests
 
         assertEquals( 3, identifiersIDs.size());
 
-        assertThat( identifiersIDs.stream().map( RecordHeader::identifier ).collect( Collectors.toList()) )
+        assertThat( identifiersIDs ).map( RecordHeader::identifier )
             .containsExactlyInAnyOrder( "850229", "850232", "850235" );
     }
 
@@ -150,23 +135,5 @@ class ListIdentifiersTests
         );
 
         assertEquals(resumptionToken, listIdentifiers.getResumptionToken().orElseThrow());
-    }
-
-    @Test
-    void shouldHandleNSDDateFormat() throws IOException, SAXException
-    {
-        // When
-        var listIdentifiers = new ListIdentifiers(
-            new InputSource( new ByteArrayInputStream( NSD_DATE_FORMAT_RESPONSE.getBytes( UTF_8 ) ) )
-        );
-
-        // Then
-        var identifiersIDs = listIdentifiers.getIdentifiers();
-
-        var firstIdentifer = identifiersIDs.getFirst();
-
-        // Assert the header has the expected content
-        assertEquals( "http://nsddata.nsd.uib.no:80/obj/fStudy/NSD2200-2", firstIdentifer.identifier() );
-        assertEquals( OffsetDateTime.parse( "2020-09-02T15:12:03Z" ), firstIdentifer.datestamp() );
     }
 }

@@ -19,7 +19,7 @@ package org.oclc.oai.harvester2.verb;
  * #%L
  * CESSDA OAI-PMH Metadata Harvester
  * %%
- * Copyright (C) 2019 - 2024 CESSDA ERIC
+ * Copyright (C) 2019 - 2025 CESSDA ERIC
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,7 @@ import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -110,6 +111,25 @@ public final class GetRecord extends HarvesterVerb
     }
 
     /**
+     * Determine whether a record should be harvested.
+     * <p>
+     * This method checks whether the datestamps in the OAI-PMH header differ and returns {@code true} if they do.
+     *
+     * @param newRecordHeader an input stream representing the record that would be harvested
+     * @param oldRecord an input stream representing the already harvested record
+     * @return {@code true} if the timestamps differ or if an IO error occurs loading
+     */
+    public static boolean shouldHarvest( RecordHeader newRecordHeader, InputStream oldRecord ) throws XMLStreamException
+    {
+        // Try opening existing file
+        var previousRecordReader = xmlInputFactory.createXMLStreamReader( oldRecord );
+        var previousDateStamp = getDateStamp( previousRecordReader );
+
+        // Harvest if the datestamp is not equal
+        return !newRecordHeader.datestamp().equals( previousDateStamp );
+    }
+
+    /**
      * Get the oai:record header.
      */
     public RecordHeader getHeader()
@@ -144,5 +164,4 @@ public final class GetRecord extends HarvesterVerb
         }
         return Optional.empty();
 	}
-
 }

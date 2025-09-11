@@ -19,7 +19,7 @@ package org.oclc.oai.harvester2.verb;
  * #%L
  * CESSDA OAI-PMH Metadata Harvester
  * %%
- * Copyright (C) 2019 - 2024 CESSDA ERIC
+ * Copyright (C) 2019 - 2025 CESSDA ERIC
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ public final class Identify extends HarvesterVerb
 		super( is );
 	}
 
-	public static Identify instance( HttpClient httpClient, URI baseURL) throws IOException, SAXException
+	public static Identify instance( HttpClient httpClient, URI baseURL ) throws IOException, SAXException
 	{
 		var requestURL = URI.create(baseURL + "?verb=Identify");
 		try (var httpResponse = httpClient.getHttpResponse( requestURL ))

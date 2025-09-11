@@ -19,7 +19,7 @@ package org.oclc.oai.harvester2.verb;
  * #%L
  * CESSDA OAI-PMH Metadata Harvester
  * %%
- * Copyright (C) 2019 - 2024 CESSDA ERIC
+ * Copyright (C) 2019 - 2025 CESSDA ERIC
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,16 +89,17 @@ public final class ListIdentifiers extends HarvesterVerb implements Resumable
 	}
 
 	/**
-	 * Construct a new instance of {@link ListIdentifiers}.
-	 * @param baseURL the URL of the repository.
-	 * @param from the date to harvest from. Set to {@code null} to harvest from the beginning.
-	 * @param until to date to harvest to. Set to {@code null} for no limit.
-	 * @param set the set to harvest.
-	 * @param metadataPrefix the metadata prefix to use.
-	 * @throws IOException if an IO error occurs.
-	 * @throws SAXException if an error occurs when parsing the XML.
-	 */
-	public static ListIdentifiers instance( HttpClient httpClient, URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix )
+     * Construct a new instance of {@link ListIdentifiers}.
+     *
+     * @param baseURL        the URL of the repository.
+     * @param metadataPrefix the metadata prefix to use.
+     * @param set            the set to harvest.
+     * @param from           the date to harvest from. Set to {@code null} to harvest from the beginning.
+     * @param until          to date to harvest to. Set to {@code null} for no limit.
+     * @throws IOException   if an IO error occurs.
+     * @throws SAXException  if an error occurs when parsing the XML.
+     */
+	public static ListIdentifiers instance( HttpClient httpClient, URI baseURL, String metadataPrefix, String set, LocalDate from, LocalDate until )
 			throws IOException, SAXException
 	{
 		var requestURL = getRequestURL( baseURL, from, until, set, metadataPrefix );
@@ -118,9 +119,14 @@ public final class ListIdentifiers extends HarvesterVerb implements Resumable
 	 */
 	private static URI getRequestURL( URI baseURL, LocalDate from, LocalDate until, String set, String metadataPrefix )
 	{
+        // Validate required parameters
+        Objects.requireNonNull( baseURL, "baseURL must not be null" );
+        Objects.requireNonNull( metadataPrefix, "metadataPrefix must not be null" );
 
+        // Construct the request URL
 		StringBuilder requestURL = new StringBuilder( baseURL.toString() );
 		requestURL.append( "?verb=ListIdentifiers" );
+        requestURL.append( "&metadataPrefix=" ).append( metadataPrefix );
 		if ( from != null )
 		{
 			requestURL.append( "&from=" ).append( from );
@@ -133,7 +139,6 @@ public final class ListIdentifiers extends HarvesterVerb implements Resumable
 		{
 			requestURL.append( "&set=" ).append( set );
 		}
-		requestURL.append( "&metadataPrefix=" ).append( metadataPrefix );
 		return URI.create(requestURL.toString());
 	}
 

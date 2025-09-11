@@ -4,7 +4,7 @@ package eu.cessda.oaiharvester;
  * #%L
  * CESSDA OAI-PMH Metadata Harvester
  * %%
- * Copyright (C) 2019 - 2024 CESSDA ERIC
+ * Copyright (C) 2019 - 2025 CESSDA ERIC
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ public class HttpClient
     private final int retryDelay;
 
     @Autowired
-    public HttpClient( HarvesterConfiguration harvesterConfiguration )
+    HttpClient( HarvesterConfiguration harvesterConfiguration )
     {
         // TK added default timeout for dataverses taking too long to respond / stall
         this.client = Methanol.newBuilder()
