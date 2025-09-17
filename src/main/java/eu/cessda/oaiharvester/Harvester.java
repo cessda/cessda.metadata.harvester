@@ -185,10 +185,10 @@ public class Harvester implements CommandLineRunner
             catch ( DirectoryCreationFailedException | MetadataCreationFailedException | RecordHeaderException e )
             {
                 log.error( "Could not harvest repository: {}, set: {}: {}: {}",
-                        value( LoggingConstants.OAI_URL, repo.code()),
-                        value( LoggingConstants.OAI_SET, metadata),
-                        value( LoggingConstants.EXCEPTION_NAME, e.getClass().getName()),
-                        value( LoggingConstants.EXCEPTION_MESSAGE, e.getMessage())
+                        value( REPO_NAME, repo.code() ),
+                        value( OAI_SET, metadata.setSpec() ),
+                        value( EXCEPTION_NAME, e.getClass().getName() ),
+                        value( EXCEPTION_MESSAGE, e.getMessage() )
                 );
             }
         }
@@ -223,7 +223,11 @@ public class Harvester implements CommandLineRunner
         IOUtilities.createMetadata( createdDirectory, repo, metadataFormat );
 
 
-        log.debug( "{}: Set: {}: Prefix: {} Fetching records.", repo.code(), metadataFormat.setSpec(), metadataFormat.metadataPrefix() );
+        log.debug( "{}: Set: {}: Prefix: {} Fetching records.",
+            value( REPO_NAME, repo.code() ),
+            value( OAI_SET, metadataFormat.setSpec() ),
+            value( "oai_prefix", metadataFormat.metadataPrefix() )
+        );
 
         List<RecordHeader> recordIdentifiers;
         boolean complete;
@@ -238,10 +242,11 @@ public class Harvester implements CommandLineRunner
             recordIdentifiers = e.getHeaders();
             if ( !recordIdentifiers.isEmpty() )
             {
-                log.warn( "{}: Partially retrieved record headers in set {}: {}",
-                    value( LoggingConstants.OAI_URL, repo.code() ),
-                    value( LoggingConstants.OAI_SET, metadataFormat.setSpec() ),
-                    e.getCause().toString()
+                log.warn( "{}: Partially retrieved record headers in set {}: {}: {}",
+                    value( REPO_NAME, repo.code() ),
+                    value( OAI_SET, metadataFormat.setSpec() ),
+                    value( EXCEPTION_NAME, e.getClass().getName() ),
+                    value( EXCEPTION_MESSAGE, e.getMessage() )
                 );
                 complete = false;
             }
@@ -260,7 +265,7 @@ public class Harvester implements CommandLineRunner
         int retrievedRecords = harvestRecords( recordIdentifiers, repo, metadataFormat.metadataPrefix(), repositoryDirectory, complete );
 
         log.info( "{}: Set: {}: Retrieved {} records.",
-                value( OAI_RECORD, repo.code() ),
+                value( REPO_NAME, repo.code() ),
                 value( OAI_SET, metadataFormat.setSpec() ),
                 value( RETRIEVED_RECORDS, retrievedRecords )
         );
@@ -329,10 +334,10 @@ public class Harvester implements CommandLineRunner
             {
                 log.warn( "{}: Failed to harvest record {} from {}: {}: {}",
                     value( REPO_NAME, repo.code() ),
-                    value( LoggingConstants.OAI_RECORD, currentRecord.identifier() ),
-                    value( LoggingConstants.OAI_URL, repo.url() ),
-                    value( LoggingConstants.EXCEPTION_NAME, e.getClass().getName() ),
-                    value( LoggingConstants.EXCEPTION_MESSAGE, e.getMessage() )
+                    value( OAI_RECORD, currentRecord.identifier() ),
+                    value( OAI_URL, repo.url() ),
+                    value( EXCEPTION_NAME, e.getClass().getName() ),
+                    value( EXCEPTION_MESSAGE, e.getMessage() )
                 );
             }
             finally
@@ -356,11 +361,14 @@ public class Harvester implements CommandLineRunner
         if (!harvesterConfiguration.incremental() && complete)
         {
             log.debug( "{}: Removing orphaned records.", value( REPO_NAME, repo.code()));
-            var wrappedRecordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, destinationDirectory );
+            var recordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, destinationDirectory );
 
-            if ( log.isInfoEnabled() || wrappedRecordsDeleted > 0 )
+            if ( log.isInfoEnabled() || recordsDeleted > 0 )
             {
-                log.info( "{}: Removed {} orphaned records.", value( REPO_NAME, repo.code() ), wrappedRecordsDeleted );
+                log.info( "{}: Removed {} orphaned records.",
+                    value( REPO_NAME, repo.code() ),
+                    value( "records_deleted", recordsDeleted )
+                );
             }
         }
 
