@@ -145,8 +145,8 @@ class RepositoryClient
                 // Check for errors, abort if any are found
                 if (!li.getErrors().isEmpty())
                 {
-                    log.warn( "[{}]: OAI-PMH errors: {}", repo.code(), li.getErrors() );
-                    break;
+                    var records = List.copyOf( recordMap.values() );
+                    throw new RecordHeaderException( repo, metadataFormat.setSpec(), records, li.getErrors() );
                 }
 
                 // add to list of records to fetch
