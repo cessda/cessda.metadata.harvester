@@ -117,7 +117,7 @@ public final class ListRecords extends HarvesterVerb implements Resumable
 		{
 			requestURL.append( "&set=" ).append( set );
 		}
-		requestURL.append( "&metadataPrefix=" ).append( metadataPrefix );
+		requestURL.append( "&oaiConfiguration=" ).append( metadataPrefix );
 		return URI.create(requestURL.toString());
 	}
 

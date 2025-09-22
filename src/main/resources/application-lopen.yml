@@ -1,187 +1,128 @@
-management:
-  endpoints.shutdown.enabled: true
-server:
-  port: 8084
-spring:
-  security:
-    user:
-      name: gesis
-      password: g3s1s
-  mail:
-    host: smtprelay.gesis.intra
-  output:
-    ansi:
-      enabled: DETECT
-  devtools:
-    restart:
-      enabled: false
-  application:
-    name: harvester
-  boot:
-    admin:
-      url: http://10.6.13.199:8087
-      username: gesis
-      password: g3s1s
-      client.name: harvester-leibniz-open
-      turbine:
-        clusters: default
-        url: http://localhost:8989/turbine.stream
-      routes:
-        endpoints: env,metrics,log,trace,dump,jolokia,info,configprops,trace,logfile,refresh,flyway,liquibase,heapdump,hystrix.stream,hystrix
-      auto-deregistration: true
-      auto-registration: true
-      period: 5000
-logging:
-  file: ${user.home}${file.separator}lopen.log
-  pattern:
-    console: '%d{yyyy-dd-MM HH:mm:ss.SSS} %highlight(%-5level) %30.30((%M\)) %40.40((%file:%line\))
-      - %message%n'
-    file: '%d{yyyy-dd-MM HH:mm:ss.SSS}  %-5level  %30.30((%M\)) %40.40((%file:%line\))
-      - %message%n'
-  level:
-    net: WARN
-    com: ERROR
-    org.gesis: TRACE
-    cessda: TRACE
-    de.codecentric.boot.admin.services: WARN
 harvester:
-  removeOAIEnvelope: false
-  metadataPrefixes: oai_wgl
-  dir:  ${user.home}${file.separator}lopen
-  recipient: support@cessda.eu
-  timeout: 60
-  from:
-    single: '1800-01-01'
-    initial: '1800-01-01'
-    incremental: '2017-02-28'
-    full: '1901-01-01'
-  cron:
-    incremental: 0 0 */2 * * *
-    full: 00 12 13 * * ?
   repos:
-  - url: https://oar.tib.eu/oai/oaiwgl
-    dataProvider: TIB Hannover
-    metaDataProvider: TIB Hannover
-  - url: https://journals.ub.uni-heidelberg.de/index.php/azgnm/oai
-    dataProvider: Heidelberg-AZGNM
-    metaDataProvider: Heidelberg-AZGNM
-  - url: https://journals.ub.uni-heidelberg.de/index.php/kulturgut/oai
-    dataProvider: Heidelberg-KulturGut
-    metaDataProvider: Heidelberg-KulturGut
-  - url: https://books.ub.uni-heidelberg.de/index.php/arthistoricum/oai
-    dataProvider: Heidelberg-Kunstgeschichte
-    metaDataProvider: Heidelberg-Kunstgeschichte
-  - url: https://journals.ub.uni-heidelberg.de/index.php/ma/oai
-    dataProvider: Heidelberg-MA-GNM
-    metaDataProvider: Heidelberg-MA-GNM
-  - url: https://books.ub.uni-heidelberg.de/index.php/propylaeum/oai
-    sets: propylaeum:byzanzoo
-    dataProvider: Heidelberg-Propyl-Byz
-    metaDataProvider: Heidelberg-Propyl-Byz
-  - url: https://journals.ub.uni-heidelberg.de/index.php/jahrb-rgzm/oai
-    dataProvider: Heidelberg-RGZM
-    metaDataProvider: Heidelberg-RGZM
-  - url: http://repository.gei.de/oai/request
-    dataProvider: GEI
-    metaDataProvider: GEI
-  - url: http://open.ifz-muenchen.de/api/v0/oai
-    dataProvider: IFZ
-    metaDataProvider: IFZ
-  - url: http://www.die-bonn.de/oai/default.aspx
-    sets: oadie
-    dataProvider: DIE
-    metaDataProvider: DIE
-  - url: http://archiv.ub.uni-heidelberg.de/artdok/cgi/oai2
-    sets: WGL
-    dataProvider: GNM 
-    metaDataProvider: GNM 
-  - url: https://digital.herder-institut.de/publications/oai
-    sets: wglsubject
-    dataProvider: HI
-    metaDataProvider: HI 
-  - url: https://ids-pub.bsz-bw.de/oai
-    sets: WglSubject
-    dataProvider:  IDS
-    metaDataProvider: IDS
-  - url: https://www.psycharchives.org/oai/request
-    dataProvider: ZPID
-    metaDataProvider: ZPID
-  - url: https://drops.dagstuhl.de/opus/phpoai/oai2.php
-    dataProvider: LZI Dagstuhl 
-    metaDataProvider: LZI Dagstuhl
-  - url: https://www.pedocs.de/oai2/oai2.php
-    dataProvider: Pedocs
-    metaDataProvider: Pedocs
-  - url: https://www.ssoar.info/OAIHandler/wgl
-    sets: WGL
-    dataProvider: SSOAR 
-    metaDataProvider: SSOAR
-  - url: https://oar.tib.eu/oai/oaiwgl
-    dataProvider: TIB Hannover
-    metaDataProvider: TIB Hannover
-  - url: http://frl.publisso.de/oai-pmh
-    dataProvider: ZB MED
-    metaDataProvider: ZB MED
-  - url: https://zeitgeschichte-digital.de/doks/oai
-    sets: open_access
-    dataProvider: Zentrum für Zeithistorische Forschung(ZZF)
-    metaDataProvider: Zentrum für Zeithistorische Forschung(ZZF)
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_157390
-    dataProvider: ECONSTOR 157390
-    metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_48632
-    dataProvider: ECONSTOR 48632
-    metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_48633
-    dataProvider: ECONSTOR 48633
-    metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_48634
-    dataProvider: ECONSTOR 48634
-    metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_48635
-    dataProvider: ECONSTOR 48635
-    metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_48636
-    dataProvider: ECONSTOR 48636
-    metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_48637
-    dataProvider: ECONSTOR 48637
-    metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_213320
-    dataProvider: ECONSTOR 213320
-    metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_213349
-    dataProvider: ECONSTOR 213349
-    metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_48638
-    dataProvider: ECONSTOR 48638
-    metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_48639
-    dataProvider: ECONSTOR 48639
-    metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_8
-    dataProvider: ECONSTOR 10419 8
-    metaDataProvider: ECONSTOR
-  - url: http://www.econstor.eu/oai/request
-    sets: col_10419_59810
-    dataProvider: ECONSTOR 59810
-    metaDataProvider: ECONSTOR
-  - url: http://pub.zbw.eu/dspace-oai/request
-    sets: open_access
-    dataProvider: ECONSTOR-Set-open_access
-    metaDataProvider: zbw
-  - url: https://journals.ub.uni-heidelberg.de/index.php/ak/oai
-    dataProvider: Heidelberg-AK
-    metaDataProvider: Heidelberg-AK    
+  - oaiConfiguration:
+      url: https://oar.tib.eu/oai/oaiwgl
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: https://journals.ub.uni-heidelberg.de/index.php/azgnm/oai
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: https://journals.ub.uni-heidelberg.de/index.php/kulturgut/oai
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: https://books.ub.uni-heidelberg.de/index.php/arthistoricum/oai
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: https://journals.ub.uni-heidelberg.de/index.php/ma/oai
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: https://books.ub.uni-heidelberg.de/index.php/propylaeum/oai
+      metadataPrefix: oai_wgl
+      setSpec: propylaeum:byzanzoo
+  - oaiConfiguration:
+      url: https://journals.ub.uni-heidelberg.de/index.php/jahrb-rgzm/oai
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: http://repository.gei.de/oai/request
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: http://open.ifz-muenchen.de/api/v0/oai
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: http://www.die-bonn.de/oai/default.aspx
+      metadataPrefix: oai_wgl
+      setSpec: oadie
+  - oaiConfiguration:
+      url: http://archiv.ub.uni-heidelberg.de/artdok/cgi/oai2
+      metadataPrefix: oai_wgl
+      setSpec: WGL
+  - oaiConfiguration:
+      url: https://digital.herder-institut.de/publications/oai
+      metadataPrefix: oai_wgl
+      setSpec: wglsubject
+  - oaiConfiguration:
+      url: https://ids-pub.bsz-bw.de/oai
+      metadataPrefix: oai_wgl
+      setSpec: WglSubject
+  - oaiConfiguration:
+      url: https://www.psycharchives.org/oai/request
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: https://drops.dagstuhl.de/opus/phpoai/oai2.php
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: https://www.pedocs.de/oai2/oai2.php
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: https://www.ssoar.info/OAIHandler/wgl
+      metadataPrefix: oai_wgl
+      setSpec: WGL
+  - oaiConfiguration:
+      url: https://oar.tib.eu/oai/oaiwgl
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: http://frl.publisso.de/oai-pmh
+      metadataPrefix: oai_wgl
+  - oaiConfiguration:
+      url: https://zeitgeschichte-digital.de/doks/oai
+      metadataPrefix: oai_wgl
+      setSpec: open_access
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_157390
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_48632
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_48633
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_48634
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_48635
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_48636
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_48637
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_213320
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_213349
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_48638
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_48639
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_8
+  - oaiConfiguration:
+      url: http://www.econstor.eu/oai/request
+      metadataPrefix: oai_wgl
+      setSpec: col_10419_59810
+  - oaiConfiguration:
+      url: http://pub.zbw.eu/dspace-oai/request
+      metadataPrefix: oai_wgl
+      setSpec: open_access
+  - oaiConfiguration:
+      url: https://journals.ub.uni-heidelberg.de/index.php/ak/oai
+      metadataPrefix: oai_wgl

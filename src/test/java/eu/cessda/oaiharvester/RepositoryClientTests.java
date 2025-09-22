@@ -22,11 +22,12 @@ package eu.cessda.oaiharvester;
 
 import org.junit.jupiter.api.Test;
 import org.oclc.oai.harvester2.verb.RecordHeader;
+import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Set;
+import java.util.Collections;
 
 import static java.nio.charset.StandardCharsets.UTF_16;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -38,21 +39,21 @@ import static org.oclc.oai.harvester2.verb.RecordHeadersMock.*;
 
 class RepositoryClientTests
 {
-    private final Repo.MetadataFormat metadataFormat = new Repo.MetadataFormat(
+    private final Repo.OAIConfiguration metadataFormat = new Repo.OAIConfiguration(
+        URI.create( "http://localhost:4556/" ),
         "ddi",
         null,
-        null,
-        null
+        false
     );
 
     private final Repo repo = new Repo(
-        Set.of( metadataFormat ),
+        metadataFormat,
         "TEST",
         "Test Repository",
-        URI.create( "http://localhost:4556/" ),
-        true,
+        "en",
         null,
-        null
+        null,
+        Collections.emptySet()
     );
 
     @Test
@@ -140,7 +141,7 @@ class RepositoryClientTests
     }
 
     @Test
-    void shouldDiscoverSets() throws IOException
+    void shouldDiscoverSets() throws IOException, SAXException
     {
         // Given
         var httpClient = mock( HttpClient.class );
@@ -168,7 +169,7 @@ class RepositoryClientTests
 
         assertThat( recordHeaders )
             .hasSize(9)
-            .map( Repo.MetadataFormat::setSpec )
+            .map( Repo.OAIConfiguration::setSpec )
             .containsExactlyInAnyOrder(
                 "f2b9352a-d976-4eac-8ee1-0c76da7cfca4",
                 "4bd6eef6-99df-40e6-9b11-5b8f64e5cb23",
@@ -183,7 +184,7 @@ class RepositoryClientTests
     }
 
     @Test
-    void shouldAddDefaultSetOnException() throws IOException
+    void shouldAddDefaultSetOnException() throws IOException, SAXException
     {
         // Given
         var httpClient = mock( HttpClient.class );
@@ -199,7 +200,7 @@ class RepositoryClientTests
 
         assertThat( recordHeaders )
             .hasSize(1)
-            .map( Repo.MetadataFormat::setSpec )
+            .map( Repo.OAIConfiguration::setSpec )
             .containsExactly( (String) null );
     }
 }
