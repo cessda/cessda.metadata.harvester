@@ -21,6 +21,7 @@ package eu.cessda.oaiharvester;
  */
 
 
+import org.oclc.oai.harvester2.verb.OAIError;
 import org.oclc.oai.harvester2.verb.RecordHeader;
 
 import java.io.Serial;
@@ -55,6 +56,21 @@ public class RecordHeaderException extends Exception
     }
 
     /**
+     * Construct a new instance of a {@link RecordHeaderException}.
+     * @param repo the repository that failed.
+     * @param set the set that was being harvested, set to {@code null} if no sets were being harvested.
+     * @param headers the list of headers discovered so far.
+     * @param cause the cause of this exception.
+     */
+    RecordHeaderException( Repo repo, String set, List<RecordHeader> headers, List<OAIError> errors )
+    {
+        super( generateMessage( repo, set, errors ) );
+        this.repo = repo;
+        this.set = set;
+        this.headers = headers;
+    }
+
+    /**
      * Generate the message for this exception.
      */
     private static String generateMessage( Repo repo, String set, Throwable cause )
@@ -66,6 +82,21 @@ public class RecordHeaderException extends Exception
         else
         {
             return repo.code() + ": Fetching identifiers failed: " + cause;
+        }
+    }
+
+    /**
+     * Generate the message for this exception.
+     */
+    private static String generateMessage( Repo repo, String set, List<OAIError> errors )
+    {
+        if (set != null)
+        {
+            return repo.code() + ": " + set + ": OAI-PMH errors: " + errors;
+        }
+        else
+        {
+            return repo.code() + ": OAI-PMH errors: " + errors;
         }
     }
 
