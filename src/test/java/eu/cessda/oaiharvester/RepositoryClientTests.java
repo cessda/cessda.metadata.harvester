@@ -22,7 +22,6 @@ package eu.cessda.oaiharvester;
 
 import org.junit.jupiter.api.Test;
 import org.oclc.oai.harvester2.verb.RecordHeader;
-import org.xml.sax.SAXException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -43,7 +42,7 @@ class RepositoryClientTests
         URI.create( "http://localhost:4556/" ),
         "ddi",
         null,
-        false
+        true
     );
 
     private final Repo repo = new Repo(
@@ -141,7 +140,7 @@ class RepositoryClientTests
     }
 
     @Test
-    void shouldDiscoverSets() throws IOException, SAXException
+    void shouldDiscoverSets() throws IOException
     {
         // Given
         var httpClient = mock( HttpClient.class );
@@ -184,7 +183,7 @@ class RepositoryClientTests
     }
 
     @Test
-    void shouldAddDefaultSetOnException() throws IOException, SAXException
+    void shouldAddDefaultSetOnException() throws IOException
     {
         // Given
         var httpClient = mock( HttpClient.class );

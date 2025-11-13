@@ -56,7 +56,7 @@ class RepositoryClient
      * Discover sets from the remote repository.
      * <ol>
      *     <li>If the repository already has sets configured, these are returned.</li>
-     *     <li>If set discovery is enabled, the repository is enquired using the {@code ListSets} verb.</li>
+     *     <li>If set discovery is enabled, the repository is queried for sets using the {@code ListSets} verb.</li>
      *     <li>
      *         Otherwise, a {@link Repo.OAIConfiguration} with a {@code setSpec} set to {@code null} will be returned.
      *         This will prevent the harvester from using set based harvesting.
@@ -67,7 +67,7 @@ class RepositoryClient
      * @return a {@link Set} of setSpecs
      */
     @SuppressWarnings( "java:S3776" )
-    Set<Repo.OAIConfiguration> discoverSets( Repo repo ) throws IOException, SAXException
+    Set<Repo.OAIConfiguration> discoverSets( Repo repo )
     {
         var mfs = new HashSet<Repo.OAIConfiguration>();
 
@@ -79,7 +79,20 @@ class RepositoryClient
 
         int unfoldedSets = 0;
 
-        ListSets ls = ListSets.instance( httpClient, repo.oaiConfiguration().url() );
+        ListSets ls;
+
+        try
+        {
+            ls = ListSets.instance( httpClient, repo.oaiConfiguration().url() );
+        }
+        catch ( IOException | SAXException e )
+        {
+            log.warn( "Failed to discover sets from {}: set set=all: {}", repo.code(), e.toString() );
+            // set set=all in case of no sets found
+            return Set.of(repo.oaiConfiguration());
+        }
+
+
         Optional<String> resumptionToken;
         do
         {
@@ -98,7 +111,15 @@ class RepositoryClient
             resumptionToken = ls.getResumptionToken();
             if ( resumptionToken.isPresent() )
             {
-                ls = ListSets.instance( httpClient, repo.oaiConfiguration().url(), resumptionToken.orElseThrow() );
+                try
+                {
+                    ls = ListSets.instance( httpClient, repo.oaiConfiguration().url(), resumptionToken.orElseThrow() );
+                }
+                catch ( IOException | SAXException e )
+                {
+                    log.warn( "Partially discovered sets from {}: {}", repo.code(), e.toString() );
+                    return mfs;
+                }
             }
         }
         while ( resumptionToken.isPresent() );

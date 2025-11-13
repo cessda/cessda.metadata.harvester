@@ -74,8 +74,8 @@ public record Repo(
     ) implements Serializable {
         OAIConfiguration
         {
-            Objects.requireNonNull( url );
-            Objects.requireNonNull(metadataPrefix);
+            Objects.requireNonNull( url, "url must not be null" );
+            Objects.requireNonNull( metadataPrefix, "metadataPrefix must not be null" );
             if (setSpec != null && discoverSets)
             {
                 throw new IllegalArgumentException("discoverSets cannot be true when a setSpec is specified");

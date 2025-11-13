@@ -33,7 +33,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.xml.sax.SAXException;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
@@ -155,18 +154,7 @@ public class Harvester implements CommandLineRunner
     {
         log.info( "Harvesting repository {}", value( "repo", repo ) );
 
-        Set<Repo.OAIConfiguration> mfs;
-
-        try
-        {
-            mfs = repositoryClient.discoverSets( repo );
-        }
-        catch ( IOException | SAXException e )
-        {
-            log.warn( "Failed to discover sets from {}: set set=all: {}", repo.code(), e.toString() );
-            // set set=all in case of no sets found
-            mfs = Set.of(repo.oaiConfiguration());
-        }
+        Set<Repo.OAIConfiguration> mfs = repositoryClient.discoverSets( repo );
 
         for ( var oaiConfiguration : mfs )
         {

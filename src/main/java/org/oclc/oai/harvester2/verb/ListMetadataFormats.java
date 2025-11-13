@@ -147,7 +147,7 @@ public final class ListMetadataFormats extends HarvesterVerb
                 var node = childNodes.item( j );
                 var localName = node.getLocalName();
 
-                if ( "oaiConfiguration".equals( localName ) )
+                if ( "metadataPrefix".equals( localName ) )
                 {
                     metadataPrefix = node.getTextContent().trim();
                 }
