@@ -106,7 +106,7 @@ public final class GetRecord extends HarvesterVerb
     {
         return URI.create( baseURL + "?verb=GetRecord"
             + "&identifier=" + identifier
-            + "&oaiConfiguration=" + metadataPrefix
+            + "&metadataPrefix=" + metadataPrefix
         );
     }
 
