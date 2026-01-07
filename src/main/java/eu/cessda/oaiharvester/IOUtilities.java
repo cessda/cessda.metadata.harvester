@@ -75,18 +75,18 @@ public class IOUtilities
      * @param repository the repository to write metadata for.
      * @param metadataFormat the metadata format for this harvest.
      */
-    static void createMetadata( Path directory, Repo repository, Repo.MetadataFormat metadataFormat ) throws MetadataCreationFailedException
+    static void createMetadata( Path directory, Repo repository, Repo.OAIConfiguration metadataFormat ) throws MetadataCreationFailedException
     {
         var metadata = new PipelineMetadata(
             repository.code(),
             repository.name(),
-            repository.url(),
+            metadataFormat.url(),
             metadataFormat.setSpec(),
             metadataFormat.metadataPrefix(),
-            metadataFormat.ddiVersion(),
-            metadataFormat.validationProfile(),
+            repository.validationProfile(),
             repository.validationGate(),
-            repository.defaultLanguage()
+            repository.defaultLanguage(),
+            repository.roles()
         );
 
         try (var outputStream = Files.newOutputStream( directory.resolve( "pipeline.json" ) ) ) {
