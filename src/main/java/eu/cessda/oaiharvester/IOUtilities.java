@@ -21,11 +21,11 @@ package eu.cessda.oaiharvester;
  */
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.oclc.oai.harvester2.verb.RecordHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -46,6 +46,7 @@ public class IOUtilities
     }
 
     private static final Logger log = LoggerFactory.getLogger( IOUtilities.class );
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Creates the destination directory for this repository.
@@ -90,7 +91,6 @@ public class IOUtilities
         );
 
         try (var outputStream = Files.newOutputStream( directory.resolve( "pipeline.json" ) ) ) {
-            var objectMapper = new ObjectMapper();
             objectMapper.writeValue( outputStream, metadata );
         } catch ( IOException e ) {
             throw new MetadataCreationFailedException(e);
