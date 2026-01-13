@@ -14,20 +14,34 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - *Fixed (for any bug fixes)*
 - *Security (in case of vulnerabilities)*
 
+## [4.1.0] - 2025-09-29
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17184088.svg)](https://doi.org/10.5281/zenodo.17184088)
+
+### Added
+
+- Added the ability for the harvester to compare timestamps of the OAI-PMH headers and skip harvesting if they are identical ([#734](https://github.com/cessda/cessda.cdc.versions/issues/734))
+
+### Changed
+
+- Updated application-snd.yml with the latest SND endpoint ([PR-81](https://github.com/cessda/cessda.metadata.harvester/pull/81))
+- Added missing structured logging keys to the logs ([PR-90](https://github.com/cessda/cessda.metadata.harvester/pull/90))
+- Skip cleaning up orphaned records if the OAI-PMH response is incomplete ([PR-91](https://github.com/cessda/cessda.metadata.harvester/pull/91), [PR-94](https://github.com/cessda/cessda.metadata.harvester/pull/94))
+
 ## [3.6.0] - 2024-06-17
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.12089946.svg)](https://doi.org/10.5281/zenodo.12089946)
 
 ### Changed
 
-* Harvest records to a temporary file, throw an `IOException` if the `HttpClient` is interrupted ([PR-48](https://github.com/cessda/cessda.metadata.harvester/pull/48))
-* Updated SND endpoint domain, metadata prefix and OAI-PMH set ([PR-50](https://github.com/cessda/cessda.metadata.harvester/pull/50))
-* Updated OpenJDK to version 21 ([#658](https://github.com/cessda/cessda.cdc.versions/issues/658))
-* Updated SQAaaS software quality badge ([#661](https://github.com/cessda/cessda.cdc.versions/issues/661))
+- Harvest records to a temporary file, throw an `IOException` if the `HttpClient` is interrupted ([PR-48](https://github.com/cessda/cessda.metadata.harvester/pull/48))
+- Updated SND endpoint domain, metadata prefix and OAI-PMH set ([PR-50](https://github.com/cessda/cessda.metadata.harvester/pull/50))
+- Updated OpenJDK to version 21 ([#658](https://github.com/cessda/cessda.cdc.versions/issues/658))
+- Updated SQAaaS software quality badge ([#661](https://github.com/cessda/cessda.cdc.versions/issues/661))
 
 ### Fixed
 
-* Fixed only harvesting 100 records from SND ([#655](https://github.com/cessda/cessda.cdc.versions/issues/655))
+- Fixed only harvesting 100 records from SND ([#655](https://github.com/cessda/cessda.cdc.versions/issues/655))
 
 ## [3.4.0] - 2023-08-29
 
@@ -226,6 +240,7 @@ n/a
   harvesting OAI servers available via HTTPS only and using
   letsencrypt SSL certificates
 
+[4.1.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/4.1.0
 [3.6.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.6.0
 [3.4.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.4.0
 [3.3.0]: https://github.com/cessda/cessda.metadata.harvester/releases/tag/3.3.0

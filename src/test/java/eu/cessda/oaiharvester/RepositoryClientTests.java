@@ -4,7 +4,7 @@ package eu.cessda.oaiharvester;
  * #%L
  * CESSDA OAI-PMH Metadata Harvester
  * %%
- * Copyright (C) 2019 - 2025 CESSDA ERIC
+ * Copyright (C) 2019 - 2026 CESSDA ERIC
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ class RepositoryClientTests
     }
 
     @Test
-    void shouldHandleOAIErrors() throws IOException, RecordHeaderException
+    void shouldHandleOAIErrors() throws IOException
     {
         // Given
         var httpClient = mock( HttpClient.class );
@@ -103,9 +103,11 @@ class RepositoryClientTests
         var repositoryClient = new RepositoryClient( httpClient );
 
         // Then
-        var recordHeaders = repositoryClient.retrieveRecordHeaders( repo, metadataFormat, null );
-
-        assertThat( recordHeaders ).isEmpty();
+        assertThatThrownBy( () -> repositoryClient.retrieveRecordHeaders( repo, metadataFormat, null ) )
+            .isInstanceOf( RecordHeaderException.class )
+            .extracting( RecordHeaderException.class::cast )
+            .extracting( RecordHeaderException::getHeaders, as( list( RecordHeader.class ) ) )
+            .isEmpty();
     }
 
     @Test
