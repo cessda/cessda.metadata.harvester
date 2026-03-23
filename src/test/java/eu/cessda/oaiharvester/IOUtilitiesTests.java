@@ -26,6 +26,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.oclc.oai.harvester2.verb.RecordHeader;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -74,7 +75,7 @@ class IOUtilitiesTests
         var mockRecordHeaders = Arrays.stream( filesToKeep )
             .mapToObj( i -> new RecordHeader( String.valueOf( i ), LocalDate.now(), Collections.emptySet(), null ) )
             .toList();
-        IOUtilities.deleteOrphanedRecords( new Repo( null, "TEST", null, null, false, null, null), mockRecordHeaders, tempDir );
+        IOUtilities.deleteOrphanedRecords( new Repo( new Repo.OAIConfiguration( URI.create( "" ),"ddi", null, false ), "TEST", null, null, null, null, Collections.emptySet()), mockRecordHeaders, tempDir );
 
         // Check that the directory is in the expected state
         for ( var file : fileNameIntArray )

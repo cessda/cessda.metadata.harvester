@@ -28,6 +28,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
@@ -67,9 +68,15 @@ public class HttpClient
         this.retryDelay = 0;
     }
 
-    private static long parseRetryAfterHeader( HttpResponse<?> response )
+    /**
+     * Parse the Retry-After header of the HTTP response.
+     *
+     * @param headers the headers of the HTTP response.
+     * @return the delay in milliseconds, or -1 if the header was missing or invalid.
+     */
+    private static long parseRetryAfterHeader( HttpHeaders headers )
     {
-        var retryAfterHeader = response.headers().firstValue( "Retry-After" );
+        var retryAfterHeader = headers.firstValue( "Retry-After" );
 
         if ( retryAfterHeader.isPresent() )
         {
@@ -159,7 +166,7 @@ public class HttpClient
                 else if ( responseCode == 429 || responseCode == 503 )
                 {
                     // Try to parse the Retry-After header, fall back to default behavior if the header is not present
-                    var delayMilliseconds = parseRetryAfterHeader( response );
+                    var delayMilliseconds = parseRetryAfterHeader( response.headers() );
                     if ( delayMilliseconds != -1 )
                     {
                         Thread.sleep( delayMilliseconds );

@@ -22,6 +22,7 @@ package eu.cessda.oaiharvester;
 
 
 import java.net.URI;
+import java.util.Set;
 
 /**
  * Repository model to be serialised to JSON. This is used by downstream components.
@@ -41,10 +42,10 @@ public record PipelineMetadata(
     URI url,
     String setSpec,
     String metadataPrefix,
-    String ddiVersion,
     URI profile,
     String validationGate,
-    String defaultLanguage
+    String defaultLanguage,
+    Set<String> role
 )
 {
 }

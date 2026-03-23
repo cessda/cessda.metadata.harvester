@@ -3,9 +3,8 @@ harvester:
   dir: '@documents@'
   recipient: support@cessda.eu
   repos:
-  - url: https://datacatalogue.cessda.eu/oai-pmh/v0/oai
-    code: CESSDA
-    metadataPrefixes:
-      - metadataPrefix: oai_ddi25
-        setspec: openaire_data
-        ddiVersion: 2_5
+  - code: CESSDA
+    oaiConfiguration:
+      url: https://datacatalogue.cessda.eu/oai-pmh/v0/oai
+      metadataPrefix: oai_ddi25
+      setSpec: openaire_data

@@ -56,9 +56,9 @@ class RepositoryClient
      * Discover sets from the remote repository.
      * <ol>
      *     <li>If the repository already has sets configured, these are returned.</li>
-     *     <li>If set discovery is enabled, the repository is enquired using the {@code ListSets} verb.</li>
+     *     <li>If set discovery is enabled, the repository is queried for sets using the {@code ListSets} verb.</li>
      *     <li>
-     *         Otherwise, a {@link Repo.MetadataFormat} with a {@code setSpec} set to {@code null} will be returned.
+     *         Otherwise, a {@link Repo.OAIConfiguration} with a {@code setSpec} set to {@code null} will be returned.
      *         This will prevent the harvester from using set based harvesting.
      *     </li>
      * </ol>
@@ -67,56 +67,64 @@ class RepositoryClient
      * @return a {@link Set} of setSpecs
      */
     @SuppressWarnings( "java:S3776" )
-    Set<Repo.MetadataFormat> discoverSets( Repo repo )
+    Set<Repo.OAIConfiguration> discoverSets( Repo repo )
     {
-        var mfs = new HashSet<Repo.MetadataFormat>();
+        var mfs = new HashSet<Repo.OAIConfiguration>();
 
-        for (var mf : repo.metadataPrefixes())
+        // If a set is already configured, or if discovery of sets is not configured, return the current configuration.
+        if (repo.oaiConfiguration().setSpec() != null || !repo.oaiConfiguration().discoverSets())
         {
-            // If a set is already configured, or if discovery of sets is not configured, return the current configuration.
-            if (mf.setSpec() != null || !repo.discoverSets())
+            return Set.of(repo.oaiConfiguration());
+        }
+
+        int unfoldedSets = 0;
+
+        ListSets ls;
+
+        try
+        {
+            ls = ListSets.instance( httpClient, repo.oaiConfiguration().url() );
+        }
+        catch ( IOException | SAXException e )
+        {
+            log.warn( "Failed to discover sets from {}: set set=all: {}", repo.code(), e.toString() );
+            // set set=all in case of no sets found
+            return Set.of(repo.oaiConfiguration());
+        }
+
+
+        Optional<String> resumptionToken;
+        do
+        {
+            if ( !ls.getErrors().isEmpty() )
             {
-                mfs.add(mf);
-                continue;
+                log.error( "{}: Error while retrieving the list of sets: {}", repo.code(), ls.getErrors() );
+                return Set.of(repo.oaiConfiguration());
             }
 
-            try
+            for ( String s : ls.getSets() )
             {
-                int unfoldedSets = 0;
-                var ls = ListSets.instance( httpClient, repo.url() );
+                mfs.add( new Repo.OAIConfiguration( repo.oaiConfiguration().url(), repo.oaiConfiguration().metadataPrefix(), s, false ) );
+                unfoldedSets++;
+            }
 
-                Optional<String> resumptionToken;
-                do
+            resumptionToken = ls.getResumptionToken();
+            if ( resumptionToken.isPresent() )
+            {
+                try
                 {
-                    if ( !ls.getErrors().isEmpty() )
-                    {
-                        log.error( "{}: Error while retrieving the list of sets: {}", repo.code(), ls.getErrors() );
-                        break;
-                    }
-
-                    for ( String s : ls.getSets() )
-                    {
-                        mfs.add( new Repo.MetadataFormat( mf.metadataPrefix(), s, mf.ddiVersion(), mf.validationProfile() ) );
-                        unfoldedSets++;
-                    }
-
-                    resumptionToken = ls.getResumptionToken();
-                    if ( resumptionToken.isPresent() )
-                    {
-                        ls =  ListSets.instance( httpClient, repo.url(), resumptionToken.orElseThrow() );
-                    }
+                    ls = ListSets.instance( httpClient, repo.oaiConfiguration().url(), resumptionToken.orElseThrow() );
                 }
-                while ( resumptionToken.isPresent() );
-
-                log.debug( "No. of sets: {}", unfoldedSets);
-            }
-            catch ( IOException | SAXException e )
-            {
-                log.warn( "Failed to discover sets from {}: set set=all: {}", repo.code(), e.toString() );
-                // set set=all in case of no sets found
-                mfs.add(mf);
+                catch ( IOException | SAXException e )
+                {
+                    log.warn( "Partially discovered sets from {}: {}", repo.code(), e.toString() );
+                    return mfs;
+                }
             }
         }
+        while ( resumptionToken.isPresent() );
+
+        log.debug( "No. of sets: {}", unfoldedSets);
 
         return mfs;
     }
@@ -129,14 +137,14 @@ class RepositoryClient
      * @return a list of {@link RecordHeader}s
      * @throws RecordHeaderException if an error occurs retrieving the record headers
      */
-    List<RecordHeader> retrieveRecordHeaders( Repo repo, Repo.MetadataFormat metadataFormat, LocalDate fromDate ) throws RecordHeaderException
+    List<RecordHeader> retrieveRecordHeaders( Repo repo, Repo.OAIConfiguration metadataFormat, LocalDate fromDate ) throws RecordHeaderException
     {
-        log.trace( "URL: {}, set: {}", repo.url(), metadataFormat.setSpec() );
+        log.trace( "URL: {}, set: {}", metadataFormat.url(), metadataFormat.setSpec() );
         final var recordMap = new HashMap<String, RecordHeader>();
 
         try
         {
-            var li = ListIdentifiers.instance( httpClient, repo.url(), metadataFormat.metadataPrefix(), metadataFormat.setSpec(), fromDate, null );
+            var li = ListIdentifiers.instance( httpClient, metadataFormat.url(), metadataFormat.metadataPrefix(), metadataFormat.setSpec(), fromDate, null );
 
             Optional<String> resumptionToken;
 
@@ -160,8 +168,8 @@ class RepositoryClient
 
                 if (resumptionToken.isPresent())
                 {
-                    log.trace( "recurse: url {}\ttoken: {}", repo.url(), resumptionToken );
-                    li = ListIdentifiers.instance( httpClient, repo.url(), resumptionToken.orElseThrow() );
+                    log.trace( "recurse: url {}\ttoken: {}", metadataFormat.url(), resumptionToken );
+                    li = ListIdentifiers.instance( httpClient, metadataFormat.url(), resumptionToken.orElseThrow() );
                 }
             }
             while ( resumptionToken.isPresent() );

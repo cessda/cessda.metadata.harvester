@@ -41,13 +41,13 @@ import static org.mockito.Mockito.when;
 class EQBHarvestingServiceTests
 {
     private static final Repo testRepository = new Repo(
-        Collections.singleton( new Repo.MetadataFormat( "oai_ddi", null, "DDI_2_5", URI.create( "https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml" ) ) ),
+        new Repo.OAIConfiguration( URI.create( "http://localhost:8080/v0/oai?set=study_group:paihde" ),"oai_ddi", null, false ),
         "TEST",
         "Test Repository",
-        URI.create( "http://localhost:8080/v0/oai?set=study_group:paihde" ),
-        false,
         "en",
-        "BASIC"
+        URI.create( "https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml" ),
+        "BASIC",
+        Collections.emptySet()
     );
 
 	public Harvester getHarvester(Path harvesterDirectory) throws IOException
@@ -73,15 +73,14 @@ class EQBHarvestingServiceTests
         var pipeline = new ObjectMapper().readValue( new File( tempDir + "/TEST/oai_ddi/pipeline.json" ), PipelineMetadata.class );
         assertEquals( testRepository.code(), pipeline.code() );
         assertEquals( testRepository.name(), pipeline.name() );
-        assertEquals( testRepository.url(), pipeline.url() );
         assertEquals( testRepository.validationGate(), pipeline.validationGate() );
+        assertEquals( testRepository.validationProfile(), pipeline.profile() );
         assertEquals( testRepository.defaultLanguage(), pipeline.defaultLanguage() );
 
         // Validate the metadata fields are as expected.
-        var metadata = testRepository.metadataPrefixes().stream().findAny().orElseThrow();
+        var metadata = testRepository.oaiConfiguration();
         assertEquals( metadata.metadataPrefix(), pipeline.metadataPrefix() );
         assertEquals( metadata.setSpec(), pipeline.setSpec() );
-        assertEquals( metadata.ddiVersion(), pipeline.ddiVersion() );
-        assertEquals( metadata.validationProfile(), pipeline.profile() );
+        assertEquals( metadata.url(), pipeline.url() );
 	}
 }

@@ -43,6 +43,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
@@ -73,24 +74,6 @@ public class Harvester implements CommandLineRunner
     {
         var applicationContext = new SpringApplicationBuilder( Harvester.class ).bannerMode( Banner.Mode.OFF ).run( args );
         System.exit(SpringApplication.exit( applicationContext ));
-    }
-
-    /**
-     * Validate that a repository has all the required parameters.
-     * @param repo the repository to validate.
-     * @throws IllegalArgumentException if a parameter fails validation.
-     */
-    private static void validateRepository( Repo repo )
-    {
-        if ( repo.code() == null)
-        {
-            throw new IllegalArgumentException( "Repository " + repo + " has no identifier configured." );
-        }
-
-        if ( repo.metadataPrefixes().isEmpty() )
-        {
-            throw new IllegalArgumentException( "Repository " + repo + " has no metadata prefixes configured." );
-        }
     }
 
     @Override
@@ -144,9 +127,6 @@ public class Harvester implements CommandLineRunner
 
         var repositories = harvesterConfiguration.getRepos();
 
-        // Validate expected parameters are present before starting the harvest
-        repositories.forEach( Harvester::validateRepository );
-
         // Create an executor that will harvest each repository in parallel
         try( var executor = Executors.newFixedThreadPool( repositories.size() ) )
         {
@@ -174,19 +154,19 @@ public class Harvester implements CommandLineRunner
     {
         log.info( "Harvesting repository {}", value( "repo", repo ) );
 
-        var metadataFormats = repositoryClient.discoverSets( repo );
+        Set<Repo.OAIConfiguration> mfs = repositoryClient.discoverSets( repo );
 
-        for ( var metadata : metadataFormats )
+        for ( var oaiConfiguration : mfs )
         {
             try
             {
-                harvestSet( repo, metadata, fromDate );
+                harvestSet( repo, oaiConfiguration, fromDate );
             }
             catch ( DirectoryCreationFailedException | MetadataCreationFailedException | RecordHeaderException e )
             {
                 log.error( "Could not harvest repository: {}, set: {}: {}: {}",
                         value( REPO_NAME, repo.code() ),
-                        value( OAI_SET, metadata.setSpec() ),
+                        value( OAI_SET, oaiConfiguration.setSpec() ),
                         value( EXCEPTION_NAME, e.getClass().getName() ),
                         value( EXCEPTION_MESSAGE, e.getMessage() )
                 );
@@ -198,10 +178,10 @@ public class Harvester implements CommandLineRunner
     /**
      * Harvest a specific set from a repository.
      * @param repo the repository to harvest.
-     * @param metadataFormat the OAI-PMH metadata prefix and setSpec to harvest from the remote repository.
+     * @param oaiConfiguration the OAI-PMH metadata prefix and setSpec to harvest from the remote repository.
      * @param fromDate the date to harvest from, set to {@code null} to harvest from the beginning.
      */
-    private void harvestSet( Repo repo, Repo.MetadataFormat metadataFormat, LocalDate fromDate) throws DirectoryCreationFailedException, MetadataCreationFailedException, RecordHeaderException
+    private void harvestSet( Repo repo, Repo.OAIConfiguration oaiConfiguration, LocalDate fromDate) throws DirectoryCreationFailedException, MetadataCreationFailedException, RecordHeaderException
     {
 
         // The folder structure is repo/set(optional)/metadataFormat/record.xml
@@ -209,24 +189,24 @@ public class Harvester implements CommandLineRunner
 
         // Sets are nested in their own directories. If the set contains characters that cannot be represented
         // by the filesystem, substitute them for -
-        if ( metadataFormat.setSpec() != null )
+        if ( oaiConfiguration.setSpec() != null )
         {
-            var setSpec = metadataFormat.setSpec();
+            var setSpec = oaiConfiguration.setSpec();
             var setSpecPath = IOUtilities.convertStringToPath( setSpec );
             repositoryDirectory = repositoryDirectory.resolve( setSpecPath );
         }
 
-        repositoryDirectory = repositoryDirectory.resolve( metadataFormat.metadataPrefix() );
+        repositoryDirectory = repositoryDirectory.resolve( oaiConfiguration.metadataPrefix() );
 
 
         var createdDirectory = IOUtilities.createDestinationDirectory( harvesterConfiguration.getDir(), repositoryDirectory );
-        IOUtilities.createMetadata( createdDirectory, repo, metadataFormat );
+        IOUtilities.createMetadata( createdDirectory, repo, oaiConfiguration );
 
 
         log.debug( "{}: Set: {}: Prefix: {} Fetching records.",
             value( REPO_NAME, repo.code() ),
-            value( OAI_SET, metadataFormat.setSpec() ),
-            value( "oai_prefix", metadataFormat.metadataPrefix() )
+            value( OAI_SET, oaiConfiguration.setSpec() ),
+            value( "oai_prefix", oaiConfiguration.metadataPrefix() )
         );
 
         List<RecordHeader> recordIdentifiers;
@@ -234,7 +214,7 @@ public class Harvester implements CommandLineRunner
 
         try
         {
-           recordIdentifiers = repositoryClient.retrieveRecordHeaders( repo, metadataFormat, fromDate );
+           recordIdentifiers = repositoryClient.retrieveRecordHeaders( repo, oaiConfiguration, fromDate );
            complete = true;
         }
         catch ( RecordHeaderException e )
@@ -244,7 +224,7 @@ public class Harvester implements CommandLineRunner
             {
                 log.warn( "{}: Partially retrieved record headers in set {}: {}: {}",
                     value( REPO_NAME, repo.code() ),
-                    value( OAI_SET, metadataFormat.setSpec() ),
+                    value( OAI_SET, oaiConfiguration.setSpec() ),
                     value( EXCEPTION_NAME, e.getClass().getName() ),
                     value( EXCEPTION_MESSAGE, e.getMessage() )
                 );
@@ -258,15 +238,15 @@ public class Harvester implements CommandLineRunner
 
         log.info( "{}: Set: {}: Retrieved {} record headers.",
             value( REPO_NAME, repo.code() ),
-            value( OAI_SET, metadataFormat.setSpec() ),
+            value( OAI_SET, oaiConfiguration.setSpec() ),
             value( RETRIEVED_RECORD_HEADERS, recordIdentifiers.size() )
         );
 
-        int retrievedRecords = harvestRecords( recordIdentifiers, repo, metadataFormat.metadataPrefix(), repositoryDirectory, complete );
+        int retrievedRecords = harvestRecords( recordIdentifiers, repo, oaiConfiguration, repositoryDirectory, complete );
 
         log.info( "{}: Set: {}: Retrieved {} records.",
                 value( REPO_NAME, repo.code() ),
-                value( OAI_SET, metadataFormat.setSpec() ),
+                value( OAI_SET, oaiConfiguration.setSpec() ),
                 value( RETRIEVED_RECORDS, retrievedRecords )
         );
     }
@@ -276,13 +256,13 @@ public class Harvester implements CommandLineRunner
      *
      * @param records        the collection of records to harvest.
      * @param repo           the repository to harvest.
-     * @param metadataFormat the metadata prefix to harvest.
+     * @param oaiConfiguration the metadata prefix to harvest.
      * @param repoDirectory  the destination directory of the harvest.
      * @param complete       {@code true} if all metadata headers were retrieved.
      * @return the number of records successfully harvested.
      */
     @SuppressWarnings( { "java:S1141", "java:S3776", "java:S5443" } )
-    private int harvestRecords( List<RecordHeader> records, Repo repo, String metadataFormat, Path repoDirectory, boolean complete )
+    private int harvestRecords( List<RecordHeader> records, Repo repo, Repo.OAIConfiguration oaiConfiguration, Path repoDirectory, boolean complete )
     {
         int retrievedRecords = 0;
 
@@ -290,7 +270,7 @@ public class Harvester implements CommandLineRunner
 
         for ( var currentRecord : records )
         {
-            log.debug( "Harvesting {} from {}", currentRecord, repo.url() );
+            log.debug( "Harvesting {} from {}", currentRecord, repo.oaiConfiguration().url() );
 
             // Create a filename from the current identifier
             var fileName = IOUtilities.generateFileName( currentRecord );
@@ -316,7 +296,7 @@ public class Harvester implements CommandLineRunner
                 log.warn( "Error reading \"{}\" for timestamp comparisons: {}", filePath, e.toString() );
             }
 
-            try ( var pmhRecord = GetRecord.asStream( httpClient, repo.url(), currentRecord.identifier(), metadataFormat ) )
+            try ( var pmhRecord = GetRecord.asStream( httpClient, repo.oaiConfiguration().url(), currentRecord.identifier(), oaiConfiguration.metadataPrefix() ) )
             {
                 // Download the record to a temp file
                 tmpFile = Files.createTempFile( null, ".xml" );
@@ -335,7 +315,7 @@ public class Harvester implements CommandLineRunner
                 log.warn( "{}: Failed to harvest record {} from {}: {}: {}",
                     value( REPO_NAME, repo.code() ),
                     value( OAI_RECORD, currentRecord.identifier() ),
-                    value( OAI_URL, repo.url() ),
+                    value( OAI_URL, oaiConfiguration.url() ),
                     value( EXCEPTION_NAME, e.getClass().getName() ),
                     value( EXCEPTION_MESSAGE, e.getMessage() )
                 );
