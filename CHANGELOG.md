@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - *Fixed (for any bug fixes)*
 - *Security (in case of vulnerabilities)*
 
+## [4.2.0] - 2026-05-27
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20406446.svg)](https://doi.org/10.5281/zenodo.20406446)
+
+### Changed
+
+- Introduce a new configuration format for repositories ([#736](https://github.com/cessda/cessda.cdc.versions/issues/736))
+
 ## [4.1.0] - 2025-09-29
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17184088.svg)](https://doi.org/10.5281/zenodo.17184088)
