@@ -165,7 +165,7 @@ public class HttpClient
                 }
                 else if ( responseCode == 429 || responseCode == 503 )
                 {
-                    // Try to parse the Retry-After header, fall back to default behavior if the header is not present
+                    // Try to parse the Retry-After header, fall back to default behaviour if the header is not present
                     var delayMilliseconds = parseRetryAfterHeader( response.headers() );
                     if ( delayMilliseconds != -1 )
                     {

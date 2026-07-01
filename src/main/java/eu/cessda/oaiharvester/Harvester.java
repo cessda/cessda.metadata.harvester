@@ -26,6 +26,7 @@ import org.oclc.oai.harvester2.verb.RecordHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner;
 import org.springframework.boot.CommandLineRunner;
@@ -49,10 +50,10 @@ import java.util.concurrent.Executors;
 
 import static eu.cessda.oaiharvester.LoggingConstants.*;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static net.logstash.logback.argument.StructuredArguments.value;
 
 @EnableConfigurationProperties
 @SpringBootApplication
+@RegisterReflectionForBinding( PipelineMetadata.class )
 public class Harvester implements CommandLineRunner
 {
 
@@ -152,7 +153,7 @@ public class Harvester implements CommandLineRunner
 
     private void harvestRepository( LocalDate fromDate, Repo repo )
     {
-        log.info( "Harvesting repository {}", value( "repo", repo ) );
+        log.atInfo().setMessage( "Harvesting repository {}" ).addArgument( repo ).addKeyValue( "repo", repo ).log();
 
         Set<Repo.OAIConfiguration> mfs = repositoryClient.discoverSets( repo );
 
@@ -164,12 +165,15 @@ public class Harvester implements CommandLineRunner
             }
             catch ( DirectoryCreationFailedException | MetadataCreationFailedException | RecordHeaderException e )
             {
-                log.error( "Could not harvest repository: {}, set: {}: {}: {}",
-                        value( REPO_NAME, repo.code() ),
-                        value( OAI_SET, oaiConfiguration.setSpec() ),
-                        value( EXCEPTION_NAME, e.getClass().getName() ),
-                        value( EXCEPTION_MESSAGE, e.getMessage() )
-                );
+                log.atInfo().setMessage( "Could not harvest repository: {}, set: {}: {}" )
+                    .addArgument( repo.code() )
+                    .addArgument( oaiConfiguration.setSpec() )
+                    .addArgument( e.toString() )
+                    .addKeyValue( REPO_NAME, repo.code() )
+                    .addKeyValue( OAI_SET, oaiConfiguration.setSpec() )
+                    .addKeyValue( EXCEPTION_NAME, e.getClass().getName() )
+                    .addKeyValue( EXCEPTION_MESSAGE, e.getMessage() )
+                    .log();
             }
         }
     }
@@ -203,11 +207,14 @@ public class Harvester implements CommandLineRunner
         IOUtilities.createMetadata( createdDirectory, repo, oaiConfiguration );
 
 
-        log.debug( "{}: Set: {}: Prefix: {} Fetching records.",
-            value( REPO_NAME, repo.code() ),
-            value( OAI_SET, oaiConfiguration.setSpec() ),
-            value( "oai_prefix", oaiConfiguration.metadataPrefix() )
-        );
+        log.atDebug().setMessage( "{}: Set: {}: Prefix: {} Fetching records.")
+            .addArgument( repo.code() )
+            .addArgument( oaiConfiguration.setSpec() )
+            .addArgument( oaiConfiguration.metadataPrefix() )
+            .addKeyValue( REPO_NAME, repo.code() )
+            .addKeyValue( OAI_SET, oaiConfiguration.setSpec() )
+            .addKeyValue( "oai_prefix", oaiConfiguration.metadataPrefix() )
+            .log();
 
         List<RecordHeader> recordIdentifiers;
         boolean complete;
@@ -222,12 +229,15 @@ public class Harvester implements CommandLineRunner
             recordIdentifiers = e.getHeaders();
             if ( !recordIdentifiers.isEmpty() )
             {
-                log.warn( "{}: Partially retrieved record headers in set {}: {}: {}",
-                    value( REPO_NAME, repo.code() ),
-                    value( OAI_SET, oaiConfiguration.setSpec() ),
-                    value( EXCEPTION_NAME, e.getClass().getName() ),
-                    value( EXCEPTION_MESSAGE, e.getMessage() )
-                );
+                log.atWarn().setMessage( "{}: Partially retrieved record headers in set {}: {}")
+                    .addArgument( repo.code() )
+                    .addArgument( oaiConfiguration.setSpec() )
+                    .addArgument( e.toString() )
+                    .addKeyValue( REPO_NAME, repo.code() )
+                    .addKeyValue( OAI_SET, oaiConfiguration.setSpec() )
+                    .addKeyValue( EXCEPTION_NAME, e.getClass().getName() )
+                    .addKeyValue( EXCEPTION_MESSAGE, e.getMessage() )
+                    .log();
                 complete = false;
             }
             else
@@ -236,19 +246,25 @@ public class Harvester implements CommandLineRunner
             }
         }
 
-        log.info( "{}: Set: {}: Retrieved {} record headers.",
-            value( REPO_NAME, repo.code() ),
-            value( OAI_SET, oaiConfiguration.setSpec() ),
-            value( RETRIEVED_RECORD_HEADERS, recordIdentifiers.size() )
-        );
+        log.atInfo().setMessage( "{}: Set: {}: Retrieved {} record headers.")
+            .addArgument( repo.code() )
+            .addArgument( oaiConfiguration.setSpec() )
+            .addArgument( recordIdentifiers.size() )
+            .addKeyValue( REPO_NAME, repo.code() )
+            .addKeyValue( OAI_SET, oaiConfiguration.setSpec() )
+            .addKeyValue( RETRIEVED_RECORD_HEADERS, recordIdentifiers.size() )
+            .log();
 
         int retrievedRecords = harvestRecords( recordIdentifiers, repo, oaiConfiguration, repositoryDirectory, complete );
 
-        log.info( "{}: Set: {}: Retrieved {} records.",
-                value( REPO_NAME, repo.code() ),
-                value( OAI_SET, oaiConfiguration.setSpec() ),
-                value( RETRIEVED_RECORDS, retrievedRecords )
-        );
+        log.atInfo().setMessage( "{}: Set: {}: Retrieved {} records." )
+            .addArgument( repo.code() )
+            .addArgument( oaiConfiguration.setSpec() )
+            .addArgument( retrievedRecords )
+            .addKeyValue( REPO_NAME, repo.code() )
+            .addKeyValue( OAI_SET, oaiConfiguration.setSpec() )
+            .addKeyValue( RETRIEVED_RECORDS, retrievedRecords )
+            .log();
     }
 
     /**
@@ -312,13 +328,17 @@ public class Harvester implements CommandLineRunner
             }
             catch ( IOException e )
             {
-                log.warn( "{}: Failed to harvest record {} from {}: {}: {}",
-                    value( REPO_NAME, repo.code() ),
-                    value( OAI_RECORD, currentRecord.identifier() ),
-                    value( OAI_URL, oaiConfiguration.url() ),
-                    value( EXCEPTION_NAME, e.getClass().getName() ),
-                    value( EXCEPTION_MESSAGE, e.getMessage() )
-                );
+                log.atWarn().setMessage( "{}: Failed to harvest record {} from {}: {}" )
+                    .addArgument( repo.code() )
+                    .addArgument( currentRecord.identifier() )
+                    .addArgument( oaiConfiguration.url() )
+                    .addArgument( e.toString() )
+                    .addKeyValue( REPO_NAME, repo.code() )
+                    .addKeyValue( OAI_RECORD, currentRecord.identifier() )
+                    .addKeyValue( OAI_URL, oaiConfiguration.url() )
+                    .addKeyValue( EXCEPTION_NAME, e.getClass().getName() )
+                    .addKeyValue( EXCEPTION_MESSAGE, e.getMessage() )
+                    .log();
             }
             finally
             {
@@ -340,15 +360,20 @@ public class Harvester implements CommandLineRunner
         // Clean up - this should only run on full harvests with complete metadata headers.
         if (!harvesterConfiguration.incremental() && complete)
         {
-            log.debug( "{}: Removing orphaned records.", value( REPO_NAME, repo.code()));
+            log.atDebug().setMessage( "{}: Removing orphaned records.")
+                .addArgument( repo.code() )
+                .addKeyValue( REPO_NAME, repo.code())
+                .log();
             var recordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, destinationDirectory );
 
             if ( log.isInfoEnabled() || recordsDeleted > 0 )
             {
-                log.info( "{}: Removed {} orphaned records.",
-                    value( REPO_NAME, repo.code() ),
-                    value( "records_deleted", recordsDeleted )
-                );
+                log.atInfo().setMessage( "{}: Removed {} orphaned records.")
+                    .addArgument( repo.code() )
+                    .addArgument( recordsDeleted )
+                    .addKeyValue( REPO_NAME, repo.code() )
+                    .addKeyValue( "records_deleted", recordsDeleted )
+                    .log();
             }
         }
 
