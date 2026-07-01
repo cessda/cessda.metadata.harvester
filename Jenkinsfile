@@ -64,10 +64,12 @@ pipeline {
                     sh "./mvnw -Pnative spring-boot:build-image-no-fork -Dspring-boot.build-image.imageName=${IMAGE_TAG}"
                 }
             }
+            when { branch 'main' }
         }
-        stage('Build and Push Docker Image') {
+        stage('Push Docker Image') {
             steps {
                 sh "gcloud auth configure-docker ${ARTIFACT_REGISTRY_HOST}"
+                sh "docker push ${IMAGE_TAG}"
                 sh "gcloud artifacts docker tags add ${IMAGE_TAG} ${DOCKER_ARTIFACT_REGISTRY}/${product_name}-${module_name}:${env.BRANCH_NAME}-latest"
             }
             when { branch 'main' }
