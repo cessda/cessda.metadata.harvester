@@ -61,7 +61,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 withMaven {
-                    sh "./mvnw -Pnative spring-boot:build-image-no-fork -Dspring-boot.build-image.imageName=${IMAGE_TAG}"
+                    sh "./mvnw -Pnative spring-boot:build-image -DskipTests -Dspring-boot.build-image.imageName=${IMAGE_TAG}"
                 }
             }
         }
