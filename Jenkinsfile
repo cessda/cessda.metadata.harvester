@@ -32,16 +32,6 @@ pipeline {
                             sh './mvnw clean verify'
                         }
                     }
-                    when { branch 'main' }
-                }
-                // Not running on main - test only (for PRs and integration branches)
-                stage('Test Project') {
-                    steps {
-                        withMaven {
-                            sh './mvnw clean test'
-                        }
-                    }
-                    when { not { branch 'main' } }
                 }
                 stage('Record Issues') {
                     steps {
