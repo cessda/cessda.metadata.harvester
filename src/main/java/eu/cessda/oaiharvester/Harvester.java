@@ -129,7 +129,7 @@ public class Harvester implements CommandLineRunner
         var repositories = harvesterConfiguration.getRepos();
 
         // Create an executor that will harvest each repository in parallel
-        try( var executor = Executors.newFixedThreadPool( repositories.size() ) )
+        try( var executor = Executors.newThreadPerTaskExecutor( Executors.defaultThreadFactory() ) )
         {
             // Start the harvest for each repository
             var futures = repositories.stream().map( repo ->
@@ -255,16 +255,32 @@ public class Harvester implements CommandLineRunner
             .addKeyValue( RETRIEVED_RECORD_HEADERS, recordIdentifiers.size() )
             .log();
 
-        int retrievedRecords = harvestRecords( recordIdentifiers, repo, oaiConfiguration, repositoryDirectory, complete );
+        HarvestResult harvestResult = harvestRecords( recordIdentifiers, repo, oaiConfiguration, repositoryDirectory, complete );
 
-        log.atInfo().setMessage( "{}: Set: {}: Retrieved {} records." )
-            .addArgument( repo.code() )
-            .addArgument( oaiConfiguration.setSpec() )
-            .addArgument( retrievedRecords )
-            .addKeyValue( REPO_NAME, repo.code() )
-            .addKeyValue( OAI_SET, oaiConfiguration.setSpec() )
-            .addKeyValue( RETRIEVED_RECORDS, retrievedRecords )
-            .log();
+        int retrievedRecords = harvestResult.retrievedRecords();
+        int recordsDeleted = harvestResult.recordsDeleted();
+
+        if ( log.isInfoEnabled() )
+        {
+            var logBuilder = log.atInfo()
+                .addArgument( repo.code() )
+                .addArgument( oaiConfiguration.setSpec() )
+                .addArgument( retrievedRecords )
+                .addKeyValue( REPO_NAME, repo.code() )
+                .addKeyValue( OAI_SET, oaiConfiguration.setSpec() )
+                .addKeyValue( RETRIEVED_RECORDS, retrievedRecords )
+                .addKeyValue( "records_deleted", recordsDeleted );
+
+            if ( recordsDeleted > 0 )
+            {
+                logBuilder.setMessage( "{}: Set: {}: Retrieved {} records, removed {} orphaned records." )
+                    .addArgument( recordsDeleted ).log();
+            }
+            else
+            {
+                logBuilder.setMessage( "{}: Set: {}: Retrieved {} records." ).log();
+            }
+        }
     }
 
     /**
@@ -278,7 +294,7 @@ public class Harvester implements CommandLineRunner
      * @return the number of records successfully harvested.
      */
     @SuppressWarnings( { "java:S1141", "java:S3776", "java:S5443" } )
-    private int harvestRecords( List<RecordHeader> records, Repo repo, Repo.OAIConfiguration oaiConfiguration, Path repoDirectory, boolean complete )
+    private HarvestResult harvestRecords( List<RecordHeader> records, Repo repo, Repo.OAIConfiguration oaiConfiguration, Path repoDirectory, boolean complete )
     {
         int retrievedRecords = 0;
 
@@ -358,26 +374,23 @@ public class Harvester implements CommandLineRunner
         }
 
         // Clean up - this should only run on full harvests with complete metadata headers.
+        int recordsDeleted = 0;
         if (!harvesterConfiguration.incremental() && complete)
         {
             log.atDebug().setMessage( "{}: Removing orphaned records.")
                 .addArgument( repo.code() )
                 .addKeyValue( REPO_NAME, repo.code())
                 .log();
-            var recordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, destinationDirectory );
-
-            if ( log.isInfoEnabled() || recordsDeleted > 0 )
-            {
-                log.atInfo().setMessage( "{}: Removed {} orphaned records.")
-                    .addArgument( repo.code() )
-                    .addArgument( recordsDeleted )
-                    .addKeyValue( REPO_NAME, repo.code() )
-                    .addKeyValue( "records_deleted", recordsDeleted )
-                    .log();
-            }
+            recordsDeleted = IOUtilities.deleteOrphanedRecords( repo, records, destinationDirectory );
         }
 
-        return retrievedRecords;
+        return new HarvestResult( retrievedRecords, recordsDeleted );
+    }
+
+    private record HarvestResult(
+        int retrievedRecords,
+        int recordsDeleted
+    ) {
     }
 
 
