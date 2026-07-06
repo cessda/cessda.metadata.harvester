@@ -20,8 +20,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<java.version>21</java.version>
-		<gesis.repository.visibility>public</gesis.repository.visibility>
+		<java.version>25</java.version>
 		<image_tag>cessda/${project.artifactId}:${project.version}</image_tag>
 		<code-generation-comment>This file is generated, all changes will be overridden</code-generation-comment>
 		<logging.file>target/application.log</logging.file>
@@ -38,23 +37,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-		</dependency>
 
         <!-- Jackson Databind -->
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-
-		<!-- Json Encoder in Logstash for Logback -->
-		<dependency>
-			<groupId>net.logstash.logback</groupId>
-			<artifactId>logstash-logback-encoder</artifactId>
-			<version>9.0</version>
-		</dependency>
 
 		<!-- HTTP Client -->
 		<dependency>
@@ -92,9 +80,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
-				<configuration>
-					<encoding>UTF-8</encoding>
-				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -163,61 +148,20 @@
 					<verbose>false</verbose>
 					<useNativeGit>false</useNativeGit>
 					<failOnNoGitDirectory>false</failOnNoGitDirectory>
-					<dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
 					<generateGitPropertiesFile>true</generateGitPropertiesFile>
-					<generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>repackage</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-            <!--Docker Containerisation-->
-            <plugin>
-                <groupId>com.google.cloud.tools</groupId>
-                <artifactId>jib-maven-plugin</artifactId>
-                <version>3.5.1</version>
                 <configuration>
-                    <to>
-                        <image>${image_tag}</image>
-                    </to>
-                    <container>
-                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
-                    </container>
+                    <createdDate>now</createdDate>
                 </configuration>
-            </plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<executions>
-					<execution>
-						<phase>initialize</phase>
-						<configuration>
-							<!-- https://stackoverflow.com/a/44033580 -->
-							<exportAntProperties>true</exportAntProperties>
-							<target>
-								<condition property="isSnapshot">
-									<contains string="${project.version}" substring="SNAPSHOT" />
-								</condition>
-								<condition property="docker.registry.uri" value="docker-private-snapshots.gesis.intra">
-									<isset property="isSnapshot" />
-								</condition>
-								<property name="docker.registry.uri" value="docker-private-releases.gesis.intra" />
-							</target>
-						</configuration>
-						<goals>
-							<goal>run</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
+            <plugin>
+                <groupId>org.graalvm.buildtools</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+            </plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>license-maven-plugin</artifactId>
