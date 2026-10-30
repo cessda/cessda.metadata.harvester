@@ -33,35 +33,59 @@ pipeline {
                         }
                     }
                 }
-                stage('Record Issues') {
-                    steps {
-                        recordIssues aggregatingResults: true, tools: [errorProne(), java()]
-                    }
-                }
-                stage('Run Sonar Scan') {
-                    steps {
-                        withSonarQubeEnv('cessda-sonar') {
-                            withMaven {
-                                sh './mvnw sonar:sonar'
-                            }
-                        }
-                    }
-                    when { branch 'main' }
-                }
             }
         }
-        stage("Get Sonar Quality Gate") {
+        stage('Record Issues') {
             steps {
-                timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: false
+                recordIssues aggregatingResults: true, tools: [java()]
+            }
+        }
+        stage('Run Sonar Scan') {
+            steps {
+                withSonarQubeEnv('cessda-sonar') {
+                    withMaven {
+                        sh './mvnw sonar:sonar'
+                    }
                 }
             }
             when { branch 'main' }
         }
-        stage('Build Docker Image') {
+        stage("Get Sonar Quality Gate") {
             steps {
-                withMaven {
-                    sh "./mvnw -Pnative spring-boot:build-image-no-fork -Dspring-boot.build-image.imageName=${IMAGE_TAG}"
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+            when { branch 'main' }
+        }
+        stage('Deploy OAI-PMH API') {
+            agent {
+                // Deploy using the version of the JDK that the module depends on
+                docker {
+                    image 'eclipse-temurin:17'
+                    reuseNode true
+                }
+            }
+            steps {
+                dir('oai-api') {
+                    withMaven {
+                        sh './mvnw jar:jar javadoc:jar source:jar deploy:deploy'
+                    }
+                }
+            }
+            when {
+                anyOf {
+                    branch 'main' // Snapshot
+                    buildingTag() // Release
+                }
+            }
+        }
+        stage('Build Harvester Docker Image') {
+            steps {
+                dir('harvester') {
+                    withMaven {
+                        sh "./mvnw -Pnative spring-boot:build-image-no-fork -Dspring-boot.build-image.imageName=${IMAGE_TAG}"
+                    }
                 }
             }
             when { branch 'main' }

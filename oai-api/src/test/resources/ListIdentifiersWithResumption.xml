@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+  #%L
+  oai-api
+  %%
+  Copyright (C) 2019 - 2026 CESSDA ERIC
+  %%
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  
+       http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  #L%
+  -->
+
+<?xml-stylesheet type='text/xsl' href='oai2.xsl' ?>
+<OAI-PMH xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://www.openarchives.org/OAI/2.0/"
+         xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/
+                 http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd">
+    <responseDate>2018-01-12T10:11:30Z</responseDate>
+    <request verb="ListIdentifiers" resumptionToken="6500/7000/7606/ddi/null/2017-01-01/null">https://oai.ukdataservice.ac.uk:8443/oai/provider</request>
+    <ListIdentifiers>
+        <header>
+            <identifier>7753</identifier>
+            <datestamp>2018-01-11T07:43:20Z</datestamp>
+            <setSpec>DataCollections</setSpec>
+        </header>
+        <header>
+            <identifier>8300</identifier>
+            <datestamp>2018-01-11T07:43:20Z</datestamp>
+            <setSpec>DataCollections</setSpec>
+        </header>
+        <header>
+            <identifier>8301</identifier>
+            <datestamp>2018-01-11T07:43:20Z</datestamp>
+            <setSpec>DataCollections</setSpec>
+        </header>
+        <resumptionToken completeListSize="7" cursor="3">3/6/7/ddi/null/2017-01-01/null</resumptionToken>
+    </ListIdentifiers>
+</OAI-PMH>

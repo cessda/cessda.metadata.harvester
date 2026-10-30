@@ -1,0 +1,90 @@
+package eu.cessda.oaiharvester;
+
+/*-
+ * #%L
+ * CESSDA OAI-PMH Metadata Harvester
+ * %%
+ * Copyright (C) 2019 - 2026 CESSDA ERIC
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import tools.jackson.databind.ObjectMapper;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.Collections;
+
+import static eu.cessda.oaiharvester.HttpClientTests.getHttpResponse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+class EQBHarvestingServiceTests
+{
+    private static final Repo testRepository = new Repo(
+        new Repo.OAIConfiguration( URI.create( "http://localhost:8080/v0/oai?set=study_group:paihde" ),"oai_ddi", null, false ),
+        "TEST",
+        "Test Repository",
+        "en",
+        URI.create( "https://cmv.cessda.eu/profiles/cdc/ddi-2.5/latest/profile.xml" ),
+        "BASIC",
+        Collections.emptySet()
+    );
+
+	@SuppressWarnings( "unchecked" )
+    public Harvester getHarvester( Path harvesterDirectory) throws IOException, InterruptedException
+    {
+		var harvesterConfiguration = new HarvesterConfiguration();
+		harvesterConfiguration.setDir( harvesterDirectory );
+		harvesterConfiguration.setFrom( new HarvesterConfiguration.From(null) );
+		harvesterConfiguration.setTimeout( Duration.ofSeconds( 10 ) );
+        harvesterConfiguration.getRepos().add( testRepository );
+
+        var httpClient = mock( HttpClient.class );
+        when( httpClient.send( any( HttpRequest.class), any( HttpResponse.BodyHandler.class) ) )
+            .thenAnswer( invocation ->  getHttpResponse(invocation.getArgument( 0 ) ) );
+
+        return new Harvester( httpClient, harvesterConfiguration, new RepositoryClient( httpClient ) );
+	}
+
+	@Test
+	void indexAllTest(@TempDir Path tempDir) throws IOException, InterruptedException
+    {
+		getHarvester( tempDir ).run();
+
+        // Read pipeline.json, assert fields are as expected.
+        var pipeline = new ObjectMapper().readValue( new File( tempDir + "/TEST/oai_ddi/pipeline.json" ), PipelineMetadata.class );
+        assertEquals( testRepository.code(), pipeline.code() );
+        assertEquals( testRepository.name(), pipeline.name() );
+        assertEquals( testRepository.validationGate(), pipeline.validationGate() );
+        assertEquals( testRepository.validationProfile(), pipeline.profile() );
+        assertEquals( testRepository.defaultLanguage(), pipeline.defaultLanguage() );
+
+        // Validate the metadata fields are as expected.
+        var metadata = testRepository.oaiConfiguration();
+        assertEquals( metadata.metadataPrefix(), pipeline.metadataPrefix() );
+        assertEquals( metadata.setSpec(), pipeline.setSpec() );
+        assertEquals( metadata.url(), pipeline.url() );
+	}
+}
