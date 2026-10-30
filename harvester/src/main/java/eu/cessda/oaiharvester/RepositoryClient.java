@@ -102,9 +102,9 @@ class RepositoryClient
                 return Set.of(repo.oaiConfiguration());
             }
 
-            for ( String s : ls.getSets() )
+            for ( var s : ls.getSets() )
             {
-                mfs.add( new Repo.OAIConfiguration( repo.oaiConfiguration().url(), repo.oaiConfiguration().metadataPrefix(), s, false ) );
+                mfs.add( new Repo.OAIConfiguration( repo.oaiConfiguration().url(), repo.oaiConfiguration().metadataPrefix(), s.spec(), false ) );
                 unfoldedSets++;
             }
 

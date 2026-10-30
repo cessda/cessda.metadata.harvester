@@ -37,9 +37,7 @@ package org.oclc.oai.harvester2.verb;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
+import org.w3c.dom.*;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -312,13 +310,17 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
     {
         try
         {
-            var stringWriter = new StringWriter();
-            identityTransformer.get().transform( new DOMSource( doc ), new StreamResult( stringWriter ) );
-            return stringWriter.toString();
+            return transform(doc);
         }
         catch ( TransformerException e )
         {
             return e.toString();
         }
+    }
+
+    protected static String transform(Node node) throws TransformerException {
+            var stringWriter = new StringWriter();
+            identityTransformer.get().transform( new DOMSource( node ), new StreamResult( stringWriter ) );
+            return stringWriter.toString();
     }
 }

@@ -35,8 +35,10 @@ package org.oclc.oai.harvester2.verb;
  * #L%
  */
 
+import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
+import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -149,14 +151,47 @@ public final class ListSets extends HarvesterVerb implements Resumable
      *
      * @return the list.
      */
-    public List<String> getSets()
+    public List<Set> getSets()
     {
-        var nl = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "setSpec" );
-        var sets = new ArrayList<String>( nl.getLength() );
+        var nl = getDocument().getElementsByTagNameNS( OAI_2_0_NAMESPACE, "set" );
+        var sets = new ArrayList<Set>( nl.getLength() );
         for ( int i = 0; i < nl.getLength(); i++ )
         {
-            sets.add( nl.item( i ).getTextContent().trim() );
+            var set = (Element) nl.item(i);
+
+            // setSpec is required
+            var setSpecString = set
+                    .getElementsByTagNameNS( OAI_2_0_NAMESPACE, "setSpec" )
+                    .item(0)
+                    .getTextContent();
+
+            // setName is required
+            var setNameString = set
+                    .getElementsByTagNameNS( OAI_2_0_NAMESPACE, "setName" )
+                    .item(0)
+                    .getTextContent();
+
+            // setDescription is optional
+            String setDescription = null;
+            var setDescriptionElem = set.getElementsByTagNameNS( OAI_2_0_NAMESPACE, "setDescription" ).item(0);
+            if (setDescriptionElem != null)
+            {
+                // setDescription is an XML node, transform to a string
+                try
+                {
+                    setDescription = transform(setDescriptionElem);
+                }
+                catch (TransformerException e)
+                {
+                    throw new IllegalStateException(e);
+                }
+            }
+
+            var setRecord = new Set(setSpecString, setNameString, setDescription);
+
+            sets.add( setRecord );
         }
         return Collections.unmodifiableList( sets );
     }
+
 }
