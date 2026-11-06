@@ -67,10 +67,8 @@ pipeline {
                 }
             }
             steps {
-                dir('oai-api') {
-                    withMaven {
-                        sh './mvnw jar:jar javadoc:jar source:jar deploy:deploy'
-                    }
+                withMaven {
+                    sh './mvnw --projects oai-api jar:jar javadoc:jar source:jar deploy:deploy'
                 }
             }
             when {
