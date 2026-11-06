@@ -36,7 +36,7 @@ properties from the
 [application-cdc.yml](src/main/resources/application-cdc.yml) file
 
 ```bash
-java -jar target/oaiharvester.jar --spring.profiles.active=cdc
+java -jar harvester/target/oaiharvester.jar --spring.profiles.active=cdc
 ```
 
 By default, the harvester will write to `data/` in the current working
@@ -214,43 +214,16 @@ See [Repo.java](/src/main/java/eu/cessda/oaiharvester/Repo.java) for the concret
 ### Execute tests and run the application
 
 ```bash
-# Execute all tests locally with default config
+# Execute all tests locally and install dependencies to the local Maven repository
 mvn test
 # Run the app locally with default config
-mvn spring-boot:run
-```
-
-### Create and run service environment with docker-compose
-
-```bash
-# Package Java jar file and build docker image with required settings
-mvn package docker:build -Pdocker-compose
-# Create and start the environment in daemon mode (-d)
-# as specified in docker-compose.yml
-docker-compose -f target/docker/generated/docker-compose.yml up -d
-# Show all (-a) containers, service must be healthy to be available
-docker ps -a
-# Check out with our browser: http://localhost:8080
-# Check out with our browser: http://localhost:8080/actuator
-# Stop the environment
-# All containers and the local network are stopped, but not deleted
-docker-compose -f target/docker/generated/docker-compose.yml stop
-# Start the existing environment
-# All containers and the local network are started
-docker-compose -f target/docker/generated/docker-compose.yml start
-# Open a shell within the running container as specified in docker-compose.yml
-# Exit the container shell again by Ctrl+C
-docker exec -it $CONTAINERID /bin/sh
-# Checkout filesystem within container with 'ls -la'
-# Shutdown the environment
-# All containers and the local network are stopped and deleted
-docker-compose -f target/docker/generated/docker-compose.yml down
+mvn --projects harvester spring-boot:run
 ```
 
 ## Getting started with Docker
 
 * Ensure that Java, Maven and are installed.
-* Build the project using `mvn package docker:build -Pdocker-compose`
+* Build the project using `mvn --projects harvester spring-boot:build-image`
 * Run a Docker container by
 
 ```bash
