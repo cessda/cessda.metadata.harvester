@@ -33,10 +33,10 @@ To compile the application to a JAR archive, run the following command:
 To execute the microservice with a defined profile run the service with the
 `spring.profiles.active` property. The following will run the app with the
 properties from the
-[application-cdc.yml](src/main/resources/application-cdc.yml) file
+[application-cdc.yml](harvester/src/main/resources/application-cdc.yml) file
 
 ```bash
-java -jar target/oaiharvester.jar --spring.profiles.active=cdc
+java -jar harvester/target/harvester.jar --spring.profiles.active=cdc
 ```
 
 By default, the harvester will write to `data/` in the current working
@@ -50,7 +50,7 @@ extend the standard spring boot properties.
 Each of them can be overwritten in the command line such as
 
 ```bash
-java -jar oaiharvester.jar --harvester.dir=/example/output/directory
+java -jar harvester.jar --harvester.dir=/example/output/directory
 ```
 
 ### Control the harvesting process
@@ -207,52 +207,25 @@ harvester:
 | `setSpec`        | String  | The set to harvest, can be omitted. Cannot be set if `discoverSets` is `true`.            |
 | `discoverSets`   | boolean | Determines whether the repository should harvest each set in the repository individually. |
 
-See [Repo.java](/src/main/java/eu/cessda/oaiharvester/Repo.java) for the concrete implementation and JavaDoc.
+See [Repo.java](/harvester/src/main/java/eu/cessda/oaiharvester/Repo.java) for the concrete implementation and JavaDoc.
 
 ## Getting started as developer
 
 ### Execute tests and run the application
 
 ```bash
-# Execute all tests locally with default config
-mvn test
+# Execute all tests locally and install dependencies to the local Maven repository
+mvn install
 # Run the app locally with default config
-mvn spring-boot:run
-```
-
-### Create and run service environment with docker-compose
-
-```bash
-# Package Java jar file and build docker image with required settings
-mvn package docker:build -Pdocker-compose
-# Create and start the environment in daemon mode (-d)
-# as specified in docker-compose.yml
-docker-compose -f target/docker/generated/docker-compose.yml up -d
-# Show all (-a) containers, service must be healthy to be available
-docker ps -a
-# Check out with our browser: http://localhost:8080
-# Check out with our browser: http://localhost:8080/actuator
-# Stop the environment
-# All containers and the local network are stopped, but not deleted
-docker-compose -f target/docker/generated/docker-compose.yml stop
-# Start the existing environment
-# All containers and the local network are started
-docker-compose -f target/docker/generated/docker-compose.yml start
-# Open a shell within the running container as specified in docker-compose.yml
-# Exit the container shell again by Ctrl+C
-docker exec -it $CONTAINERID /bin/sh
-# Checkout filesystem within container with 'ls -la'
-# Shutdown the environment
-# All containers and the local network are stopped and deleted
-docker-compose -f target/docker/generated/docker-compose.yml down
+mvn --projects harvester spring-boot:run
 ```
 
 ## Getting started with Docker
 
 * Ensure that Java, Maven and are installed.
-* Build the project using `mvn package docker:build -Pdocker-compose`
+* Build the project using `mvn --projects harvester spring-boot:build-image`
 * Run a Docker container by
 
 ```bash
-docker run -p 8080:8080 cessda/oaiharvester
+docker run -p 8080:8080 cessda/harvester:${version}
 ```
