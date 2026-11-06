@@ -33,10 +33,10 @@ To compile the application to a JAR archive, run the following command:
 To execute the microservice with a defined profile run the service with the
 `spring.profiles.active` property. The following will run the app with the
 properties from the
-[application-cdc.yml](src/main/resources/application-cdc.yml) file
+[application-cdc.yml](harvester/src/main/resources/application-cdc.yml) file
 
 ```bash
-java -jar harvester/target/oaiharvester.jar --spring.profiles.active=cdc
+java -jar harvester/target/harvester.jar --spring.profiles.active=cdc
 ```
 
 By default, the harvester will write to `data/` in the current working
@@ -50,7 +50,7 @@ extend the standard spring boot properties.
 Each of them can be overwritten in the command line such as
 
 ```bash
-java -jar oaiharvester.jar --harvester.dir=/example/output/directory
+java -jar harvester.jar --harvester.dir=/example/output/directory
 ```
 
 ### Control the harvesting process
@@ -207,7 +207,7 @@ harvester:
 | `setSpec`        | String  | The set to harvest, can be omitted. Cannot be set if `discoverSets` is `true`.            |
 | `discoverSets`   | boolean | Determines whether the repository should harvest each set in the repository individually. |
 
-See [Repo.java](/src/main/java/eu/cessda/oaiharvester/Repo.java) for the concrete implementation and JavaDoc.
+See [Repo.java](/harvester/src/main/java/eu/cessda/oaiharvester/Repo.java) for the concrete implementation and JavaDoc.
 
 ## Getting started as developer
 
@@ -227,5 +227,5 @@ mvn --projects harvester spring-boot:run
 * Run a Docker container by
 
 ```bash
-docker run -p 8080:8080 cessda/oaiharvester
+docker run -p 8080:8080 cessda/harvester:${version}
 ```
