@@ -44,7 +44,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('cessda-sonar') {
                     withMaven {
-                        sh './mvnw sonar:sonar'
+                        sh './mvnw --projects harvester,oai-api sonar:sonar'
                     }
                 }
             }
@@ -82,10 +82,8 @@ pipeline {
         }
         stage('Build Harvester Docker Image') {
             steps {
-                dir('harvester') {
-                    withMaven {
-                        sh "./mvnw -Pnative spring-boot:build-image-no-fork -Dspring-boot.build-image.imageName=${IMAGE_TAG}"
-                    }
+                withMaven {
+                    sh "./mvnw -Pnative --projects harvester spring-boot:build-image-no-fork -Dspring-boot.build-image.imageName=${IMAGE_TAG}"
                 }
             }
             when { branch 'main' }
