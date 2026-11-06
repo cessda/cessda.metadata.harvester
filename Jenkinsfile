@@ -44,7 +44,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('cessda-sonar') {
                     withMaven {
-                        sh './mvnw --projects harvester,oai-api sonar:sonar'
+                        sh './mvnw sonar:sonar'
                     }
                 }
             }
