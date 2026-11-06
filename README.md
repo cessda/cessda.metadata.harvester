@@ -215,7 +215,7 @@ See [Repo.java](/src/main/java/eu/cessda/oaiharvester/Repo.java) for the concret
 
 ```bash
 # Execute all tests locally and install dependencies to the local Maven repository
-mvn test
+mvn install
 # Run the app locally with default config
 mvn --projects harvester spring-boot:run
 ```
