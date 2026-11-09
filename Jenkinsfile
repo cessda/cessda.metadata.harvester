@@ -29,7 +29,7 @@ pipeline {
                 stage('Build Project') {
                     steps {
                         withMaven {
-                            sh './mvnw clean verify'
+                            sh './mvnw -Pnative clean verify'
                         }
                     }
                 }
