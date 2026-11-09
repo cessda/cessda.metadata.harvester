@@ -79,7 +79,6 @@ pipeline {
                     dir('harvester') {
                         sh "../mvnw -Pnative spring-boot:build-image-no-fork -Dspring-boot.build-image.imageName=${IMAGE_TAG}"
                     }
-
                 }
             }
             when { branch 'main' }
