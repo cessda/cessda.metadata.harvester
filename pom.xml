@@ -91,6 +91,20 @@
 		<url>https://github.com/cessda/cessda.metadata.harvester</url>
 		<connection>scm:git:https://github.com/cessda/cessda.metadata.harvester.git</connection>
 	  <tag>3.4.0</tag>
-  </scm>
+  	</scm>
+
+	<distributionManagement>
+		<repository>
+			<id>cessda-nexus</id>
+			<name>CESSDA Nexus Repository</name>
+			<url>https://nexus.cessda.eu/repository/maven-releases</url>
+		</repository>
+		<snapshotRepository>
+			<id>cessda-nexus-snapshot</id>
+			<name>CESSDA Nexus Snapshot Repository</name>
+			<url>https://nexus.cessda.eu/repository/maven-snapshots</url>
+			<uniqueVersion>true</uniqueVersion>
+		</snapshotRepository>
+	</distributionManagement>
 
 </project>
