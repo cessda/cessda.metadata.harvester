@@ -81,7 +81,10 @@ pipeline {
         stage('Build Harvester Docker Image') {
             steps {
                 withMaven {
-                    sh "./mvnw -Pnative --projects harvester --update-snapshots spring-boot:build-image-no-fork -Dspring-boot.build-image.imageName=${IMAGE_TAG}"
+                    dir('harvester') {
+                        sh "../mvnw -Pnative -Dspring-boot.build-image.imageName=${IMAGE_TAG} --update-snapshots spring-boot:build-image-no-fork"
+                    }
+
                 }
             }
             when { branch 'main' }
