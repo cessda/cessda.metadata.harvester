@@ -62,7 +62,7 @@ pipeline {
             agent {
                 // Deploy using the version of the JDK that the module depends on
                 docker {
-                    image 'eclipse-temurin:17'
+                    image 'eclipse-temurin:25'
                     reuseNode true
                 }
             }
