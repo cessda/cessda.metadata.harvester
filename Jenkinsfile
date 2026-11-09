@@ -29,52 +29,47 @@ pipeline {
                 stage('Build Project') {
                     steps {
                         withMaven {
-                            sh './mvnw -Pnative clean verify'
+                            sh './mvnw clean verify'
                         }
                     }
                 }
-            }
-        }
-        stage('Record Issues') {
-            steps {
-                recordIssues aggregatingResults: true, tools: [java()]
-            }
-        }
-        stage('Run Sonar Scan') {
-            steps {
-                withSonarQubeEnv('cessda-sonar') {
-                    withMaven {
-                        sh './mvnw sonar:sonar'
+                stage('Record Issues') {
+                    steps {
+                        recordIssues aggregatingResults: true, tools: [java()]
                     }
                 }
-            }
-            when { branch 'main' }
-        }
-        stage("Get Sonar Quality Gate") {
-            steps {
-                timeout(time: 1, unit: 'HOURS') {
-                    waitForQualityGate abortPipeline: true
+                stage('Run Sonar Scan') {
+                    steps {
+                        withSonarQubeEnv('cessda-sonar') {
+                            withMaven {
+                                sh './mvnw sonar:sonar'
+                            }
+                        }
+                    }
+                    when { branch 'main' }
                 }
-            }
-            when { branch 'main' }
-        }
-        stage('Deploy OAI-PMH API') {
-            agent {
-                // Deploy using the version of the JDK that the module depends on
-                docker {
-                    image 'eclipse-temurin:25'
-                    reuseNode true
+                stage("Get Sonar Quality Gate") {
+                    steps {
+                        timeout(time: 1, unit: 'HOURS') {
+                            waitForQualityGate abortPipeline: true
+                        }
+                    }
+                    when { branch 'main' }
                 }
-            }
-            steps {
-                withMaven {
-                    sh './mvnw jar:jar javadoc:jar source:jar deploy:deploy'
-                }
-            }
-            when {
-                anyOf {
-                    branch 'main' // Snapshot
-                    buildingTag() // Release
+                stage('Deploy OAI-PMH API') {
+                    steps {
+                        withMaven {
+                            dir('oai-api') {
+                                sh '../mvnw jar:jar javadoc:jar source:jar deploy:deploy'
+                            }
+                        }
+                    }
+                    when {
+                        anyOf {
+                            branch 'main' // Snapshot
+                            buildingTag() // Release
+                        }
+                    }
                 }
             }
         }
@@ -82,7 +77,7 @@ pipeline {
             steps {
                 withMaven {
                     dir('harvester') {
-                        sh "../mvnw -Pnative -Dspring-boot.build-image.imageName=${IMAGE_TAG} --update-snapshots spring-boot:build-image-no-fork"
+                        sh "../mvnw -Pnative spring-boot:build-image-no-fork -Dspring-boot.build-image.imageName=${IMAGE_TAG}"
                     }
 
                 }

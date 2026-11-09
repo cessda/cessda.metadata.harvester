@@ -5,23 +5,20 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>eu.cessda.oai</groupId>
-        <artifactId>parent</artifactId>
-        <version>4.2.0-SNAPSHOT</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.1</version>
+        <relativePath/>
     </parent>
 
+    <groupId>eu.cessda.oai</groupId>
     <artifactId>harvester</artifactId>
+    <version>4.2.0</version>
 
     <properties>
         <argLine/>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>25</java.version>
-        <spring-boot.version>4.1.1</spring-boot.version>
-        <resource.delimiter>@</resource.delimiter>
-        <maven.compiler.release>${java.version}</maven.compiler.release>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <spring-boot.run.main-class>${start-class}</spring-boot.run.main-class>
         <logging.file>target/application.log</logging.file>
         <logging.level.org.springframework>INFO</logging.level.org.springframework>
         <server.port>8083</server.port>
@@ -67,24 +64,11 @@
         </dependency>
     </dependencies>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.15.0</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -92,31 +76,6 @@
                         <arg>-Xlint:all</arg>
                     </compilerArgs>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.5.0</version>
-                <configuration>
-                    <propertiesEncoding>${project.build.sourceEncoding}</propertiesEncoding>
-                    <delimiters>
-                        <delimiter>${resource.delimiter}</delimiter>
-                    </delimiters>
-                    <useDefaultDelimiters>false</useDefaultDelimiters>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.4.0</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -131,37 +90,15 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.5.1</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>${start-class}</mainClass>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.6.0</version>
                 <!-- http://stackoverflow.com/a/9825309 -->
                 <configuration>
                     <argLine>@{argLine} -javaagent:${org.mockito:mockito-core:jar}</argLine>
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring-boot.version}</version>
                 <executions>
                     <execution>
                         <id>repackage</id>
@@ -179,7 +116,6 @@
             <plugin>
                 <groupId>org.graalvm.buildtools</groupId>
                 <artifactId>native-maven-plugin</artifactId>
-                <version>1.1.18</version>
                 <extensions>true</extensions>
             </plugin>
             <plugin>
@@ -204,195 +140,11 @@
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
+                <version>5.8.0.7211</version>
             </plugin>
         </plugins>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-shade-plugin</artifactId>
-                    <configuration>
-                        <keepDependenciesWithProvidedScope>true</keepDependenciesWithProvidedScope>
-                        <createDependencyReducedPom>true</createDependencyReducedPom>
-                        <filters>
-                            <filter>
-                                <artifact>*:*</artifact>
-                                <excludes>
-                                    <exclude>META-INF/*.SF</exclude>
-                                    <exclude>META-INF/*.DSA</exclude>
-                                    <exclude>META-INF/*.RSA</exclude>
-                                </excludes>
-                            </filter>
-                        </filters>
-                    </configuration>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.springframework.boot</groupId>
-                            <artifactId>spring-boot-maven-plugin</artifactId>
-                            <version>${spring-boot.version}</version>
-                        </dependency>
-                    </dependencies>
-                    <executions>
-                        <execution>
-                            <phase>package</phase>
-                            <goals>
-                                <goal>shade</goal>
-                            </goals>
-                            <configuration>
-                                <transformers>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/spring.handlers</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/spring.schemas</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
-                                        <resource>META-INF/spring/org.springframework.boot.actuate.autoconfigure.web.ManagementContextConfiguration.imports</resource>
-                                    </transformer>
-                                    <transformer implementation="org.springframework.boot.maven.PropertiesMergingResourceTransformer">
-                                        <resource>META-INF/spring.factories</resource>
-                                    </transformer>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
-                                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                        <mainClass>${start-class}</mainClass>
-                                        <manifestEntries>
-                                            <Multi-Release>true</Multi-Release>
-                                        </manifestEntries>
-                                    </transformer>
-                                </transformers>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-                <includes>
-                    <include>application.properties</include>
-                    <include>**/application*.yml</include>
-                    <include>logback-spring.xml</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>src/main/resources</directory>
-                <includes>
-                    <include>git.properties</include>
-                </includes>
-            </resource>
-        </resources>
         <finalName>${project.artifactId}</finalName>
     </build>
-
-    <profiles>
-        <profile>
-            <id>native</id>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-jar-plugin</artifactId>
-                            <configuration>
-                                <archive>
-                                    <manifestEntries>
-                                        <Spring-Boot-Native-Processed>true</Spring-Boot-Native-Processed>
-                                    </manifestEntries>
-                                </archive>
-                            </configuration>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.springframework.boot</groupId>
-                            <artifactId>spring-boot-maven-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>process-aot</id>
-                                    <goals>
-                                        <goal>process-aot</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.graalvm.buildtools</groupId>
-                            <artifactId>native-maven-plugin</artifactId>
-                            <configuration>
-                                <classesDirectory>${project.build.outputDirectory}</classesDirectory>
-                                <exclusions>
-                                    <exclusion>
-                                        <groupId>org.springframework.boot</groupId>
-                                        <artifactId>spring-boot-devtools</artifactId>
-                                    </exclusion>
-                                </exclusions>
-                            </configuration>
-                            <executions>
-                                <execution>
-                                    <id>add-reachability-metadata</id>
-                                    <goals>
-                                        <goal>add-reachability-metadata</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-        <profile>
-            <id>nativeTest</id>
-            <dependencies>
-                <dependency>
-                    <groupId>org.junit.platform</groupId>
-                    <artifactId>junit-platform-launcher</artifactId>
-                    <scope>test</scope>
-                </dependency>
-            </dependencies>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.springframework.boot</groupId>
-                            <artifactId>spring-boot-maven-plugin</artifactId>
-                            <executions>
-                                <execution>
-                                    <id>process-test-aot</id>
-                                    <goals>
-                                        <goal>process-test-aot</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.graalvm.buildtools</groupId>
-                            <artifactId>native-maven-plugin</artifactId>
-                            <configuration>
-                                <classesDirectory>${project.build.outputDirectory}</classesDirectory>
-                                <exclusions>
-                                    <exclusion>
-                                        <groupId>org.springframework.boot</groupId>
-                                        <artifactId>spring-boot-devtools</artifactId>
-                                    </exclusion>
-                                </exclusions>
-                            </configuration>
-                            <executions>
-                                <execution>
-                                    <id>native-test</id>
-                                    <goals>
-                                        <goal>test</goal>
-                                    </goals>
-                                </execution>
-                            </executions>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-    </profiles>
 
     <repositories>
         <repository>
