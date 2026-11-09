@@ -68,7 +68,7 @@ pipeline {
             }
             steps {
                 withMaven {
-                    sh './mvnw --projects oai-api jar:jar javadoc:jar source:jar deploy:deploy'
+                    sh './mvnw jar:jar javadoc:jar source:jar deploy:deploy'
                 }
             }
             when {
