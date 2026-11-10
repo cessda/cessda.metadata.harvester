@@ -148,6 +148,28 @@
                 <artifactId>sonar-maven-plugin</artifactId>
                 <version>5.8.0.7211</version>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>2.7.1</version>
+                <configuration>
+                    <licenseName>apache_v2</licenseName>
+                    <canUpdateCopyright>true</canUpdateCopyright>
+                    <failOnMissingHeader>true</failOnMissingHeader>
+                    <failOnNotUptodateHeader>true</failOnNotUptodateHeader>
+                    <ignoreNoFileToScan>true</ignoreNoFileToScan>
+                    <!-- Corrupts UTF-16 encoded XML -->
+                    <excludes>**/*.xml</excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check-file-header</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -164,6 +186,11 @@
             <uniqueVersion>true</uniqueVersion>
         </snapshotRepository>
     </distributionManagement>
+
+    <organization>
+        <name>CESSDA ERIC</name>
+        <url>https://www.cessda.eu/</url>
+    </organization>
 
     <scm>
         <url>https://github.com/cessda/cessda.metadata.harvester</url>
