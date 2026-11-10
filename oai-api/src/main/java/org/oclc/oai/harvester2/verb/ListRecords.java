@@ -40,9 +40,7 @@ import org.xml.sax.InputSource;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 
 /**
@@ -148,8 +146,7 @@ public final class ListRecords extends HarvesterVerb implements Resumable
 	 */
 	private static URI getRequestURL( URI baseURL, String resumptionToken )
 	{
-		return URI.create(baseURL + "?verb=ListRecords"
-				+ "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 )
-		);
+        var listRecordsUrl = URI.create( baseURL + "?verb=ListRecords" );
+		return getResumptionRequestURL( listRecordsUrl, resumptionToken );
 	}
 }

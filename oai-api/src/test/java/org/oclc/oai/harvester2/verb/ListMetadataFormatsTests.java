@@ -22,25 +22,41 @@ package org.oclc.oai.harvester2.verb;
 
 
 import org.junit.jupiter.api.Test;
-import org.xml.sax.InputSource;
 
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ListMetadataFormatsTests
 {
     @Test
-    void shouldReturnAListOfMetadataFormats() throws IOException, OAIException, URISyntaxException
+    void shouldReturnAListOfMetadataFormats() throws IOException, OAIException, URISyntaxException, InterruptedException
     {
+        var httpClient = mock( HttpClient.class );
+
+        var httpRequest = HttpRequest.newBuilder( URI.create("http://localhost:4556/?verb=ListMetadataFormats" ) ).GET().build();
+        var bodyHandler = HttpResponse.BodyHandlers.ofInputStream();
+
+
+
         // Given
         ListMetadataFormats metadataFormats;
-        try (var listMetadataFormatsResponse = this.getClass().getResourceAsStream( "/ListMetadataFormatsResponse.xml" ))
+        try(var listMetadataFormatsResponse = this.getClass().getResourceAsStream( "/ListMetadataFormatsResponse.xml" ))
         {
-            var inputSource = new InputSource( listMetadataFormatsResponse );
-            metadataFormats = new ListMetadataFormats( inputSource );
+            when( httpClient.send( httpRequest, bodyHandler ) ).thenAnswer(
+                invocation -> RecordHeadersMock.buildResponse(
+                    invocation.getArgument( 0 ), listMetadataFormatsResponse
+                )
+            );
+
+            metadataFormats = ListMetadataFormats.instance( httpClient, URI.create("http://localhost:4556/") );
         }
 
         // Then

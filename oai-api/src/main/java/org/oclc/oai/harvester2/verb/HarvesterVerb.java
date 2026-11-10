@@ -60,9 +60,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -331,6 +334,15 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
             return stringWriter.toString();
     }
 
+    /**
+     * Performs an HTTP request to a URI and wraps the response in a {@link ClosableInputSource}.
+     *
+     * @param httpClient the HTTP client.
+     * @param requestUrl the request URL.
+     * @return the input source.
+     * @throws IOException if an IO error occurs.
+     * @throws InterruptedException if the operation is interrupted.
+     */
     protected static ClosableInputSource openInputSource( HttpClient httpClient, URI requestUrl ) throws IOException, InterruptedException
     {
         var httpRequest = HttpRequest.newBuilder( requestUrl ).GET().build();
@@ -342,6 +354,28 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
         inputSource.setSystemId( requestUrl.toASCIIString() );
         inputSource.setByteStream( httpResponse );
         return inputSource;
+    }
+
+    /**
+     * Construct the query portion of the http request (resumptionToken version)
+     *
+     * @param baseURL the base URL of the OAI-PMH repository.
+     * @param resumptionToken the resumption token.
+     * @return a URI with a resumption token appended.
+     */
+    protected static URI getResumptionRequestURL( URI baseURL, String resumptionToken )
+    {
+        var listIdentifierURL = baseURL + "&resumptionToken=";
+        try
+        {
+            // Attempt to create the URL using the resumption token directly
+            return new URI( listIdentifierURL + resumptionToken );
+        }
+        catch ( URISyntaxException e )
+        {
+            // Fall back to encoding the resumption token
+            return URI.create( listIdentifierURL + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 ) );
+        }
     }
 
     protected static class ClosableInputSource extends InputSource implements Closeable

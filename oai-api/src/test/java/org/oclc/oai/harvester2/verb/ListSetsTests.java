@@ -26,11 +26,17 @@ import org.xml.sax.InputSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ListSetsTests
 {
@@ -84,18 +90,8 @@ class ListSetsTests
                 <error code="noSetHierarchy">This repository does not support sets</error>
             </OAI-PMH>""";
 
-    @Test
-    void shouldReturnSets() throws IOException, OAIException
+    private static void verifySets( ListSets listSets )
     {
-        // Given
-        var inputStream = new ByteArrayInputStream(
-                LIST_SETS_XML.getBytes( StandardCharsets.UTF_8 )
-        );
-
-        // Then
-        var inputSource = new InputSource( inputStream );
-        var listSets = new ListSets( inputSource );
-
         var sets = listSets.getSets();
 
         assertEquals(4, sets.size());
@@ -106,14 +102,64 @@ class ListSetsTests
     }
 
     @Test
+    void shouldReturnSets() throws IOException, OAIException, InterruptedException
+    {
+        var httpClient = mock( HttpClient.class );
+
+        // Given
+        var inputStream = new ByteArrayInputStream(
+                LIST_SETS_XML.getBytes( StandardCharsets.UTF_8 )
+        );
+
+        var httpRequest = HttpRequest.newBuilder( URI.create("http://localhost:4556/?verb=ListSets" ) ).GET().build();
+        var bodyHandler = HttpResponse.BodyHandlers.ofInputStream();
+
+        when( httpClient.send( httpRequest, bodyHandler ) ).thenAnswer(
+            invocation -> RecordHeadersMock.buildResponse(
+                invocation.getArgument( 0 ), inputStream
+            )
+        );
+
+        // Then
+        var listSets = ListSets.instance( httpClient, URI.create("http://localhost:4556/") );
+
+        verifySets( listSets );
+    }
+
+    @Test
+    void shouldConstructFromResumptionToken() throws IOException, OAIException, InterruptedException
+    {
+        var httpClient = mock( HttpClient.class );
+
+        // Given
+        var inputStream = new ByteArrayInputStream(
+            LIST_SETS_XML.getBytes( StandardCharsets.UTF_8 )
+        );
+
+        var resumptionToken = "3/6/7/ddi/null/2017-01-01/null";
+
+        var httpRequest = HttpRequest.newBuilder( URI.create("http://localhost:4556/?verb=ListSets&resumptionToken=" + resumptionToken ) ).GET().build();
+        var bodyHandler = HttpResponse.BodyHandlers.ofInputStream();
+
+        when( httpClient.send( httpRequest, bodyHandler ) ).thenAnswer(
+            invocation -> RecordHeadersMock.buildResponse(
+                invocation.getArgument( 0 ), inputStream
+            )
+        );
+
+        // Then
+        var listSets = ListSets.instance( httpClient, URI.create("http://localhost:4556/"), resumptionToken );
+
+        verifySets( listSets );
+    }
+
+    @Test
     void shouldReturnErrorWhenRepositoryDoesNotSupportSets()
     {
         // Given
         var inputStream = new ByteArrayInputStream(
                 SETS_NOT_SUPPORTED_ERROR.getBytes( StandardCharsets.UTF_8 )
         ) ;
-
-
 
         // Then
         var inputSource = new InputSource( inputStream );

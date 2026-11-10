@@ -41,9 +41,7 @@ import org.xml.sax.InputSource;
 import javax.xml.transform.TransformerException;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -125,9 +123,8 @@ public final class ListSets extends HarvesterVerb implements Resumable
      */
     private static URI getRequestURL( URI baseURL, String resumptionToken )
     {
-        return URI.create( baseURL + "?verb=ListSets"
-            + "&resumptionToken=" + URLEncoder.encode( resumptionToken, StandardCharsets.UTF_8 )
-        );
+        var listSetsUrl = URI.create( baseURL + "?verb=ListSets" );
+        return getResumptionRequestURL( listSetsUrl, resumptionToken );
     }
 
     /**

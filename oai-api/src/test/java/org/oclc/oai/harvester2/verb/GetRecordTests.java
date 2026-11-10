@@ -27,12 +27,18 @@ import org.xml.sax.InputSource;
 import javax.xml.stream.XMLStreamException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.util.Set;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class GetRecordTests
 {
@@ -133,10 +139,26 @@ class GetRecordTests
     );
 
     @Test
-    void shouldReturnARecordHeader() throws IOException, OAIException
+    void shouldReturnARecordHeader() throws IOException, OAIException, InterruptedException
     {
-        var getRecord = new GetRecord(
-            new InputSource( new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( UTF_8 ) ) )
+        var httpClient = mock( HttpClient.class );
+
+        // Given
+        var inputStream = new ByteArrayInputStream( GET_RECORD_RESPONSE.getBytes( UTF_8 ) );
+
+        var httpRequest = HttpRequest.newBuilder( URI.create(
+            "http://localhost:4556/?verb=GetRecord&identifier=oai:arXiv.org:cs/0112017&metadataPrefix=oai_dc"
+        ) ).GET().build();
+        var bodyHandler = HttpResponse.BodyHandlers.ofInputStream();
+
+        when( httpClient.send( httpRequest, bodyHandler ) ).thenAnswer(
+            invocation -> RecordHeadersMock.buildResponse(
+                invocation.getArgument( 0 ), inputStream
+            )
+        );
+
+        var getRecord = GetRecord.instance(
+            httpClient, URI.create("http://localhost:4556/"), "oai:arXiv.org:cs/0112017", "oai_dc"
         );
 
         var header = getRecord.getHeader();
