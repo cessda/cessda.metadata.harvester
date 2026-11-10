@@ -37,7 +37,9 @@ package org.oclc.oai.harvester2.verb;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.*;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -54,8 +56,13 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -322,5 +329,31 @@ public abstract sealed class HarvesterVerb permits GetRecord, Identify, ListIden
             var stringWriter = new StringWriter();
             identityTransformer.get().transform( new DOMSource( node ), new StreamResult( stringWriter ) );
             return stringWriter.toString();
+    }
+
+    protected static ClosableInputSource openInputSource( HttpClient httpClient, URI requestUrl ) throws IOException, InterruptedException
+    {
+        var httpRequest = HttpRequest.newBuilder( requestUrl ).GET().build();
+        var bodyHandler = HttpResponse.BodyHandlers.ofInputStream();
+
+        var httpResponse = httpClient.send( httpRequest, bodyHandler ).body();
+
+        var inputSource = new ClosableInputSource();
+        inputSource.setSystemId( requestUrl.toASCIIString() );
+        inputSource.setByteStream( httpResponse );
+        return inputSource;
+    }
+
+    protected static class ClosableInputSource extends InputSource implements Closeable
+    {
+        @Override
+        public void close() throws IOException
+        {
+            var byteStream = this.getByteStream();
+            if (byteStream != null)
+            {
+                byteStream.close();
+            }
+        }
     }
 }

@@ -43,8 +43,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -83,15 +81,8 @@ public final class ListSets extends HarvesterVerb implements Resumable
     public static ListSets instance( HttpClient httpClient, URI baseURL ) throws IOException, OAIException, InterruptedException
     {
         var requestURL = getRequestURL( baseURL );
-
-        var httpRequest = HttpRequest.newBuilder( requestURL ).GET().build();
-        var bodyHandler = HttpResponse.BodyHandlers.ofInputStream();
-
-        try ( var httpResponse = httpClient.send( httpRequest, bodyHandler ).body() )
+        try (var inputSource = openInputSource( httpClient, requestURL ))
         {
-            var inputSource = new InputSource();
-            inputSource.setSystemId( requestURL.toASCIIString() );
-            inputSource.setByteStream( httpResponse );
             return new ListSets( inputSource );
         }
     }
@@ -110,15 +101,8 @@ public final class ListSets extends HarvesterVerb implements Resumable
     public static ListSets instance( HttpClient httpClient, URI baseURL, String resumptionToken ) throws IOException, OAIException, InterruptedException
     {
         var requestURL = getRequestURL( baseURL, resumptionToken );
-
-        var httpRequest = HttpRequest.newBuilder( requestURL ).GET().build();
-        var bodyHandler = HttpResponse.BodyHandlers.ofInputStream();
-
-        try ( var httpResponse = httpClient.send( httpRequest, bodyHandler ).body() )
+        try (var inputSource = openInputSource( httpClient, requestURL ))
         {
-            var inputSource = new InputSource();
-            inputSource.setSystemId( requestURL.toASCIIString() );
-            inputSource.setByteStream( httpResponse );
             return new ListSets( inputSource );
         }
     }

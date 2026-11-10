@@ -42,8 +42,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -87,15 +85,10 @@ public final class ListIdentifiers extends HarvesterVerb implements Resumable
         Objects.requireNonNull( resumptionToken, "resumptionToken cannot be null" );
 
 		var requestURL = getRequestURL( baseURL, resumptionToken );
-        var httpRequest = HttpRequest.newBuilder( requestURL ).GET().build();
-
-        try (var httpResponse = httpClient.send( httpRequest, HttpResponse.BodyHandlers.ofInputStream() ).body() )
-		{
-            var inputSource = new InputSource();
-            inputSource.setSystemId( requestURL.toASCIIString() );
-            inputSource.setByteStream( httpResponse );
-			return new ListIdentifiers( inputSource );
-		}
+        try (var inputSource = openInputSource( httpClient, requestURL ))
+        {
+            return new ListIdentifiers( inputSource );
+        }
 	}
 
 	/**
@@ -116,15 +109,10 @@ public final class ListIdentifiers extends HarvesterVerb implements Resumable
         throws IOException, OAIException, InterruptedException
     {
 		var requestURL = getRequestURL( baseURL, from, until, set, metadataPrefix );
-        var httpRequest = HttpRequest.newBuilder( requestURL ).GET().build();
-
-        try (var httpResponse = httpClient.send( httpRequest, HttpResponse.BodyHandlers.ofInputStream() ).body() )
-		{
-            var inputSource = new InputSource();
-            inputSource.setSystemId( requestURL.toASCIIString() );
-            inputSource.setByteStream( httpResponse );
-			return new ListIdentifiers( inputSource );
-		}
+        try (var inputSource = openInputSource( httpClient, requestURL ))
+        {
+            return new ListIdentifiers( inputSource );
+        }
 	}
 
 	/**

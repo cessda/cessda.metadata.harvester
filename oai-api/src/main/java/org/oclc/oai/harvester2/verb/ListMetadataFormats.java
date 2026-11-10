@@ -38,12 +38,9 @@ package org.oclc.oai.harvester2.verb;
 import org.xml.sax.InputSource;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -76,28 +73,11 @@ public final class ListMetadataFormats extends HarvesterVerb
      * @throws IOException  if an IO error occurs.
      * @throws OAIException if an error occurs when parsing the stream, or the endpoint returns an error.
      */
-    public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL ) throws IOException, OAIException
+    public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL ) throws IOException, OAIException, InterruptedException
     {
         var requestURL = getRequestURL( baseURL, null );
-        InputStream result;
-
-        var httpRequest = HttpRequest.newBuilder( requestURL ).GET().build();
-        var bodyHandler = HttpResponse.BodyHandlers.ofInputStream();
-
-        try
+        try (var inputSource = openInputSource( httpClient, requestURL ))
         {
-            result = httpClient.send( httpRequest, bodyHandler ).body();
-        }
-        catch ( InterruptedException e )
-        {
-            Thread.currentThread().interrupt();
-            throw new IOException( e );
-        }
-        try ( var httpResponse = result )
-        {
-            var inputSource = new InputSource();
-            inputSource.setSystemId( requestURL.toASCIIString() );
-            inputSource.setByteStream( httpResponse );
             return new ListMetadataFormats( inputSource );
         }
     }
@@ -112,29 +92,12 @@ public final class ListMetadataFormats extends HarvesterVerb
      * @throws IOException if an IO error occurs.
      * @throws OAIException if an error occurs when parsing the stream, or the endpoint returns an error.
      */
-    public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL, String identifier ) throws IOException, OAIException
+    public static ListMetadataFormats instance( HttpClient httpClient, URI baseURL, String identifier ) throws IOException, OAIException, InterruptedException
     {
         Objects.requireNonNull( identifier, "identifier cannot be null" );
         var requestURL = getRequestURL( baseURL, identifier );
-        InputStream result;
-
-        var httpRequest = HttpRequest.newBuilder( requestURL ).GET().build();
-        var bodyHandler = HttpResponse.BodyHandlers.ofInputStream();
-
-        try
+        try (var inputSource = openInputSource( httpClient, requestURL ))
         {
-            result = httpClient.send( httpRequest, bodyHandler ).body();
-        }
-        catch ( InterruptedException e )
-        {
-            Thread.currentThread().interrupt();
-            throw new IOException( e );
-        }
-        try ( var httpResponse = result )
-        {
-            var inputSource = new InputSource();
-            inputSource.setSystemId( requestURL.toASCIIString() );
-            inputSource.setByteStream( httpResponse );
             return new ListMetadataFormats( inputSource );
         }
     }

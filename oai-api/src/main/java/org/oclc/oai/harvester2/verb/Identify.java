@@ -40,8 +40,6 @@ import org.xml.sax.InputSource;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 
 /**
  * This class represents an Identify response on either the server or on the client
@@ -75,13 +73,8 @@ public final class Identify extends HarvesterVerb
 	public static Identify instance( HttpClient httpClient, URI baseURL ) throws IOException, OAIException, InterruptedException
     {
 		var requestURL = URI.create(baseURL + "?verb=Identify");
-        var httpRequest = HttpRequest.newBuilder( requestURL ).GET().build();
-
-        try ( var httpResponse =  httpClient.send( httpRequest, HttpResponse.BodyHandlers.ofInputStream() ).body() )
+        try (var inputSource = openInputSource( httpClient, requestURL ))
         {
-            var inputSource = new InputSource();
-            inputSource.setSystemId( requestURL.toASCIIString() );
-            inputSource.setByteStream( httpResponse );
             return new Identify( inputSource );
         }
 	}

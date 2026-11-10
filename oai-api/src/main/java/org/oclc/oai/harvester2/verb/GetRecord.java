@@ -81,13 +81,8 @@ public final class GetRecord extends HarvesterVerb
     public static GetRecord instance( HttpClient httpClient, URI baseURL, String identifier, String metadataPrefix ) throws IOException, OAIException, InterruptedException
     {
         var requestURL = getRequestURL( baseURL, identifier, metadataPrefix );
-        var httpRequest = HttpRequest.newBuilder( requestURL ).GET().build();
-
-        try ( var httpResponse = httpClient.send( httpRequest, HttpResponse.BodyHandlers.ofInputStream() ).body() )
+        try (var inputSource = openInputSource( httpClient, requestURL ))
         {
-            var inputSource = new InputSource();
-            inputSource.setSystemId( requestURL.toASCIIString() );
-            inputSource.setByteStream( httpResponse );
             return new GetRecord( inputSource );
         }
     }
