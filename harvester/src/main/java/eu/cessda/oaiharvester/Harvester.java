@@ -59,12 +59,12 @@ public class Harvester implements CommandLineRunner
 
     private static final Logger log = LoggerFactory.getLogger( Harvester.class );
 
-    private final HttpClient httpClient;
+    private final HarvesterHttpClient httpClient;
     private final HarvesterConfiguration harvesterConfiguration;
     private final RepositoryClient repositoryClient;
 
     @Autowired
-    Harvester( HttpClient httpClient, HarvesterConfiguration harvesterConfiguration, RepositoryClient repositoryClient )
+    Harvester( HarvesterHttpClient httpClient, HarvesterConfiguration harvesterConfiguration, RepositoryClient repositoryClient )
     {
         this.httpClient = httpClient;
         this.harvesterConfiguration = harvesterConfiguration;

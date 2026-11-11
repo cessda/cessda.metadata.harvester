@@ -34,7 +34,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collections;
 
-import static eu.cessda.oaiharvester.HttpClientTests.getHttpResponse;
+import static eu.cessda.oaiharvester.HarvesterHttpClientTests.getHttpResponse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -61,7 +61,7 @@ class EQBHarvestingServiceTests
 		harvesterConfiguration.setTimeout( Duration.ofSeconds( 10 ) );
         harvesterConfiguration.getRepos().add( testRepository );
 
-        var httpClient = mock( HttpClient.class );
+        var httpClient = mock( HarvesterHttpClient.class );
         when( httpClient.send( any( HttpRequest.class), any( HttpResponse.BodyHandler.class) ) )
             .thenAnswer( invocation ->  getHttpResponse(invocation.getArgument( 0 ) ) );
 

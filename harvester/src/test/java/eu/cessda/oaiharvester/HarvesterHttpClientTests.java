@@ -46,7 +46,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @SuppressWarnings( { "unchecked", "resource" } ) // HttpResponse.BodyHandler.class cannot be cast to generic type
-class HttpClientTests
+class HarvesterHttpClientTests
 {
     private final HttpClient clientMock = mock( HttpClient.class );
 
@@ -127,7 +127,7 @@ class HttpClientTests
     @Test
     void shouldConstruct()
     {
-        assertDoesNotThrow( () -> new eu.cessda.oaiharvester.HttpClient( new HarvesterConfiguration() ) );
+        assertDoesNotThrow( () -> new HarvesterHttpClient( new HarvesterConfiguration() ) );
     }
 
     @Test
@@ -136,7 +136,7 @@ class HttpClientTests
         when(clientMock.send( any( HttpRequest.class), any( HttpResponse.BodyHandler.class ) ))
             .thenAnswer( invocation -> getHttpResponse( invocation.getArgument( 0 ) ) );
 
-        var httpClient = new eu.cessda.oaiharvester.HttpClient( clientMock );
+        var httpClient = new HarvesterHttpClient( clientMock );
 
         // The client should return a successful result
         var httpRequest = HttpRequest.newBuilder(URI.create( "http://localhost:8080/")).build();
@@ -151,7 +151,7 @@ class HttpClientTests
             .thenAnswer( invocation -> getHttpResponse( invocation.getArgument( 0 ), 500 ))
             .thenAnswer( invocation -> getHttpResponse( invocation.getArgument( 0 ) ));
 
-        var httpClient = new eu.cessda.oaiharvester.HttpClient( clientMock );
+        var httpClient = new HarvesterHttpClient( clientMock );
 
         // The client should return a successful result
         var httpRequest = HttpRequest.newBuilder(URI.create( "http://localhost:8080/")).build();
@@ -170,7 +170,7 @@ class HttpClientTests
         when(clientMock.send( any( HttpRequest.class), any( HttpResponse.BodyHandler.class ) ))
             .thenAnswer( invocation -> getHttpResponse( invocation.getArgument( 0 ), status, Collections.emptyMap() ) );
 
-        var httpClient = new eu.cessda.oaiharvester.HttpClient( clientMock );
+        var httpClient = new HarvesterHttpClient( clientMock );
 
         // The client should throw
         var httpRequest = HttpRequest.newBuilder(URI.create( "http://localhost:8080/")).build();
@@ -191,7 +191,7 @@ class HttpClientTests
             .thenAnswer( invocation -> getHttpResponse( invocation.getArgument( 0 ), 429, responseHeaders ) )
             .thenAnswer( invocation -> getHttpResponse( invocation.getArgument( 0 ), 200, Collections.emptyMap() ) );
 
-        var httpClient = new eu.cessda.oaiharvester.HttpClient( clientMock );
+        var httpClient = new HarvesterHttpClient( clientMock );
 
         // Build the request
         var httpRequest = HttpRequest.newBuilder(URI.create( "http://localhost:8080/")).build();
@@ -223,7 +223,7 @@ class HttpClientTests
             .thenAnswer( invocation -> getHttpResponse( invocation.getArgument( 0 ), 503, responseHeaders ) )
             .thenAnswer( invocation -> getHttpResponse( invocation.getArgument( 0 ), 200, Collections.emptyMap() ) );
 
-        var httpClient = new eu.cessda.oaiharvester.HttpClient( clientMock );
+        var httpClient = new HarvesterHttpClient( clientMock );
 
         // Build the request
         var httpRequest = HttpRequest.newBuilder(URI.create( "http://localhost:8080/")).build();
@@ -246,7 +246,7 @@ class HttpClientTests
             .thenAnswer( invocation -> getHttpResponse( invocation.getArgument( 0 ), 429, responseHeaders ) )
             .thenAnswer( invocation -> getHttpResponse( invocation.getArgument( 0 ), 200, Collections.emptyMap() ) );
 
-        var httpClient = new eu.cessda.oaiharvester.HttpClient( clientMock );
+        var httpClient = new HarvesterHttpClient( clientMock );
 
         // The client should return a successful result, ignoring the invalid header
         var httpRequest = HttpRequest.newBuilder(URI.create( "http://localhost:8080/")).build();
@@ -264,7 +264,7 @@ class HttpClientTests
         when(clientMock.send( any( HttpRequest.class), any( HttpResponse.BodyHandler.class ) ))
             .thenAnswer( invocation -> getHttpResponse( invocation.getArgument( 0 ), status, Collections.emptyMap() ) );
 
-        var httpClient = new eu.cessda.oaiharvester.HttpClient( clientMock );
+        var httpClient = new HarvesterHttpClient( clientMock );
 
         // The client should throw
         var httpRequest = HttpRequest.newBuilder(URI.create( "http://localhost:8080/")).build();
@@ -280,14 +280,11 @@ class HttpClientTests
     @Test
     void shouldHandleIOExceptions() throws IOException, InterruptedException
     {
-        // Setup variables
-        var requestURL = URI.create( "http://localhost:8080/" );
-
         // Setup mocks
         when(clientMock.send( any( HttpRequest.class), any( HttpResponse.BodyHandler.class ) ))
             .then( _ -> { throw new IOException();} );
 
-        var httpClient = new eu.cessda.oaiharvester.HttpClient( clientMock );
+        var httpClient = new HarvesterHttpClient( clientMock );
 
         // The client should throw
         var httpRequest = HttpRequest.newBuilder(URI.create( "http://localhost:8080/")).build();
@@ -304,7 +301,7 @@ class HttpClientTests
         when(clientMock.send( any( HttpRequest.class), any( HttpResponse.BodyHandler.class ) ))
             .thenThrow( InterruptedException.class );
 
-        var httpClient = new eu.cessda.oaiharvester.HttpClient( clientMock );
+        var httpClient = new HarvesterHttpClient( clientMock );
 
         // The client should throw an InterruptedException, and the thread should not be interrupted
         var httpRequest = HttpRequest.newBuilder(URI.create( "http://localhost:8080/")).build();

@@ -28,11 +28,10 @@ import org.springframework.stereotype.Component;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.Authenticator;
 import java.net.CookieHandler;
 import java.net.ProxySelector;
-import java.net.URI;
+import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -47,15 +46,15 @@ import java.util.concurrent.Executor;
 import static java.net.http.HttpClient.Redirect.NORMAL;
 
 @Component
-public class HttpClient extends java.net.http.HttpClient
+public class HarvesterHttpClient extends HttpClient
 {
     private static final int MAX_RETRIES = 3;
 
-    private final java.net.http.HttpClient client;
+    private final HttpClient client;
     private final Duration retryDelay;
 
     @Autowired
-    HttpClient( HarvesterConfiguration harvesterConfiguration )
+    HarvesterHttpClient( HarvesterConfiguration harvesterConfiguration )
     {
         // TK added default timeout for dataverses taking too long to respond / stall
         this.client = Methanol.newBuilder()
@@ -70,7 +69,7 @@ public class HttpClient extends java.net.http.HttpClient
     /**
      * Testing constructor, takes a mock HTTP client
      */
-    HttpClient( java.net.http.HttpClient client )
+    HarvesterHttpClient( HttpClient client )
     {
         this.client = client;
         this.retryDelay = Duration.ZERO;
@@ -114,14 +113,6 @@ public class HttpClient extends java.net.http.HttpClient
 
         // header not present or invalid
         return null;
-    }
-
-    @Deprecated(forRemoval = true)
-    InputStream getHttpResponse( URI requestURL ) throws IOException, InterruptedException
-    {
-        var httpRequest = HttpRequest.newBuilder( requestURL ).build();
-        var bodyHandler = HttpResponse.BodyHandlers.ofInputStream();
-        return send( httpRequest, bodyHandler ).body();
     }
 
     /**

@@ -61,7 +61,7 @@ class RepositoryClientTests
     void shouldGetIdentifiers() throws IOException, RecordHeaderException, InterruptedException
     {
         // Given
-        var httpClient = mock( HttpClient.class );
+        var httpClient = mock( HarvesterHttpClient.class );
 
         // Request
         var uri = URI.create( "http://localhost:4556/?verb=ListIdentifiers&metadataPrefix=ddi" );
@@ -71,7 +71,7 @@ class RepositoryClientTests
         when(httpClient.send(
             httpRequest, HttpResponse.BodyHandlers.ofInputStream()
         )).thenReturn(
-            HttpClientTests.getHttpResponse( httpRequest, new ByteArrayInputStream(
+            HarvesterHttpClientTests.getHttpResponse( httpRequest, new ByteArrayInputStream(
                 GET_LIST_IDENTIFIERS_XML_WITH_RESUMPTION.getBytes( UTF_8 )
             ))
         );
@@ -82,7 +82,7 @@ class RepositoryClientTests
         var resumptionTokenRequest = HttpRequest.newBuilder().uri( tokenURI ).build();
         when(httpClient.send(
             resumptionTokenRequest, HttpResponse.BodyHandlers.ofInputStream()
-        )).thenReturn( HttpClientTests.getHttpResponse( resumptionTokenRequest, new ByteArrayInputStream(
+        )).thenReturn( HarvesterHttpClientTests.getHttpResponse( resumptionTokenRequest, new ByteArrayInputStream(
                 GET_LIST_IDENTIFIERS_XML_WITH_RESUMPTION_LAST_LIST.getBytes( UTF_8 )
             ))
         );
@@ -102,7 +102,7 @@ class RepositoryClientTests
     void shouldHandleOAIErrors() throws IOException, InterruptedException
     {
         // Given
-        var httpClient = mock( HttpClient.class );
+        var httpClient = mock( HarvesterHttpClient.class );
 
         // Request
         var uri = URI.create( "http://localhost:4556/?verb=ListIdentifiers&metadataPrefix=ddi" );
@@ -112,7 +112,7 @@ class RepositoryClientTests
         when(httpClient.send(
             httpRequest, HttpResponse.BodyHandlers.ofInputStream()
         )).thenReturn(
-            HttpClientTests.getHttpResponse( httpRequest, new ByteArrayInputStream(
+            HarvesterHttpClientTests.getHttpResponse( httpRequest, new ByteArrayInputStream(
                 GET_LIST_IDENTIFIERS_XML_WITH_CANNOT_DISSEMINATE_FORMAT_ERROR.getBytes( UTF_8 )
             ))
         );
@@ -131,7 +131,7 @@ class RepositoryClientTests
     void shouldHandleExceptions() throws IOException, InterruptedException
     {
         // Given
-        var httpClient = mock( HttpClient.class );
+        var httpClient = mock( HarvesterHttpClient.class );
 
         // Request
         var uri = URI.create( "http://localhost:4556/?verb=ListIdentifiers&metadataPrefix=ddi" );
@@ -141,7 +141,7 @@ class RepositoryClientTests
         when(httpClient.send(
             httpRequest, HttpResponse.BodyHandlers.ofInputStream()
         )).thenReturn(
-            HttpClientTests.getHttpResponse( httpRequest, new ByteArrayInputStream(
+            HarvesterHttpClientTests.getHttpResponse( httpRequest, new ByteArrayInputStream(
                 GET_LIST_IDENTIFIERS_XML_WITH_RESUMPTION.getBytes( UTF_8 )
             ))
         );
@@ -170,7 +170,7 @@ class RepositoryClientTests
     void shouldDiscoverSets() throws IOException, InterruptedException
     {
         // Given
-        var httpClient = mock( HttpClient.class );
+        var httpClient = mock( HarvesterHttpClient.class );
 
         // Request
         var uri = URI.create( "http://localhost:4556/?verb=ListSets" );
@@ -180,7 +180,7 @@ class RepositoryClientTests
         when(httpClient.send(
             httpRequest, HttpResponse.BodyHandlers.ofInputStream()
         )).thenReturn(
-            HttpClientTests.getHttpResponse( httpRequest, new ByteArrayInputStream(
+            HarvesterHttpClientTests.getHttpResponse( httpRequest, new ByteArrayInputStream(
                 // The XML prelude declares the encoding as UTF-16
                 GET_LIST_SETS_XML.getBytes( UTF_16 )
             ))
@@ -193,7 +193,7 @@ class RepositoryClientTests
         when(httpClient.send(
             resumptionTokenRequest, HttpResponse.BodyHandlers.ofInputStream()
         )).thenReturn(
-            HttpClientTests.getHttpResponse( httpRequest,
+            HarvesterHttpClientTests.getHttpResponse( httpRequest,
                 // The XML prelude declares the encoding as UTF-16
                 new ByteArrayInputStream( GET_LIST_SETS_XML_LAST_LIST.getBytes( UTF_16 ) )
             )
@@ -223,7 +223,7 @@ class RepositoryClientTests
     void shouldAddDefaultSetOnException() throws IOException, InterruptedException
     {
         // Given
-        var httpClient = mock( HttpClient.class );
+        var httpClient = mock( HarvesterHttpClient.class );
 
         // Request
         var uri = URI.create( "http://localhost:4556/?verb=ListSets" );

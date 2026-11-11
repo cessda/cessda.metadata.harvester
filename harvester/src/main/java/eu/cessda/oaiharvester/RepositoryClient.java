@@ -42,12 +42,12 @@ class RepositoryClient
 {
     private static final Logger log = LoggerFactory.getLogger( RepositoryClient.class );
 
-    private final HttpClient httpClient;
+    private final HarvesterHttpClient httpClient;
 
     /**
      * Create a new instance of a {@link RepositoryClient}.
      */
-    RepositoryClient( HttpClient httpClient)
+    RepositoryClient( HarvesterHttpClient httpClient)
     {
         this.httpClient = httpClient;
     }
